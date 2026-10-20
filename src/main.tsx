@@ -10,7 +10,7 @@ import "./styles.css";
 
 function App() {
   return <BrowserRouter><AuthProvider><Routes>
-    <Route path="/" element={<Navigate to="/demonstracao" replace/>}/>
+    <Route path="/" element={<Navigate to="/login" replace/>}/>
     <Route path="/demonstracao" element={<DemoPage/>}/>
     <Route path="/login" element={<LoginPage/>}/>
     <Route path="/cadastro" element={<RegisterPage/>}/>
