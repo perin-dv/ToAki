@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { consultarCnpj, normalizarCnpj, validarCnpj, type DadosCnpj } from "../lib/cnpj";
 
@@ -8,7 +9,7 @@ export default function CompanyRegistration() {
   const {user}=useAuth();
   const [cnpj,setCnpj]=useState("");const [dados,setDados]=useState<DadosCnpj|null>(null);const [nomeContato,setNomeContato]=useState("");const [telefone,setTelefone]=useState("");const [confirmado,setConfirmado]=useState(false);
   const [busy,setBusy]=useState(false);const [message,setMessage]=useState("");const [exists,setExists]=useState(false);
-  useEffect(()=>{let mounted=true;if(!user)return;getDoc(doc(db,"solicitacoes_cadastro_empresas",user.uid)).then(snap=>{if(mounted&&snap.exists()){setExists(true);setMessage("Sua solicitação de cadastro já foi registrada e aguarda análise.");}}).catch(()=>{if(mounted)setMessage("Não foi possível consultar solicitações. Verifique se o Firestore foi ativado.");});return()=>{mounted=false}},[user]);
+  useEffect(()=>{let mounted=true;if(!user?.emailVerified)return;getDoc(doc(db,"solicitacoes_cadastro_empresas",user.uid)).then(snap=>{if(mounted&&snap.exists()){setExists(true);setMessage("Sua solicitação de cadastro já foi registrada e aguarda análise.");}}).catch(()=>{if(mounted)setMessage("Não foi possível consultar solicitações. Verifique se o Firestore foi ativado.");});return()=>{mounted=false}},[user]);
   const lookup=async()=>{setMessage("");setDados(null);setConfirmado(false);if(!validarCnpj(cnpj)){setMessage("Informe um CNPJ numérico válido com 14 dígitos.");return;}setBusy(true);try{setDados(await consultarCnpj(cnpj))}catch(error){setMessage(error instanceof Error?error.message:"Erro na consulta.")}finally{setBusy(false)}};
   const submit=async(e:FormEvent)=>{e.preventDefault();if(!user?.emailVerified||!dados||!confirmado||exists)return;setBusy(true);setMessage("");try{await setDoc(doc(db,"solicitacoes_cadastro_empresas",user.uid),{
     tipo_registro:"solicitacao_cadastro_empresa",titulo_registro:"Solicitação de cadastro — "+dados.razao_social.slice(0,140),
@@ -16,6 +17,7 @@ export default function CompanyRegistration() {
     cnpj:normalizarCnpj(dados.cnpj),razao_social:dados.razao_social.trim(),nome_fantasia:dados.nome_fantasia.trim(),
     municipio:dados.municipio,uf:dados.uf,telefone_contato:telefone.trim(),status:"aguardando_analise",criado_em:new Date().toISOString()
   });setExists(true);setMessage("Solicitação enviada. Um administrador precisa verificar o responsável antes de liberar a empresa.");}catch{setMessage("Não foi possível enviar. O Firestore pode não estar ativado ou a solicitação já existe. Não tente criar outra conta.");}finally{setBusy(false)}};
+  if(!user?.emailVerified) return <section className="panel content-panel"><h2>Solicitar cadastro de empresa</h2><p className="subheading">Seu login já está funcionando no ambiente de testes. Para registrar uma empresa e armazenar dados comerciais, precisamos confirmar seu e-mail.</p><Link to="/verificar-email" className="primary button-link">Confirmar e-mail para cadastrar empresa</Link></section>;
   return <section className="panel content-panel"><h2>Solicitar cadastro de empresa</h2><p className="subheading">O CNPJ preenche os dados públicos, mas não comprova que você tem autorização para representar a empresa.</p>
   <form className="stack" onSubmit={submit}>
     <label>CNPJ<input value={cnpj} onChange={e=>{setCnpj(e.target.value);setDados(null);setConfirmado(false)}} inputMode="numeric" maxLength={18} required placeholder="00.000.000/0000-00" disabled={exists}/></label>
