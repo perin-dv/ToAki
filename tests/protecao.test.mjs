@@ -31,7 +31,7 @@ test('Marca oficial, tema híbrido e mapa fake preservados no React', () => {
   assert.ok(existsSync(new URL('../public/logo-toaki.webp', import.meta.url)));
   assert.ok(demo.includes('fake-map'));
   assert.ok(demo.includes('Mapa demonstrativo ilustrativo, sem GPS real'));
-  assert.ok(css.includes('--toaki-sidebar:#0d111a'));
+  assert.ok(css.includes('--toaki-sidebar:#000000'));
 });
 
 test('Regras do Firestore negam todos os dados por padrão', () => {
@@ -75,4 +75,21 @@ test('Fundo lateral preto uniforme e logo integrados no login e prototipo', () =
   assert.ok(brand.includes('to="/login"'));
   assert.ok(auth.includes('Já tem cadastro no Firebase Authentication?'));
   assert.ok(auth.includes('Ver painel de demonstração (dados fictícios)'));
+});
+
+test('Cadastro de teste usa e-mail/senha sem link automático e protege dados empresariais', () => {
+  const pages = file('src/pages/AuthPages.tsx');
+  const cadastro = pages.split('export function RegisterPage()')[1].split('export function PasswordPage()')[0];
+  const login = pages.split('export function LoginPage()')[1].split('export function RegisterPage()')[0];
+  const confirmacao = pages.split('export function VerifyEmailPage()')[1];
+  const guard = file('src/components/PrivateRoute.tsx');
+  const empresa = file('src/pages/CompanyRegistration.tsx');
+  assert.ok(cadastro.includes('createUserWithEmailAndPassword'));
+  assert.ok(!cadastro.includes('sendEmailVerification('));
+  assert.ok(cadastro.includes('navigate("/cliente")'));
+  assert.ok(login.includes('if(!user.emailVerified){navigate("/cliente");return}'));
+  assert.ok(guard.includes('!user.emailVerified && area!=="cliente"'));
+  assert.ok(empresa.includes('if(!user?.emailVerified)return;getDoc('));
+  assert.ok(empresa.includes('Confirmar e-mail para cadastrar empresa'));
+  assert.ok(confirmacao.includes('sendEmailVerification(user)'));
 });
