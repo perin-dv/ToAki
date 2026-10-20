@@ -56,3 +56,11 @@ test('Arquivos privados permanecem excluídos do Git', () => {
   const ignore = file('.gitignore');
   for (const value of ['node_modules/', 'dist/', '.env']) assert.ok(ignore.includes(value));
 });
+
+test('Entrada inicial é login e demonstração fica como opção separada', () => {
+  const main = file('src/main.tsx');
+  const login = file('src/pages/AuthPages.tsx');
+  assert.ok(main.includes('<Route path="/" element={<Navigate to="/login" replace/>}/>'));
+  assert.ok(main.includes('<Route path="/demonstracao" element={<DemoPage/>}/>'));
+  assert.ok(login.includes('Ver painel de demonstração (dados fictícios)'));
+});
