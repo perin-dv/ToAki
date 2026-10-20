@@ -40,6 +40,7 @@ export function LoginPage() {
     <button className="primary" disabled={busy}>{busy?"Entrando...":"Entrar"}</button></form>
     <p className="auth-footer">Ainda não tem conta? <Link to="/cadastro">Criar conta</Link></p>
     <p className="helper">Acesso empresarial exige autorização específica.</p>
+    <p className="auth-footer"><Link to="/demonstracao">Ver painel de demonstração (dados fictícios) →</Link></p>
   </Layout>;
 }
 export function RegisterPage() {
