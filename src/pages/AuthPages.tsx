@@ -39,7 +39,7 @@ export function LoginPage() {
     {error&&<p className="form-error" role="alert">{error}</p>}
     <button className="primary" disabled={busy}>{busy?"Entrando...":"Entrar"}</button></form>
     <p className="auth-footer">Ainda não tem conta? <Link to="/cadastro">Criar conta</Link></p>
-    <p className="helper">Acesso empresarial exige autorização específica.</p>
+    <p className="helper">Já tem cadastro no Firebase Authentication? Use Entrar com o mesmo e-mail e senha. Criar conta é somente para novos usuários. O acesso empresarial exige autorização específica.</p>
     <p className="auth-footer"><Link to="/demonstracao">Ver painel de demonstração (dados fictícios) →</Link></p>
   </Layout>;
 }
