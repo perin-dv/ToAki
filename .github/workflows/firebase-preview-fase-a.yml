@@ -1,0 +1,64 @@
+name: Publicar Fase A no Firebase Preview
+
+on:
+  pull_request:
+    branches: [develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: firebase-preview-fase-a
+  cancel-in-progress: true
+
+jobs:
+  preview-fase-a:
+    name: Preview Firebase (nunca canal live)
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'feature/fase-a-base-react'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Conferir credencial de publicação
+        id: firebase_credentials
+        shell: bash
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TOAKI_CF058 }}
+        run: |
+          if [[ -n "$FIREBASE_SERVICE_ACCOUNT_JSON" ]]; then
+            echo 'available=yes' >> "$GITHUB_OUTPUT"
+          else
+            echo 'available=no' >> "$GITHUB_OUTPUT"
+            echo '### Preview não publicado' >> "$GITHUB_STEP_SUMMARY"
+            echo 'Configure o secret FIREBASE_SERVICE_ACCOUNT_TOAKI_CF058 em Settings → Secrets and variables → Actions. Não envie o JSON no chat.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Instalar dependências
+        if: steps.firebase_credentials.outputs.available == 'yes'
+        run: npm install --no-audit --no-fund
+      - name: Compilar aplicativo
+        if: steps.firebase_credentials.outputs.available == 'yes'
+        run: npm run build
+      - name: Publicar APENAS no canal de testes
+        if: steps.firebase_credentials.outputs.available == 'yes'
+        id: firebase_preview
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TOAKI_CF058 }}
+          projectId: toaki-cf058
+          channelId: fase-a
+          expires: 7d
+      - name: Exibir endereço da versão de testes
+        if: steps.firebase_credentials.outputs.available == 'yes'
+        shell: bash
+        env:
+          PREVIEW_URL: ${{ steps.firebase_preview.outputs.details_url }}
+        run: |
+          echo '### Preview Fase A do toAki' >> "$GITHUB_STEP_SUMMARY"
+          echo "URL: $PREVIEW_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo 'Esta ação publica apenas em um Preview Channel e não faz deploy no canal live.' >> "$GITHUB_STEP_SUMMARY"
