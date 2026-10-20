@@ -4,6 +4,7 @@ import { auth } from "../lib/firebase";
 import { useAuth } from "../auth/AuthProvider";
 import Brand from "../components/Brand";
 import CompanyRegistration from "./CompanyRegistration";
+import AdminRequests from "./AdminRequests";
 
 function Shell({title,description,children}:{title:string;description:string;children:React.ReactNode}) {
   const {user,role}=useAuth();const navigate=useNavigate();
@@ -33,6 +34,7 @@ export function CompanyPage() {
 
 export function AdminPage() {
   return <Shell title="Administração toAki" description="Acesso permitido somente ao perfil admin_toaki validado por custom claims.">
-    <section className="panel content-panel"><h2>Administração em preparação</h2><p>O módulo de aprovação de empresas, contratos, auditoria, cobranças e gestão de planos será implementado depois das regras e verificações de segurança.</p><p className="helper">Não é possível atribuir privilégios administrativos pelo navegador ou pela tela de cadastro.</p></section>
+    <AdminRequests/>
+    <section className="panel content-panel" style={{marginTop:16}}><h2>Próximos controles administrativos</h2><p>Aprovação de empresas, contratos, cobranças e atribuição de cargos serão operações validadas no backend e registradas na auditoria.</p><p className="helper">Não é possível conceder privilégios administrativos usando o navegador ou apenas o e-mail cadastrado.</p></section>
   </Shell>;
 }
