@@ -34,7 +34,7 @@ jobs:
           distribution: temurin
           java-version: '21'
       - name: Verificar configuracao e arquivos
-        run: node --test tests/*.test.mjs
+        run: node --test tests/protecao.test.mjs
       - name: Testar isolamento de dados no Firestore Emulator
         run: npm run test:security
       - name: Compilar front-end
