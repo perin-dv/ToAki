@@ -28,8 +28,15 @@ jobs:
           node-version: '22'
       - name: Instalar dependencias
         run: npm install --no-audit --no-fund
+      - name: Configurar Java para o Firestore Emulator
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
       - name: Verificar configuracao e arquivos
         run: node --test tests/*.test.mjs
+      - name: Testar isolamento de dados no Firestore Emulator
+        run: npm run test:security
       - name: Compilar front-end
         run: npm run build
       - name: Verificar saida para Firebase Hosting
