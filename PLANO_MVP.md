@@ -47,6 +47,8 @@
 - [ ] **A04** Habilitar Firebase Authentication (e-mail/senha, verificação de e-mail, redefinição, logout e sessões); controlar tentativas de abuso.
 - [ ] **A05** Implementar autorização no servidor/regras: papéis `admin_toaki`, `dono_empresa`, `gestor`, `vendedor`, `entregador` e `cliente`.
 - [ ] **A06** Criar Firestore e suas Security Rules em *deny by default*; testes com emuladores para isolamento entre empresas.
+  - [x] **A06.1** Regras e testes do Firestore Emulator: isolamento de empresas/clientes, leitura de solicitações e bloqueio de alterações (GitHub Actions aprovado em PR #4).
+  - [ ] **A06.2** Verificar que as regras PUBLICADAS no Firebase correspondem às testadas no repositório, antes do primeiro teste com dados reais.
 - [ ] **A07** Criar convite de funcionário por e-mail com validade, aprovação e revogação; gestor limitado à sua empresa e filial.
 - [ ] **A08** Criar logs de auditoria para criação/alteração/exclusão de empresa, usuários, pedidos, atribuição e comprovantes.
 
