@@ -1,42 +1,190 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Negar tudo por padrão. Telas e dados de demonstração NÃO ficam aqui.
-    match /{document=**} { allow read, write: if false; }
+    function verificado() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+    function proprietario(uid) {
+      return verificado() && request.auth.uid == uid;
+    }
+    function adminToaki() {
+      return verificado() && request.auth.token.role == 'admin_toaki';
+    }
+    function funcionarioPath(empresaId) {
+      return /databases/$(database)/documents/empresas/$(empresaId)/funcionarios/$(request.auth.uid);
+    }
+    function funcionario(empresaId) {
+      return verificado()
+        && exists(funcionarioPath(empresaId))
+        && get(funcionarioPath(empresaId)).data.ativo == true;
+    }
+    function gestor(empresaId) {
+      return funcionario(empresaId)
+        && get(funcionarioPath(empresaId)).data.papel in ['dono_empresa','gestor'];
+    }
 
-    // Cada solicitação usa o UID técnico interno para impor posse.
-    // No painel, mostrar sempre titulo_registro e razao_social, NUNCA UID.
-    match /solicitacoes_cadastro_empresas/{uid_responsavel} {
-      allow get: if request.auth != null && request.auth.uid == uid_responsavel;
-      allow list: if false;
-      allow create: if request.auth != null
-        && request.auth.uid == uid_responsavel
-        && request.auth.token.email_verified == true
+    // Solicitação inicial: um documento por conta, com título legível e identificação da empresa.
+    // A conta não recebe privilégios empresariais pela simples consulta do CNPJ.
+    match /solicitacoes_cadastro_empresas/{uid} {
+      allow get: if proprietario(uid) || adminToaki();
+      allow list: if adminToaki();
+
+      allow create: if proprietario(uid)
         && request.resource.data.keys().hasOnly([
           'tipo_registro','titulo_registro','uid_responsavel','email_responsavel',
-          'nome_responsavel','cnpj','razao_social','nome_fantasia',
-          'municipio','uf','telefone_contato','status','criado_em'
+          'nome_responsavel','cnpj','razao_social','nome_fantasia','municipio',
+          'uf','telefone_contato','status','criado_em'
         ])
         && request.resource.data.keys().hasAll([
           'tipo_registro','titulo_registro','uid_responsavel','email_responsavel',
-          'nome_responsavel','cnpj','razao_social','nome_fantasia',
-          'municipio','uf','telefone_contato','status','criado_em'
+          'nome_responsavel','cnpj','razao_social','nome_fantasia','municipio',
+          'uf','telefone_contato','status','criado_em'
         ])
-        && request.resource.data.uid_responsavel == request.auth.uid
+        && request.resource.data.uid_responsavel == uid
         && request.resource.data.email_responsavel == request.auth.token.email
         && request.resource.data.tipo_registro == 'solicitacao_cadastro_empresa'
         && request.resource.data.status == 'aguardando_analise'
-        && request.resource.data.cnpj is string && request.resource.data.cnpj.matches('^[0-9]{14}$')
-        && request.resource.data.razao_social is string && request.resource.data.razao_social.size() > 1 && request.resource.data.razao_social.size() <= 140
-        && request.resource.data.nome_fantasia is string && request.resource.data.nome_fantasia.size() <= 140
-        && request.resource.data.titulo_registro is string && request.resource.data.titulo_registro.size() <= 200
-        && request.resource.data.nome_responsavel is string && request.resource.data.nome_responsavel.size() > 1 && request.resource.data.nome_responsavel.size() <= 100
-        && request.resource.data.telefone_contato is string && request.resource.data.telefone_contato.size() >= 8 && request.resource.data.telefone_contato.size() <= 20
-        && request.resource.data.municipio is string && request.resource.data.municipio.size() <= 100
-        && request.resource.data.uf is string && request.resource.data.uf.size() <= 2
-        && request.resource.data.criado_em is string && request.resource.data.criado_em.size() <= 35;
-      // Somente um backend administrativo futuro poderá aprovar uma empresa.
+        && request.resource.data.cnpj is string
+        && request.resource.data.cnpj.matches('^[0-9]{14}$')
+        && request.resource.data.titulo_registro is string
+        && request.resource.data.titulo_registro.size() > 10
+        && request.resource.data.titulo_registro.size() <= 200
+        && request.resource.data.razao_social is string
+        && request.resource.data.razao_social.size() > 1
+        && request.resource.data.razao_social.size() <= 140
+        && request.resource.data.nome_fantasia is string
+        && request.resource.data.nome_fantasia.size() <= 140
+        && request.resource.data.nome_responsavel is string
+        && request.resource.data.nome_responsavel.size() > 1
+        && request.resource.data.nome_responsavel.size() <= 100
+        && request.resource.data.telefone_contato is string
+        && request.resource.data.telefone_contato.size() >= 8
+        && request.resource.data.telefone_contato.size() <= 20
+        && request.resource.data.municipio is string
+        && request.resource.data.municipio.size() <= 100
+        && request.resource.data.uf is string
+        && request.resource.data.uf.size() <= 2
+        && request.resource.data.criado_em is string
+        && request.resource.data.criado_em.size() <= 35;
+      // Aprovação e alteração só pelo backend administrativo confiável.
       allow update, delete: if false;
+    }
+
+    match /usuarios/{uid} {
+      allow get: if proprietario(uid);
+      allow list, create, update, delete: if false;
+      match /empresas_autorizadas/{vinculoId} {
+        allow read: if proprietario(uid);
+        allow write: if false;
+      }
+    }
+    match /empresas/{empresaId} {
+      allow get: if funcionario(empresaId) || adminToaki();
+      allow list: if adminToaki();
+      allow write: if false;
+
+      match /filiais/{filialId} {
+        allow read: if funcionario(empresaId);
+        allow write: if false;
+      }
+      match /funcionarios/{uid} {
+        allow get: if gestor(empresaId) || (proprietario(uid) && funcionario(empresaId));
+        allow list: if gestor(empresaId);
+        allow write: if false;
+      }
+      match /clientes/{clienteId} {
+        allow read: if funcionario(empresaId);
+        allow write: if false;
+      }
+      match /entregadores_vinculados/{entregadorId} {
+        allow read: if funcionario(empresaId);
+        allow write: if false;
+      }
+      match /veiculos/{veiculoId} {
+        allow read: if funcionario(empresaId);
+        allow write: if false;
+      }
+      match /pedidos/{pedidoId} {
+        allow read: if funcionario(empresaId);
+        allow write: if false;
+      }
+      match /rotas/{rotaId} {
+        allow read: if funcionario(empresaId);
+        allow write: if false;
+      }
+      match /entregas/{entregaId} {
+        allow read: if funcionario(empresaId);
+        allow write: if false;
+      }
+      match /ocorrencias/{ocorrenciaId} {
+        allow read: if funcionario(empresaId);
+        allow write: if false;
+      }
+      match /comprovantes/{comprovanteId} {
+        allow read: if funcionario(empresaId);
+        allow write: if false;
+      }
+      match /links_rastreamento/{linkId} {
+        allow read: if gestor(empresaId);
+        allow write: if false;
+      }
+      match /historico/{eventoId} {
+        allow read: if gestor(empresaId);
+        allow write: if false;
+      }
+      match /relatorios/{relatorioId} {
+        allow read: if gestor(empresaId);
+        allow write: if false;
+      }
+      match /contratos/{contratoId} {
+        allow read: if gestor(empresaId);
+        allow write: if false;
+      }
+      match /faturas/{faturaId} {
+        allow read: if gestor(empresaId);
+        allow write: if false;
+      }
+    }
+    match /clientes/{uid} {
+      allow read: if proprietario(uid);
+      allow write: if false;
+      match /entregas/{entregaId} {
+        allow read: if proprietario(uid);
+        allow write: if false;
+      }
+      match /comprovantes/{comprovanteId} {
+        allow read: if proprietario(uid);
+        allow write: if false;
+      }
+    }
+    match /entregadores/{uid} {
+      allow read: if proprietario(uid);
+      allow write: if false;
+      match /tarefas/{tarefaId} {
+        allow read: if proprietario(uid);
+        allow write: if false;
+      }
+    }
+    match /planos/{planoId} {
+      allow get, list: if adminToaki() || resource.data.publicado == true;
+      allow write: if false;
+    }
+    match /assinaturas/{assinaturaId} {
+      allow read: if adminToaki() || gestor(resource.data.empresa_id);
+      allow write: if false;
+    }
+    match /contratos/{contratoId} {
+      allow read: if adminToaki() || gestor(resource.data.empresa_id);
+      allow write: if false;
+    }
+    match /auditoria/{eventoId} {
+      allow read: if adminToaki();
+      allow write: if false;
+    }
+
+    // Toda coleção desconhecida permanece BLOQUEADA, inclusive dados futuros.
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
