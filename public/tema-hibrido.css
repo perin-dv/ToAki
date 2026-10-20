@@ -1,0 +1,70 @@
+/* toAki - Tema Hibrido (menu escuro, painel claro, acentos em laranja)
+   CSS isolado para facilitar futuras escolhas de visual. */
+:root {
+  --toaki-sidebar: #0d111a;
+  --toaki-sidebar-border: #27303e;
+  --toaki-sidebar-text: #bdc5d1;
+  --toaki-orange-start: #ffa116;
+  --toaki-orange-end: #ff590b;
+  --toaki-content: #f5f7f9;
+}
+body { background: var(--toaki-content); }
+.sidebar {
+  background: var(--toaki-sidebar);
+  border-right: 1px solid var(--toaki-sidebar-border);
+  box-shadow: 5px 0 20px rgba(11,17,27,.045);
+}
+.sidebar .brand {
+  padding: 13px 6px 25px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  margin-bottom: 14px;
+  justify-content: center;
+}
+.sidebar .brand-logo {
+  width: 180px;
+  max-width: 100%;
+  border-radius: 9px;
+}
+.sidebar .nav {
+  width: 100%;
+  color: var(--toaki-sidebar-text);
+  letter-spacing: .08px;
+  transition: background-color .15s ease, color .15s ease;
+}
+.sidebar .nav .ico { color: #9ca8b8; }
+.sidebar .nav.active {
+  color: #fff;
+  background: linear-gradient(110deg, var(--toaki-orange-start), var(--toaki-orange-end));
+  box-shadow: 0 5px 15px rgba(255,104,11,.2);
+}
+.sidebar .nav.active .ico { color: #fff; }
+.sidebar .nav:hover:not(.active) {
+  background: #222a37;
+  color: #fff;
+}
+.sidebar .side-bottom {
+  color: #94a0af;
+  border-top-color: #2b3340;
+  padding-top: 17px;
+}
+.sidebar .side-bottom strong { color: #fff; }
+.main { background: var(--toaki-content); }
+.heading h1 { color: #192536; }
+.stat, .panel, .map-shell, .page-card { box-shadow: 0 5px 20px rgba(28,42,54,.04); }
+@media (max-width:760px) {
+  .mobile-top {
+    background: var(--toaki-sidebar);
+    color: #fff;
+    border-bottom-color: var(--toaki-sidebar-border);
+    min-height: 68px;
+  }
+  .mobile-top .brand-logo { width: 135px; }
+  .mobile-nav {
+    background: var(--toaki-sidebar);
+    border-top-color: var(--toaki-sidebar-border);
+    box-shadow: 0 -6px 20px rgba(0,0,0,.06);
+  }
+  .mobile-nav button { color: #aab5c4; }
+  .mobile-nav button.on { color: #ff9227; }
+  .main { background: var(--toaki-content); }
+}
