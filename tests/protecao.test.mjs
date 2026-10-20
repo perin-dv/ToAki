@@ -32,3 +32,10 @@ test('Nao versionar arquivos locais ou segredos acidentalmente', () => {
   }
   assert.ok(existsSync(new URL('../package.json', import.meta.url)));
 });
+
+test('Logo oficial aparece no desktop e no celular', () => {
+  const html = file('index.html');
+  assert.equal((html.match(/class="brand-logo"/g) ?? []).length, 2);
+  assert.ok(html.includes('src="/logo-toaki.webp"'));
+  assert.ok(existsSync(new URL('../public/logo-toaki.webp', import.meta.url)));
+});
