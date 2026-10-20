@@ -39,3 +39,13 @@ test('Logo oficial aparece no desktop e no celular', () => {
   assert.ok(html.includes('src="/logo-toaki.webp"'));
   assert.ok(existsSync(new URL('../public/logo-toaki.webp', import.meta.url)));
 });
+
+test('Tema hibrido mantém navegacao escura e area de trabalho clara', () => {
+  assert.ok(existsSync(new URL('../public/tema-hibrido.css', import.meta.url)));
+  const html = file('index.html');
+  const css = file('public/tema-hibrido.css');
+  assert.ok(html.includes('href="/tema-hibrido.css"'));
+  assert.ok(css.includes('.sidebar'));
+  assert.ok(css.includes('--toaki-sidebar: #0d111a'));
+  assert.ok(css.includes('--toaki-content: #f5f7f9'));
+});
