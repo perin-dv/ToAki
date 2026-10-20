@@ -1,0 +1,42 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Negar tudo por padrão. Telas e dados de demonstração NÃO ficam aqui.
+    match /{document=**} { allow read, write: if false; }
+
+    // Cada solicitação usa o UID técnico interno para impor posse.
+    // No painel, mostrar sempre titulo_registro e razao_social, NUNCA UID.
+    match /solicitacoes_cadastro_empresas/{uid_responsavel} {
+      allow get: if request.auth != null && request.auth.uid == uid_responsavel;
+      allow list: if false;
+      allow create: if request.auth != null
+        && request.auth.uid == uid_responsavel
+        && request.auth.token.email_verified == true
+        && request.resource.data.keys().hasOnly([
+          'tipo_registro','titulo_registro','uid_responsavel','email_responsavel',
+          'nome_responsavel','cnpj','razao_social','nome_fantasia',
+          'municipio','uf','telefone_contato','status','criado_em'
+        ])
+        && request.resource.data.keys().hasAll([
+          'tipo_registro','titulo_registro','uid_responsavel','email_responsavel',
+          'nome_responsavel','cnpj','razao_social','nome_fantasia',
+          'municipio','uf','telefone_contato','status','criado_em'
+        ])
+        && request.resource.data.uid_responsavel == request.auth.uid
+        && request.resource.data.email_responsavel == request.auth.token.email
+        && request.resource.data.tipo_registro == 'solicitacao_cadastro_empresa'
+        && request.resource.data.status == 'aguardando_analise'
+        && request.resource.data.cnpj is string && request.resource.data.cnpj.matches('^[0-9]{14}$')
+        && request.resource.data.razao_social is string && request.resource.data.razao_social.size() > 1 && request.resource.data.razao_social.size() <= 140
+        && request.resource.data.nome_fantasia is string && request.resource.data.nome_fantasia.size() <= 140
+        && request.resource.data.titulo_registro is string && request.resource.data.titulo_registro.size() <= 200
+        && request.resource.data.nome_responsavel is string && request.resource.data.nome_responsavel.size() > 1 && request.resource.data.nome_responsavel.size() <= 100
+        && request.resource.data.telefone_contato is string && request.resource.data.telefone_contato.size() >= 8 && request.resource.data.telefone_contato.size() <= 20
+        && request.resource.data.municipio is string && request.resource.data.municipio.size() <= 100
+        && request.resource.data.uf is string && request.resource.data.uf.size() <= 2
+        && request.resource.data.criado_em is string && request.resource.data.criado_em.size() <= 35;
+      // Somente um backend administrativo futuro poderá aprovar uma empresa.
+      allow update, delete: if false;
+    }
+  }
+}

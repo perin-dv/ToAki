@@ -1,8 +1,9 @@
 import { getApp, getApps, initializeApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore";
 
-// Firebase Web config é pública. Nunca coloque service accounts ou tokens de servidor aqui.
-// Variáveis VITE_* sobrescrevem apenas a configuração web fornecida para o projeto.
+// A configuração Web é pública, mas credenciais de servidor NUNCA pertencem ao front-end.
+// IDs técnicos do Firebase nunca serão mostrados como títulos de empresa, pessoa ou pedido.
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyAlEwcePvdIVM8LGvS95jJflfSeK27dytg",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "toaki-cf058.firebaseapp.com",
@@ -14,3 +15,4 @@ const firebaseConfig = {
 
 export const firebaseApp: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 export const auth: Auth = getAuth(firebaseApp);
+export const db: Firestore = getFirestore(firebaseApp);
