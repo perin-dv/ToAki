@@ -64,3 +64,15 @@ test('Entrada inicial é login e demonstração fica como opção separada', () 
   assert.ok(main.includes('<Route path="/demonstracao" element={<DemoPage/>}/>'));
   assert.ok(login.includes('Ver painel de demonstração (dados fictícios)'));
 });
+
+test('Fundo lateral preto uniforme e logo integrados no login e prototipo', () => {
+  const css = file('src/styles.css');
+  const brand = file('src/components/Brand.tsx');
+  const auth = file('src/pages/AuthPages.tsx');
+  assert.ok(css.includes('--toaki-sidebar:#000000'));
+  assert.ok(css.includes('filter:contrast(1.2) saturate(1.02)'));
+  assert.ok(css.includes('.demo-sidebar,.auth-intro,.private-header,.mobile-top,.mobile-nav'));
+  assert.ok(brand.includes('to="/login"'));
+  assert.ok(auth.includes('Já tem cadastro no Firebase Authentication?'));
+  assert.ok(auth.includes('Ver painel de demonstração (dados fictícios)'));
+});
