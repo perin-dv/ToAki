@@ -38,7 +38,7 @@ test('Regras do Firestore negam todos os dados por padrão', () => {
   const rules = file('firestore.rules');
   assert.ok(rules.includes('allow read, write: if false'));
   assert.ok(rules.includes('solicitacoes_cadastro_empresas'));
-  assert.ok(rules.includes('request.auth.uid == uid_responsavel'));
+  assert.ok(rules.includes('allow get: if proprietario(uid) || adminToaki()'));
   assert.ok(rules.includes("request.resource.data.status == 'aguardando_analise'"));
   assert.ok(rules.includes('allow update, delete: if false'));
 });
