@@ -3,7 +3,7 @@
 > Documento central para acompanhar o que já existe e o que ainda precisa ser construído.  
 > **Atualização inicial:** 20/10/2026.  
 > **Regra:** marque [x] apenas depois da implementação, teste e verificação; uma tela demonstrativa não significa função real.  
-> **Fonte de verdade:** este arquivo na branch `develop`, sincronizado com `main` só após aprovação.
+> **Fonte de verdade:** este arquivo na branch `develop`, sincronizado com `main` só após aprovação. As marcações experimentais da Fase A estão por enquanto na branch `feature/fase-a-base-react`.
 
 ## 0. Definição do produto
 
@@ -29,7 +29,7 @@
 - [x] Logo oficial incorporada ao front-end do GitHub.
 - [x] Tema híbrido na **`develop`** (menu escuro + conteúdo claro), sem merge/deploy.
 - [x] GitHub Actions de build e testes mínimos configurados; os testes serão reexecutados após alterações.
-- [ ] Migração de protótipo HTML monolítico para React + TypeScript + Vite com módulos.
+- [x] Migração inicial para React + TypeScript + Vite com módulos, testada na branch `feature/fase-a-base-react` (ainda sem Merge/deploy).
 - [ ] Tela de login real, contas e permissões reais.
 - [ ] Cadastro real de empresa e consultas de CNPJ.
 - [ ] Firestore, Realtime Database, Storage e Rules implementados.
@@ -41,7 +41,7 @@
 ## 2. Fase A — Fundamentos, cadastro e autenticação (bloqueia o restante)
 
 ### Front-end e acesso
-- [ ] **A01** Transformar o protótipo em React + TypeScript + Vite; separar páginas, estilos, serviços e componentes compartilhados.
+- [x] **A01** Migrar o protótipo para React + TypeScript + Vite e separar páginas, estilos, serviços e componentes (compilação GitHub Actions aprovada; PR #4 em rascunho).
 - [ ] **A02** Definir rotas `/empresa`, `/cliente`, `/admin` e fluxo de login/convite; layouts responsivos, PWA instalável para empresa e cliente.
 - [ ] **A03** Integrar Firebase SDK do projeto `toaki-cf058`; separar ambientes de teste/produção antes de trabalhar com dados reais.
 - [ ] **A04** Habilitar Firebase Authentication (e-mail/senha, verificação de e-mail, redefinição, logout e sessões); controlar tentativas de abuso.
@@ -250,3 +250,15 @@ A localização do cliente só pode ser acessada por pedido vinculado, via leitu
 - Não chamar de concluído o que é mock: páginas renderizadas != login, banco, GPS, NF ou cobrança reais.
 - Não construir tudo de uma vez; prioridade de dependências: **A (identidade/permissões) → B (pedido e entrega) → C + D (GPS/mapa) → E (cliente) → F (comprovante) → G (assinatura) → H (piloto)**, com privacidade e segurança trabalhadas desde o início.
 - Critério final MVP: a empresa aprovada e um vendedor autenticado registram uma NF, entregador Android aceita/coleta/compartilha GPS, cliente autenticado ligado à compra acompanha sua NF, recebe o produto e comprovante; histórico/relatórios funcionam; outra empresa/cliente não acessa os dados.
+
+## 14. Andamento detalhado da Fase A (PR #4)
+
+- **A01:** concluído nesta branch com validação automática de build e testes (React/TypeScript/Vite).
+- **A02:** rotas `/empresa`, `/cliente`, `/admin`, `/login` preparadas; PWA e convites ainda pendentes.
+- **A03:** Firebase Web SDK configurado para o projeto `toaki-cf058`; ambiente de homologação separado ainda pendente.
+- **A04:** formulários de login, cadastro, verificação, recuperação e logout programados; é obrigatório habilitar o provedor no console e testar a jornada antes de marcar concluído.
+- **A05:** proteção inicial de rotas com custom claims; **ainda faltam** atribuição segura de cargos no backend, regras completas e testes de isolamento.
+- **A06:** arquivo `firestore.rules` criado com bloqueio padrão e criação/leitura restrita de solicitação própria; falta ativar Firestore, publicar regras e testar em emulador.
+- **A09/A10:** formulário inicial e consulta BrasilAPI preparados; faltam endereços completos, regra para CNPJ alfanumérico, validação do responsável e testes reais.
+- **Padrões de registros:** consultar `FIREBASE_NOMES.md`. Nome/título exibido no painel sempre legível; UID técnico só para unicidade/autorização.
+- **Estado da produção:** `main` e Hosting ainda não alterados por este PR.
