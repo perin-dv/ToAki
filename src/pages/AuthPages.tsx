@@ -23,11 +23,11 @@ function Layout({title,description,children}:{title:string;description:string;ch
 export function LoginPage() {
   const {user,role,loading}=useAuth();const navigate=useNavigate();
   const [email,setEmail]=useState("");const[password,setPassword]=useState("");const[busy,setBusy]=useState(false);const[error,setError]=useState("");
-  if(!loading&&user?.emailVerified)return <Navigate to={role==="admin_toaki"?"/admin":["dono_empresa","gestor","vendedor"].includes(role??"")?"/empresa":"/cliente"} replace/>;
+  if(!loading&&user)return <Navigate to={!user.emailVerified?"/cliente":role==="admin_toaki"?"/admin":["dono_empresa","gestor","vendedor"].includes(role??"")?"/empresa":"/cliente"} replace/>;
   const submit=async(e:FormEvent)=>{e.preventDefault();setBusy(true);setError("");try{
     const {user}=await signInWithEmailAndPassword(auth,email.trim(),password);
     await user.reload();
-    if(!user.emailVerified){navigate("/verificar-email");return}
+    if(!user.emailVerified){navigate("/cliente");return}
     const token=await user.getIdTokenResult(true);
     const role=String(token.claims.role??"");
     navigate(role==="admin_toaki"?"/admin":["dono_empresa","gestor","vendedor"].includes(role)?"/empresa":"/cliente");
@@ -48,8 +48,9 @@ export function RegisterPage() {
   const submit=async(e:FormEvent)=>{e.preventDefault();setError("");if(password.length<10){setError("Use pelo menos 10 caracteres na senha.");return}setBusy(true);try{
     const {user}=await createUserWithEmailAndPassword(auth,email.trim(),password);
     await updateProfile(user,{displayName:name.trim()});
-    await sendEmailVerification(user);
-    navigate("/verificar-email");
+    // No modo de testes, criar conta NÃO dispara e-mail de confirmação.
+    // A confirmação é solicitada só ao tentar acessar serviços empresariais.
+    navigate("/cliente");
   }catch(e){setError(message(e))}finally{setBusy(false)}};
   return <Layout title="Criar sua conta" description="Cadastre-se como cliente. Empresas precisam solicitar aprovação."><form className="stack" onSubmit={submit}>
     <label>Nome de contato<input required maxLength={100} autoComplete="name" value={name} onChange={e=>setName(e.target.value)} placeholder="Seu nome"/></label>
@@ -57,7 +58,7 @@ export function RegisterPage() {
     <label>Senha<input required type="password" minLength={10} autoComplete="new-password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Mínimo de 10 caracteres"/></label>
     {error&&<p role="alert" className="form-error">{error}</p>}
     <button className="primary" disabled={busy}>{busy?"Cadastrando...":"Criar conta"}</button></form>
-    <p className="helper">Sua conta não recebe acesso automático a nenhuma nota fiscal.</p>
+    <p className="helper">Cadastro por e-mail e senha, sem link de acesso. Você pode entrar imediatamente no ambiente de testes. A verificação de e-mail será exigida somente antes de acessar dados reais ou solicitar cadastro empresarial.</p>
     <p className="auth-footer"><Link to="/login">Já tenho uma conta</Link></p>
   </Layout>;
 }
@@ -69,8 +70,8 @@ export function PasswordPage() {
 export function VerifyEmailPage() {
   const {user,refreshClaims}=useAuth();const navigate=useNavigate();const[busy,setBusy]=useState(false);const[notice,setNotice]=useState("");
   const check=async()=>{if(!user)return;setBusy(true);try{await user.reload();await refreshClaims();if(auth.currentUser?.emailVerified)navigate("/cliente");else setNotice("E-mail ainda não confirmado.");}catch{setNotice("Não foi possível verificar agora.")}finally{setBusy(false)}};
-  const resend=async()=>{if(!user)return;setBusy(true);try{await sendEmailVerification(user);setNotice("Link de confirmação enviado novamente.");}catch{setNotice("Tente reenviar mais tarde.")}finally{setBusy(false)}};
-  return <Layout title="Verifique seu e-mail" description="Abra o link enviado para liberar o acesso."><div className="stack"><p className="helper">{user?.email||"Faça login para solicitar outro link."}</p>{notice&&<p className="form-info" role="status">{notice}</p>}<button className="primary" disabled={!user||busy} onClick={check}>Já confirmei meu e-mail</button><button className="secondary" disabled={!user||busy} onClick={resend}>Reenviar link</button><button className="text-button" onClick={async()=>{await signOut(auth);navigate("/login")}}>Sair</button></div></Layout>;
+  const resend=async()=>{if(!user)return;setBusy(true);try{await sendEmailVerification(user);setNotice("O e-mail de confirmação foi enviado porque você solicitou.");}catch{setNotice("Tente reenviar mais tarde.")}finally{setBusy(false)}};
+  return <Layout title="Verifique seu e-mail" description="Esta confirmação só é necessária para solicitar acesso empresarial e consultar dados privados quando estes serviços estiverem disponíveis. Nenhum e-mail é enviado automaticamente ao criar a conta."><div className="stack"><p className="helper">{user?.email||"Faça login para solicitar outro link."}</p>{notice&&<p className="form-info" role="status">{notice}</p>}<button className="primary" disabled={!user||busy} onClick={check}>Já confirmei meu e-mail</button><button className="secondary" disabled={!user||busy} onClick={resend}>Enviar e-mail de verificação</button><button className="text-button" onClick={async()=>{await signOut(auth);navigate("/login")}}>Sair</button></div></Layout>;
 }
 export function PendingPage() {
   const {role}=useAuth();return <Layout title="Acesso pendente" description="A sua conta existe, mas esta área exige autorização."><p className="helper">Perfil: {role||"sem função atribuída"}. Empresa e administração exigem aprovação.</p><Link to="/cliente" className="primary button-link">Ir para minha conta</Link></Layout>;
