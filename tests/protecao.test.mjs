@@ -61,8 +61,8 @@ test('Entrada inicial é login e demonstração fica como opção separada', () 
   const main = file('src/main.tsx');
   const login = file('src/pages/AuthPages.tsx');
   assert.ok(main.includes('<Route path="/" element={<Navigate to="/login" replace/>}/>'));
-  assert.ok(main.includes('<Route path="/demonstracao" element={<DemoPage/>}/>'));
-  assert.ok(login.includes('Ver painel de demonstração (dados fictícios)'));
+  assert.ok(main.includes('<Route path="/demonstracao" element={<PrivateRoute area="demo"><DemoPage/></PrivateRoute>}/>'));
+  assert.ok(login.includes('O painel de demonstração e seus menus são acessíveis somente após entrar na sua conta.'));
 });
 
 test('Fundo lateral preto uniforme e logo integrados no login e prototipo', () => {
@@ -74,7 +74,7 @@ test('Fundo lateral preto uniforme e logo integrados no login e prototipo', () =
   assert.ok(css.includes('.demo-sidebar,.auth-intro,.private-header,.mobile-top,.mobile-nav'));
   assert.ok(brand.includes('to="/login"'));
   assert.ok(auth.includes('Já tem cadastro no Firebase Authentication?'));
-  assert.ok(auth.includes('Ver painel de demonstração (dados fictícios)'));
+  assert.ok(auth.includes('O painel de demonstração e seus menus são acessíveis somente após entrar na sua conta.'));
 });
 
 test('Cadastro de teste usa e-mail/senha sem link automático e protege dados empresariais', () => {
@@ -111,4 +111,24 @@ test('No celular, Menu e Mais abrem os oito modulos em lateral acessivel', () =>
   assert.ok(css.includes('position:fixed'));
   assert.ok(css.includes('.drawer-backdrop'));
   assert.ok(css.includes('touch-action:manipulation'));
+});
+
+test('Demonstracao exige sessao; icones SVG correspondem a cada modulo', () => {
+  const routes = file('src/main.tsx');
+  const guard = file('src/components/PrivateRoute.tsx');
+  const demo = file('src/pages/DemoPage.tsx');
+  const icons = file('src/components/MenuIcon.tsx');
+  const login = file('src/pages/AuthPages.tsx');
+  assert.ok(routes.includes('<PrivateRoute area="demo"><DemoPage/></PrivateRoute>'));
+  assert.ok(guard.includes('if (!user) return <Navigate to="/login"'));
+  assert.ok(guard.includes('area==="demo"?true'));
+  assert.ok(routes.includes('import.meta.env.MODE === "e2e"'));
+  assert.ok(!demo.includes('to="/login"'));
+  assert.ok(demo.includes('<MenuIcon name={m.key}'));
+  assert.ok(demo.includes('accountPath'));
+  for (const name of ['inicio','entregas','entregadores','clientes','comprovantes','historico','empresa','assinatura']) {
+    assert.ok(icons.includes(name + ':'), 'SVG ausente: ' + name);
+  }
+  assert.ok(login.includes('voltarAoDemo'));
+  assert.ok(!login.includes('<Link to="/demonstracao">'));
 });
