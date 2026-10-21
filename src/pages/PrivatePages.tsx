@@ -20,6 +20,7 @@ export function CustomerPage() {
   return <Shell title="Minhas entregas" description="Acompanhe suas compras com segurança.">
     {!user?.emailVerified&&<div className="demo-warning" role="status">Você entrou com e-mail e senha no ambiente de testes. Para cadastrar uma empresa ou receber dados reais, será necessário confirmar seu e-mail quando solicitado.</div>}
     <div className="dash-grid">
+      <section className="panel content-panel"><h2>Explorar painel demonstrativo</h2><p>Quer testar os oito módulos do sistema no celular? Abra o painel fictício e use o botão <strong>Menu</strong> ou <strong>Mais</strong> para navegar.</p><Link to="/demonstracao" className="primary button-link">Abrir painel fake com todos os menus →</Link></section>
       <section className="panel content-panel"><h2>Bem-vindo ao toAki</h2><p>Você ainda não possui entregas vinculadas à sua conta.</p><p className="helper">Quando uma empresa identificar sua compra e vincular a nota à sua conta, ela será listada aqui. Por segurança, digitar o número de uma NF não libera dados de terceiros.</p><span className="pill muted">Nenhuma entrega disponível</span></section>
       <section className="panel content-panel"><h2>Quer cadastrar sua empresa?</h2><p>Informe o CNPJ e solicite aprovação para gerenciar entregas da sua equipe.</p><a className="button-link primary" href="#cadastro-empresa">Solicitar acesso empresarial</a></section>
     </div>
