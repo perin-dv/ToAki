@@ -40,5 +40,12 @@
       "host": "127.0.0.1",
       "port": 8080
     }
-  }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "runtime": "nodejs22"
+    }
+  ]
 }
