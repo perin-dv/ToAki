@@ -73,3 +73,28 @@
     touch-action:manipulation;
   }
 }
+
+/* Cadastro seguro: senha com retorno legível para leitores de tela e cores sem depender só da cor. */
+.password-input{position:relative;display:block}
+.password-input input{padding-right:96px!important}
+.password-toggle{
+  position:absolute;top:50%;right:5px;transform:translateY(-50%);
+  min-width:78px;min-height:36px;padding:4px 8px;
+  border:0;border-radius:7px;background:#eff2f5;color:#354455;
+  font-size:12px;font-weight:700;touch-action:manipulation;
+}
+.password-toggle:hover{background:#e1e7ec}
+.password-feedback{display:grid;gap:7px;margin-top:-7px}
+.password-meter{height:9px;overflow:hidden;border-radius:999px;background:#e2e9ed}
+.password-meter span{display:block;width:0;height:100%;border-radius:999px;transition:width .2s ease,background-color .2s ease;background:#aeb8c2}
+.password-fraca .password-meter span{background:#d72c38}
+.password-media .password-meter span{background:#e6ab1e}
+.password-forte .password-meter span{background:#16965b}
+.password-meta{display:grid;gap:3px;font-size:12px;line-height:1.5}
+.password-meta strong{color:#647282}
+.password-fraca .password-meta strong{color:#b92530}
+.password-media .password-meta strong{color:#986100}
+.password-forte .password-meta strong{color:#067645}
+.password-meta span{color:#667685}
+.password-match{color:#067645;font-size:12px;margin:0}
+.stack .form-error{margin:0;line-height:1.5}
