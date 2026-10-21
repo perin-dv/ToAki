@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Brand from "../components/Brand";
 
@@ -41,12 +41,38 @@ function MapIllustration({selected,onSelect}:{selected:number;onSelect:(i:number
 }
 export default function DemoPage() {
   const [tab,setTab]=useState<MenuKey>("inicio");const[selected,setSelected]=useState(0);const[search,setSearch]=useState("");
+  const [menuAberto,setMenuAberto]=useState(false);
+  const mudarAba=(novaAba:MenuKey)=>{setTab(novaAba);setMenuAberto(false)};
+  useEffect(()=>{
+    if(!menuAberto)return;
+    const anterior=document.body.style.overflow;
+    document.body.style.overflow="hidden";
+    const fecharComEscape=(evento:KeyboardEvent)=>{if(evento.key==="Escape")setMenuAberto(false)};
+    window.addEventListener("keydown",fecharComEscape);
+    return ()=>{
+      document.body.style.overflow=anterior;
+      window.removeEventListener("keydown",fecharComEscape);
+    };
+  },[menuAberto]);
   const filtered=useMemo(()=>entregas.filter(e=>[e.nf,e.person,e.place].join(" ").toLowerCase().includes(search.toLowerCase())),[search]);
   const chosen=entregas[selected];
   const panelTitle=menu.find(m=>m.key===tab)?.name??"Início";
   return <div className="demo-layout">
-    <aside className="demo-sidebar"><Brand/><nav aria-label="Menu do protótipo">{menu.map(m=><button key={m.key} onClick={()=>setTab(m.key)} className={"nav "+(tab===m.key?"active":"")}><span className="nav-icon">{m.icon}</span>{m.name}</button>)}</nav><div className="sidebar-foot"><strong>Soma Distribuidora</strong><span>Filial Maringá · Simulação</span><Link to="/login">Acessar sistema →</Link></div></aside>
-    <div className="demo-body"><header className="mobile-top"><Brand compact/><Link to="/login" className="top-signin">Entrar →</Link></header>
+    {menuAberto&&<button className="drawer-backdrop" type="button" aria-label="Fechar menu lateral" onClick={()=>setMenuAberto(false)}/>}
+    <aside id="demo-sidebar-menu" className={"demo-sidebar "+(menuAberto?"drawer-open":"")}>
+      <div className="drawer-heading">
+        <Brand/>
+        <button className="drawer-close" type="button" aria-label="Fechar menu" onClick={()=>setMenuAberto(false)}>✕</button>
+      </div>
+      <nav aria-label="Menu completo do protótipo">
+        {menu.map(m=><button type="button" key={m.key} onClick={()=>mudarAba(m.key)} className={"nav "+(tab===m.key?"active":"")} aria-current={tab===m.key?"page":undefined}><span className="nav-icon">{m.icon}</span>{m.name}</button>)}
+      </nav>
+      <div className="sidebar-foot"><strong>Soma Distribuidora</strong><span>Filial Maringá · Simulação</span><Link to="/login">Acessar sistema →</Link></div>
+    </aside>
+    <div className="demo-body"><header className="mobile-top">
+      <button className="mobile-menu-button" type="button" aria-label="Abrir menu completo" aria-controls="demo-sidebar-menu" aria-expanded={menuAberto} onClick={()=>setMenuAberto(true)}>☰ <span>Menu</span></button>
+      <Brand compact/><Link to="/login" className="top-signin">Entrar →</Link>
+    </header>
       <main className="demo-main">
         <div className="demo-head"><div><h1>{tab==="inicio"?"Central de rastreamento":panelTitle}</h1><p>toAki Business • Ambiente de demonstração</p></div><div className="head-right"><span className="fake-status">● Dados simulados</span><Link to="/login" className="secondary">Entrar</Link></div></div>
         <div className="demo-warning">Demonstração visual — informações, localização, notas e previsão de chegada fictícias.</div>
@@ -54,10 +80,13 @@ export default function DemoPage() {
           <div className="content-grid"><section className="panel map-shell"><div className="panel-head maphead"><h2>Mapa dos entregadores</h2><label className="search">⌕ <input type="search" placeholder="Buscar NF, pedido ou entregador..." value={search} onChange={e=>setSearch(e.target.value)} aria-label="Buscar entregas fictícias"/></label></div><MapIllustration selected={selected} onSelect={setSelected}/></section>
           <div className="right"><section className="panel"><div className="panel-head"><h2>Entregas em andamento</h2><span className="subtle">Fictícias</span></div>{filtered.length?filtered.map(e=>{const i=entregas.indexOf(e);return <button key={e.nf} className={"delivery "+(selected===i?"selected":"")} onClick={()=>setSelected(i)}><span className="bike">🛵</span><span className="copy"><strong>NF {e.nf}</strong><small>{e.person} · {e.place}</small></span><span className="delivery-side"><span className={"pill "+(e.status==="Em rota"?"":"muted")}>{e.status}</span><small>{e.eta}</small></span></button>;}):<p className="subtle">Nenhuma entrega encontrada.</p>}</section>
           <section className="panel"><div className="panel-head"><h2>Resumo do dia</h2><span className="subtle">Exemplo</span></div><div className="mini-stat">{[["18","Entregas"],["07","Em rota"],["09","Entregues"],["02","Pendentes"]].map(([value,label])=><div key={label}><strong>{value}</strong><small>{label}</small></div>)}</div></section>
-          <section className="panel"><div className="panel-head"><h2>Detalhes da entrega</h2><span className={"pill "+(chosen.status==="Em rota"?"":"muted")}>{chosen.status}</span></div><p className="details"><strong>NF {chosen.nf}</strong><br/>Entregador: {chosen.person}<br/>Destino: {chosen.place}<br/>Previsão fictícia: {chosen.eta}<br/>Localização: simulada</p><button className="primary" onClick={()=>setTab("entregas")}>Ver detalhes →</button></section></div></div>
-        </>:<section className="panel content-panel"><div className="panel-head"><h2>{panelTitle}</h2><span className="pill muted">Protótipo</span></div>{tab==="entregas"?<div className="table-scroll"><table><thead><tr><th>Nota fiscal</th><th>Entregador</th><th>Destino</th><th>Status</th><th>Ação</th></tr></thead><tbody>{entregas.map((e,i)=><tr key={e.nf}><td>NF {e.nf}</td><td>{e.person}</td><td>{e.place}</td><td>{e.status}</td><td><button className="secondary" onClick={()=>{setTab("inicio");setSelected(i)}}>Ver mapa</button></td></tr>)}</tbody></table></div>:<p>A área <strong>{panelTitle}</strong> será conectada a informações reais nas próximas fases. Aqui mostramos apenas a organização visual.</p>}<p className="helper">Para autenticação, cadastro e solicitações reais, acesse a área de login.</p><Link className="primary button-link" to="/login">Ir para o login</Link></section>}
+          <section className="panel"><div className="panel-head"><h2>Detalhes da entrega</h2><span className={"pill "+(chosen.status==="Em rota"?"":"muted")}>{chosen.status}</span></div><p className="details"><strong>NF {chosen.nf}</strong><br/>Entregador: {chosen.person}<br/>Destino: {chosen.place}<br/>Previsão fictícia: {chosen.eta}<br/>Localização: simulada</p><button className="primary" onClick={()=>mudarAba("entregas")}>Ver detalhes →</button></section></div></div>
+        </>:<section className="panel content-panel"><div className="panel-head"><h2>{panelTitle}</h2><span className="pill muted">Protótipo</span></div>{tab==="entregas"?<div className="table-scroll"><table><thead><tr><th>Nota fiscal</th><th>Entregador</th><th>Destino</th><th>Status</th><th>Ação</th></tr></thead><tbody>{entregas.map((e,i)=><tr key={e.nf}><td>NF {e.nf}</td><td>{e.person}</td><td>{e.place}</td><td>{e.status}</td><td><button className="secondary" onClick={()=>{mudarAba("inicio");setSelected(i)}}>Ver mapa</button></td></tr>)}</tbody></table></div>:<p>A área <strong>{panelTitle}</strong> será conectada a informações reais nas próximas fases. Aqui mostramos apenas a organização visual.</p>}<p className="helper">Para autenticação, cadastro e solicitações reais, acesse a área de login.</p><Link className="primary button-link" to="/login">Ir para o login</Link></section>}
       </main>
-      <nav className="mobile-nav" aria-label="Navegação móvel do protótipo">{menu.filter(m=>["inicio","entregas","entregadores","empresa"].includes(m.key)).map(m=><button key={m.key} className={tab===m.key?"on":""} onClick={()=>setTab(m.key)}><strong>{m.icon}</strong>{m.name.split(" ")[0]}</button>)}</nav>
+      <nav className="mobile-nav" aria-label="Atalhos móveis do protótipo">
+        {menu.filter(m=>["inicio","entregas","entregadores","empresa"].includes(m.key)).map(m=><button type="button" key={m.key} className={tab===m.key?"on":""} onClick={()=>mudarAba(m.key)} aria-current={tab===m.key?"page":undefined}><strong>{m.icon}</strong>{m.name.split(" ")[0]}</button>)}
+        <button type="button" className={menuAberto||!["inicio","entregas","entregadores","empresa"].includes(tab)?"on":""} aria-label="Abrir todos os módulos" aria-controls="demo-sidebar-menu" aria-expanded={menuAberto} onClick={()=>setMenuAberto(true)}><strong>☰</strong>Mais</button>
+      </nav>
     </div>
   </div>;
 }
