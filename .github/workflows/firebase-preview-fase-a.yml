@@ -36,6 +36,8 @@ jobs:
             echo 'available=no' >> "$GITHUB_OUTPUT"
             echo '### Preview não publicado' >> "$GITHUB_STEP_SUMMARY"
             echo 'Configure o secret FIREBASE_SERVICE_ACCOUNT_TOAKI_CF058 em Settings → Secrets and variables → Actions. Não envie o JSON no chat.' >> "$GITHUB_STEP_SUMMARY"
+            echo '::error::Preview não publicado: falta a credencial Firebase no GitHub Actions.'
+            exit 1
           fi
       - name: Instalar dependências
         if: steps.firebase_credentials.outputs.available == 'yes'
@@ -57,7 +59,7 @@ jobs:
         if: steps.firebase_credentials.outputs.available == 'yes'
         shell: bash
         env:
-          PREVIEW_URL: ${{ steps.firebase_preview.outputs.details_url }}
+          PREVIEW_URL: ${{ steps.firebase_preview.outputs.urls }}
         run: |
           echo '### Preview Fase A do toAki' >> "$GITHUB_STEP_SUMMARY"
           echo "URL: $PREVIEW_URL" >> "$GITHUB_STEP_SUMMARY"
