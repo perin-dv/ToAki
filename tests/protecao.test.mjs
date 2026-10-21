@@ -87,7 +87,7 @@ test('Cadastro de teste usa e-mail/senha sem link automático e protege dados em
   assert.ok(cadastro.includes('createUserWithEmailAndPassword'));
   assert.ok(!cadastro.includes('sendEmailVerification('));
   assert.ok(cadastro.includes('navigate("/cliente")'));
-  assert.ok(login.includes('if(!user.emailVerified){navigate("/cliente");return}'));
+  assert.ok(login.includes('if(!user.emailVerified){navigate(voltarAoDemo?"/demonstracao":"/cliente");return}'));
   assert.ok(guard.includes('!user.emailVerified && area!=="cliente"'));
   assert.ok(empresa.includes('if(!user?.emailVerified)return;getDoc('));
   assert.ok(empresa.includes('Confirmar e-mail para cadastrar empresa'));
