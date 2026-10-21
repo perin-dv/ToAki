@@ -1,6 +1,6 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, signOut, updateProfile } from "firebase/auth";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { auth } from "../lib/firebase";
 import { useAuth } from "../auth/AuthProvider";
 import Brand from "../components/Brand";
@@ -23,15 +23,17 @@ function Layout({title,description,children}:{title:string;description:string;ch
 }
 export function LoginPage() {
   const {user,role,loading}=useAuth();const navigate=useNavigate();
+  const location=useLocation();
+  const voltarAoDemo=location.state?.from==="/demonstracao";
   const [email,setEmail]=useState("");const[password,setPassword]=useState("");const[mostrarSenha,setMostrarSenha]=useState(false);const[busy,setBusy]=useState(false);const[error,setError]=useState("");
-  if(!loading&&user)return <Navigate to={!user.emailVerified?"/cliente":role==="admin_toaki"?"/admin":["dono_empresa","gestor","vendedor"].includes(role??"")?"/empresa":"/cliente"} replace/>;
+  if(!loading&&user)return <Navigate to={voltarAoDemo?"/demonstracao":!user.emailVerified?"/cliente":role==="admin_toaki"?"/admin":["dono_empresa","gestor","vendedor"].includes(role??"")?"/empresa":"/cliente"} replace/>;
   const submit=async(e:FormEvent)=>{e.preventDefault();setBusy(true);setError("");try{
     const {user}=await signInWithEmailAndPassword(auth,email.trim(),password);
     await user.reload();
-    if(!user.emailVerified){navigate("/cliente");return}
+    if(!user.emailVerified){navigate(voltarAoDemo?"/demonstracao":"/cliente");return}
     const token=await user.getIdTokenResult(true);
     const role=String(token.claims.role??"");
-    navigate(role==="admin_toaki"?"/admin":["dono_empresa","gestor","vendedor"].includes(role)?"/empresa":"/cliente");
+    navigate(voltarAoDemo?"/demonstracao":role==="admin_toaki"?"/admin":["dono_empresa","gestor","vendedor"].includes(role)?"/empresa":"/cliente");
   }catch(e){setError(message(e))}finally{setBusy(false)}};
   return <Layout title="Entrar no toAki" description="Acesse usando seu e-mail e senha."><form className="stack" onSubmit={submit}>
     <label>E-mail<input required type="email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} placeholder="voce@exemplo.com"/></label>
@@ -41,7 +43,7 @@ export function LoginPage() {
     <button className="primary" disabled={busy}>{busy?"Entrando...":"Entrar"}</button></form>
     <p className="auth-footer">Ainda não tem conta? <Link to="/cadastro">Criar conta</Link></p>
     <p className="helper">Já tem cadastro no Firebase Authentication? Use Entrar com o mesmo e-mail e senha. Criar conta é somente para novos usuários. O acesso empresarial exige autorização específica.</p>
-    <p className="auth-footer"><Link to="/demonstracao">Ver painel de demonstração (dados fictícios) →</Link></p>
+    <p className="helper">O painel de demonstração e seus menus são acessíveis somente após entrar na sua conta.</p>
   </Layout>;
 }
 export function RegisterPage() {
