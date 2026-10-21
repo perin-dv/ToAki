@@ -11,7 +11,8 @@ import "./styles.css";
 function App() {
   return <BrowserRouter><AuthProvider><Routes>
     <Route path="/" element={<Navigate to="/login" replace/>}/>
-    <Route path="/demonstracao" element={<DemoPage/>}/>
+    <Route path="/demonstracao" element={<PrivateRoute area="demo"><DemoPage/></PrivateRoute>}/>
+    {import.meta.env.MODE === "e2e" && <Route path="/__e2e_demonstracao" element={<DemoPage/>}/>}
     <Route path="/login" element={<LoginPage/>}/>
     <Route path="/cadastro" element={<RegisterPage/>}/>
     <Route path="/recuperar-senha" element={<PasswordPage/>}/>
