@@ -98,3 +98,22 @@
 .password-meta span{color:#667685}
 .password-match{color:#067645;font-size:12px;margin:0}
 .stack .form-error{margin:0;line-height:1.5}
+
+
+/* Navegação: ícones SVG vetoriais coerentes em desktop e celular. */
+.demo-sidebar .nav-icon{
+  display:inline-flex;
+  flex:0 0 22px;
+  width:22px;
+  height:22px;
+  align-items:center;
+  justify-content:center;
+}
+.demo-sidebar .nav-icon svg,.mobile-nav button svg,.mobile-menu-button svg{
+  display:block;
+  flex-shrink:0;
+}
+.demo-sidebar .nav{gap:12px;min-height:43px;font-size:12.5px}
+.demo-sidebar .nav:hover:not(.active) svg{stroke-width:2.1}
+.mobile-nav button svg{margin:0 auto 3px}
+.mobile-menu-button{gap:7px}
