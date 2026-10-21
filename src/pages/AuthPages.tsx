@@ -4,13 +4,14 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { auth } from "../lib/firebase";
 import { useAuth } from "../auth/AuthProvider";
 import Brand from "../components/Brand";
+import { avaliarSenha } from "../lib/passwordStrength";
 
 function message(error:unknown):string {
   const code=(error && typeof error==="object" && "code" in error)?String(error.code):"";
   return ({
     "auth/invalid-credential":"E-mail ou senha incorretos.",
     "auth/invalid-email":"E-mail inválido.",
-    "auth/email-already-in-use":"Este e-mail já está cadastrado.",
+    "auth/email-already-in-use":"Não foi possível criar essa conta. Se já tem cadastro, use Entrar ou Recuperar senha.",
     "auth/weak-password":"Escolha uma senha mais forte.",
     "auth/too-many-requests":"Muitas tentativas; tente mais tarde.",
     "auth/operation-not-allowed":"Ative E-mail/senha no Firebase Authentication.",
@@ -22,7 +23,7 @@ function Layout({title,description,children}:{title:string;description:string;ch
 }
 export function LoginPage() {
   const {user,role,loading}=useAuth();const navigate=useNavigate();
-  const [email,setEmail]=useState("");const[password,setPassword]=useState("");const[busy,setBusy]=useState(false);const[error,setError]=useState("");
+  const [email,setEmail]=useState("");const[password,setPassword]=useState("");const[mostrarSenha,setMostrarSenha]=useState(false);const[busy,setBusy]=useState(false);const[error,setError]=useState("");
   if(!loading&&user)return <Navigate to={!user.emailVerified?"/cliente":role==="admin_toaki"?"/admin":["dono_empresa","gestor","vendedor"].includes(role??"")?"/empresa":"/cliente"} replace/>;
   const submit=async(e:FormEvent)=>{e.preventDefault();setBusy(true);setError("");try{
     const {user}=await signInWithEmailAndPassword(auth,email.trim(),password);
@@ -34,7 +35,7 @@ export function LoginPage() {
   }catch(e){setError(message(e))}finally{setBusy(false)}};
   return <Layout title="Entrar no toAki" description="Acesse usando seu e-mail e senha."><form className="stack" onSubmit={submit}>
     <label>E-mail<input required type="email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} placeholder="voce@exemplo.com"/></label>
-    <label>Senha<input required type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Sua senha"/></label>
+    <label>Senha<span className="password-input"><input required type={mostrarSenha?"text":"password"} autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Sua senha"/><button type="button" className="password-toggle" onClick={()=>setMostrarSenha(!mostrarSenha)} aria-label={mostrarSenha?"Ocultar senha":"Mostrar senha"} aria-pressed={mostrarSenha}>{mostrarSenha?"Ocultar":"Mostrar"}</button></span></label>
     <Link className="right-link" to="/recuperar-senha">Esqueceu sua senha?</Link>
     {error&&<p className="form-error" role="alert">{error}</p>}
     <button className="primary" disabled={busy}>{busy?"Entrando...":"Entrar"}</button></form>
@@ -44,21 +45,48 @@ export function LoginPage() {
   </Layout>;
 }
 export function RegisterPage() {
-  const [name,setName]=useState("");const[email,setEmail]=useState("");const[password,setPassword]=useState("");const[busy,setBusy]=useState(false);const[error,setError]=useState("");const navigate=useNavigate();
-  const submit=async(e:FormEvent)=>{e.preventDefault();setError("");if(password.length<10){setError("Use pelo menos 10 caracteres na senha.");return}setBusy(true);try{
-    const {user}=await createUserWithEmailAndPassword(auth,email.trim(),password);
-    await updateProfile(user,{displayName:name.trim()});
-    // No modo de testes, criar conta NÃO dispara e-mail de confirmação.
-    // A confirmação é solicitada só ao tentar acessar serviços empresariais.
-    navigate("/cliente");
-  }catch(e){setError(message(e))}finally{setBusy(false)}};
-  return <Layout title="Criar sua conta" description="Cadastre-se como cliente. Empresas precisam solicitar aprovação."><form className="stack" onSubmit={submit}>
-    <label>Nome de contato<input required maxLength={100} autoComplete="name" value={name} onChange={e=>setName(e.target.value)} placeholder="Seu nome"/></label>
-    <label>E-mail<input required type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="voce@exemplo.com"/></label>
-    <label>Senha<input required type="password" minLength={10} autoComplete="new-password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Mínimo de 10 caracteres"/></label>
-    {error&&<p role="alert" className="form-error">{error}</p>}
-    <button className="primary" disabled={busy}>{busy?"Cadastrando...":"Criar conta"}</button></form>
-    <p className="helper">Cadastro por e-mail e senha, sem link de acesso. Você pode entrar imediatamente no ambiente de testes. A verificação de e-mail será exigida somente antes de acessar dados reais ou solicitar cadastro empresarial.</p>
+  const [name,setName]=useState("");
+  const [email,setEmail]=useState("");
+  const [password,setPassword]=useState("");
+  const [confirmar,setConfirmar]=useState("");
+  const [mostrarSenha,setMostrarSenha]=useState(false);
+  const [busy,setBusy]=useState(false);
+  const [error,setError]=useState("");
+  const navigate=useNavigate();
+  const avaliacao=avaliarSenha(password,email,name);
+  const senhasIguais=confirmar.length>0 && password===confirmar;
+
+  const submit=async(e:FormEvent)=>{
+    e.preventDefault();setError("");
+    if(name.trim().length<2){setError("Informe seu nome de contato.");return}
+    if(!avaliacao.aceita){setError("Escolha uma senha média ou forte antes de continuar.");return}
+    if(password!==confirmar){setError("A confirmação de senha não corresponde.");return}
+    setBusy(true);
+    try{
+      const {user}=await createUserWithEmailAndPassword(auth,email.trim().toLowerCase(),password);
+      // Nunca salvar senhas em Firestore, logs ou armazenamento local.
+      try{await updateProfile(user,{displayName:name.trim()})}catch{ /* O cadastro já existe; não solicitar nova conta. */ }
+      // No modo de testes, criar conta NÃO dispara e-mail de confirmação.
+      // A confirmação é solicitada somente para cadastro empresarial.
+      navigate("/cliente");
+    }catch(e){setError(message(e))}finally{setBusy(false)}
+  };
+
+  return <Layout title="Criar sua conta" description="Cadastre-se como cliente. Empresas precisam solicitar aprovação.">
+    <form className="stack" onSubmit={submit}>
+      <label>Nome de contato<input required minLength={2} maxLength={100} autoComplete="name" value={name} onChange={e=>setName(e.target.value)} placeholder="Seu nome"/></label>
+      <label>E-mail<input required type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="voce@exemplo.com"/></label>
+      <label>Senha<span className="password-input"><input required type={mostrarSenha?"text":"password"} minLength={12} maxLength={128} autoComplete="new-password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Pelo menos 12 caracteres" aria-describedby="senha-qualidade" /><button type="button" className="password-toggle" onClick={()=>setMostrarSenha(!mostrarSenha)} aria-label={mostrarSenha?"Ocultar senha":"Mostrar senha"} aria-pressed={mostrarSenha}>{mostrarSenha?"Ocultar":"Mostrar"}</button></span></label>
+      <div className={"password-feedback password-"+avaliacao.forca} id="senha-qualidade" data-strength={avaliacao.forca}>
+        <div className="password-meter" role="progressbar" aria-label="Força da senha" aria-valuemin={0} aria-valuemax={100} aria-valuenow={avaliacao.percentual}><span style={{width:avaliacao.percentual+"%"}}/></div>
+        <div className="password-meta"><strong>{password?"Senha "+avaliacao.rotulo:"Força da senha"}</strong><span>{avaliacao.sugestao}</span></div>
+      </div>
+      <label>Confirmar senha<input required type={mostrarSenha?"text":"password"} minLength={12} maxLength={128} autoComplete="new-password" value={confirmar} onChange={e=>setConfirmar(e.target.value)} placeholder="Digite a senha novamente" aria-describedby="senha-confirmacao"/></label>
+      {confirmar&&<p className={senhasIguais?"password-match":"form-error"} id="senha-confirmacao" role="status">{senhasIguais?"As senhas coincidem.":"As senhas não coincidem."}</p>}
+      {error&&<p role="alert" className="form-error">{error}</p>}
+      <button className="primary" disabled={busy||!avaliacao.aceita||!senhasIguais}>{busy?"Cadastrando...":"Criar conta"}</button>
+    </form>
+    <p className="helper">Por segurança, use uma senha exclusiva, de preferência uma frase longa. O toAki não guarda sua senha no Firestore. A verificação de e-mail será exigida antes de solicitar acesso empresarial.</p>
     <p className="auth-footer"><Link to="/login">Já tenho uma conta</Link></p>
   </Layout>;
 }
