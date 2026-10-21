@@ -93,3 +93,22 @@ test('Cadastro de teste usa e-mail/senha sem link automático e protege dados em
   assert.ok(empresa.includes('Confirmar e-mail para cadastrar empresa'));
   assert.ok(confirmacao.includes('sendEmailVerification(user)'));
 });
+
+test('No celular, Menu e Mais abrem os oito modulos em lateral acessivel', () => {
+  const demo = file('src/pages/DemoPage.tsx');
+  const css = file('src/styles.css');
+  for (const nome of ['Início','Entregas e NFs','Entregadores','Clientes e links','Comprovantes','Histórico e relatórios','Empresa e equipe','Assinatura']) {
+    assert.ok(demo.includes('name:"'+nome+'"'), 'Módulo ausente: ' + nome);
+  }
+  assert.ok(demo.includes('aria-label="Abrir menu completo"'));
+  assert.ok(demo.includes('aria-label="Abrir todos os módulos"'));
+  assert.ok(demo.includes('aria-controls="demo-sidebar-menu"'));
+  assert.ok(demo.includes('onClick={()=>mudarAba(m.key)}'));
+  assert.ok(demo.includes('setMenuAberto(false)'));
+  assert.ok(demo.includes('evento.key==="Escape"'));
+  assert.ok(demo.includes('className="drawer-backdrop"'));
+  assert.ok(css.includes('.demo-sidebar.drawer-open'));
+  assert.ok(css.includes('position:fixed'));
+  assert.ok(css.includes('.drawer-backdrop'));
+  assert.ok(css.includes('touch-action:manipulation'));
+});
