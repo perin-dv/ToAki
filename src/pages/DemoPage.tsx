@@ -65,7 +65,7 @@ export default function DemoPage() {
         <button className="drawer-close" type="button" aria-label="Fechar menu" onClick={()=>setMenuAberto(false)}>✕</button>
       </div>
       <nav aria-label="Menu completo do protótipo">
-        {menu.map(m=><button type="button" key={m.key} onClick={()=>mudarAba(m.key)} className={"nav "+(tab===m.key?"active":"")} aria-current={tab===m.key?"page":undefined}><span className="nav-icon">{m.icon}</span>{m.name}</button>)}
+        {menu.map(m=><button type="button" key={m.key} onClick={()=>mudarAba(m.key)} className={"nav "+(tab===m.key?"active":"")} aria-current={tab===m.key?"page":undefined}><span className="nav-icon" aria-hidden="true">{m.icon}</span>{m.name}</button>)}
       </nav>
       <div className="sidebar-foot"><strong>Soma Distribuidora</strong><span>Filial Maringá · Simulação</span><Link to="/login">Acessar sistema →</Link></div>
     </aside>
@@ -84,7 +84,7 @@ export default function DemoPage() {
         </>:<section className="panel content-panel"><div className="panel-head"><h2>{panelTitle}</h2><span className="pill muted">Protótipo</span></div>{tab==="entregas"?<div className="table-scroll"><table><thead><tr><th>Nota fiscal</th><th>Entregador</th><th>Destino</th><th>Status</th><th>Ação</th></tr></thead><tbody>{entregas.map((e,i)=><tr key={e.nf}><td>NF {e.nf}</td><td>{e.person}</td><td>{e.place}</td><td>{e.status}</td><td><button className="secondary" onClick={()=>{mudarAba("inicio");setSelected(i)}}>Ver mapa</button></td></tr>)}</tbody></table></div>:<p>A área <strong>{panelTitle}</strong> será conectada a informações reais nas próximas fases. Aqui mostramos apenas a organização visual.</p>}<p className="helper">Para autenticação, cadastro e solicitações reais, acesse a área de login.</p><Link className="primary button-link" to="/login">Ir para o login</Link></section>}
       </main>
       <nav className="mobile-nav" aria-label="Atalhos móveis do protótipo">
-        {menu.filter(m=>["inicio","entregas","entregadores","empresa"].includes(m.key)).map(m=><button type="button" key={m.key} className={tab===m.key?"on":""} onClick={()=>mudarAba(m.key)} aria-current={tab===m.key?"page":undefined}><strong>{m.icon}</strong>{m.name.split(" ")[0]}</button>)}
+        {menu.filter(m=>["inicio","entregas","entregadores","empresa"].includes(m.key)).map(m=><button type="button" key={m.key} className={tab===m.key?"on":""} onClick={()=>mudarAba(m.key)} aria-current={tab===m.key?"page":undefined}><strong aria-hidden="true">{m.icon}</strong>{m.name.split(" ")[0]}</button>)}
         <button type="button" className={menuAberto||!["inicio","entregas","entregadores","empresa"].includes(tab)?"on":""} aria-label="Abrir todos os módulos" aria-controls="demo-sidebar-menu" aria-expanded={menuAberto} onClick={()=>setMenuAberto(true)}><strong>☰</strong>Mais</button>
       </nav>
     </div>
