@@ -37,6 +37,10 @@ jobs:
         run: node --test tests/protecao.test.mjs
       - name: Testar isolamento de dados no Firestore Emulator
         run: npm run test:security
+      - name: Testar regras de aprovação de empresas (sem acessar produção)
+        run: node --test tests/company-policy.test.cjs
+      - name: Conferir sintaxe do backend privado
+        run: node --check functions/index.cjs
       - name: Compilar front-end
         run: npm run build
       - name: Verificar saida para Firebase Hosting
