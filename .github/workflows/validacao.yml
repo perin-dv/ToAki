@@ -42,7 +42,7 @@ jobs:
       - name: Conferir sintaxe do backend privado
         run: node --check functions/index.cjs
       - name: Compilar front-end
-        run: npm run build
+        run: npm run build -- --mode e2e
       - name: Verificar saida para Firebase Hosting
         run: node -e "const fs=require('node:fs'); if(!fs.existsSync('dist/index.html')) process.exit(1);"
       - name: Instalar Playwright para testar navegação móvel real
