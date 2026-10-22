@@ -55,6 +55,7 @@ function Shell({title,description,children}:{title:string;description:string;chi
 export function CustomerPage() {
   const {user}=useAuth();
   const [aba,setAba]=useState<AbaCliente>("inicio");
+  const [,atualizarPerfil]=useState(0);
   const nome=nomeConta(user?.displayName,user?.email);
   return <Shell title="Minha conta" description="Seus dados, entregas e solicitações em um só lugar.">
     <section className="account-hero" aria-label="Boas-vindas">
@@ -94,7 +95,7 @@ export function CustomerPage() {
       <div className="account-section-heading"><div><h2>Minhas entregas</h2><p>Consultas privadas, disponíveis após vínculo seguro com a empresa.</p></div><span className="pill muted">Integração pendente</span></div>
       <div className="account-empty"><span className="account-empty-icon"><MenuIcon name="entregas" size={32}/></span><strong>A consulta das suas entregas ainda está sendo integrada.</strong><p>Estamos preparando a conexão entre empresas e clientes. NFs de terceiros não são mostradas sem autorização.</p></div>
     </section>}
-    {aba==="perfil"&&<PerfilConta/>}
+    {aba==="perfil"&&<PerfilConta onSaved={()=>atualizarPerfil(n=>n+1)}/>}
     {aba==="empresa"&&<div className="account-business">
       <div className="account-business-intro"><h2>Vincular minha empresa</h2><p>O cadastro por CNPJ exige comprovação do vínculo e aprovação administrativa; consultar o CNPJ não concede acesso.</p></div>
       <CompanyRegistration/>
