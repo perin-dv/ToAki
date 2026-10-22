@@ -22,3 +22,18 @@ Decisão confirmada em 22/10/2026: primeiro concluir o site web integrado ao Fir
 
 ## Critério de concluído
 Cadastrar, editar, consultar e reabrir sessão mantendo dados Firestore; usuário de outra empresa não acessa nada; funcionamento desktop e celular comprovado; nenhuma simulação operacional apresentada como real. Cada etapa deve registrar resultado do CI, pendências e próximo passo.
+
+## Continuidade do desenvolvimento da web — 22/10/2026
+
+Novo incremento (PR #9, branch `feature/fase-b-busca-vinculos-crud`, baseado no PR #8):
+
+- Busca em tempo real de clientes pelo nome, motoristas pelo nome e motos pela placa, com seleção por referência Firestore da empresa.
+- Motorista vinculado a veículo; NF vinculada a cliente, motorista e veículo, com sugestão do endereço registrado do cliente.
+- Edição de cadastros, desativação de registros não referenciados, atualização auditada da situação das entregas.
+- Backend transacional confere associações e nega referências inexistentes, inativas, inconsistentes ou de outra empresa.
+- As listas consultam o Firestore em tempo real; status e alterações também são auditados pelo servidor.
+- **Ainda não implantado no projeto Firebase nem publicado no Hosting live.** A empresa piloto, administrador confiável, Rules e Functions precisam ser verificados e autorizados antes do teste real.
+- Manter PR #7 (protótipo motoboy) em espera. Flutter somente após a web.
+- Critérios de escala (busca remota/paginação acima de 100 registros) e conclusão de comprovantes, links, relatórios e cobrança continuam pendentes.
+
+Documentação detalhada: `WEB_CADASTROS_VINCULADOS.md`.
