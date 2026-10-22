@@ -1,0 +1,73 @@
+name: Publicar Homologacao Isolada (manual)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: toaki-homologacao-manual
+  cancel-in-progress: false
+
+jobs:
+  homologacao:
+    name: Publicar somente no novo Firebase de testes
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      STAGE_PROJECT: ${{ vars.TOAKI_HML_PROJECT_ID }}
+      VITE_TOAKI_ENV: homologacao
+      VITE_FIREBASE_PROJECT_ID: ${{ vars.TOAKI_HML_PROJECT_ID }}
+      VITE_FIREBASE_API_KEY: ${{ vars.TOAKI_HML_FIREBASE_API_KEY }}
+      VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.TOAKI_HML_FIREBASE_AUTH_DOMAIN }}
+      VITE_FIREBASE_APP_ID: ${{ vars.TOAKI_HML_FIREBASE_APP_ID }}
+      VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.TOAKI_HML_FIREBASE_MESSAGING_SENDER_ID }}
+      VITE_FIREBASE_STORAGE_BUCKET: ${{ vars.TOAKI_HML_FIREBASE_STORAGE_BUCKET }}
+      VITE_ENABLE_ADMIN_APPROVAL: 'false'
+      FIREBASE_STAGE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TOAKI_HML }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Bloquear destino original e configuracao incompleta
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$STAGE_PROJECT" || "$STAGE_PROJECT" == "toaki-cf058" ]]; then
+            echo '::error::O deploy exige outro projeto Firebase, nunca toaki-cf058.'
+            exit 1
+          fi
+          for key in VITE_FIREBASE_API_KEY VITE_FIREBASE_AUTH_DOMAIN VITE_FIREBASE_APP_ID VITE_FIREBASE_MESSAGING_SENDER_ID VITE_FIREBASE_STORAGE_BUCKET; do
+            if [[ -z "${!key}" ]]; then
+              echo "::error::Falta configurar a variavel publica $key."
+              exit 1
+            fi
+          done
+          if [[ -z "$FIREBASE_STAGE_SERVICE_ACCOUNT" ]]; then
+            echo '::error::Falta o secret exclusivo de homologacao.'
+            exit 1
+          fi
+      - name: Instalar e validar frontend
+        run: |
+          npm install --no-audit --no-fund
+          npm test
+          node --test tests/company-policy.test.cjs tests/operacao-politica.test.cjs
+          npm run build
+      - name: Preparar dependencias do backend
+        run: npm --prefix functions install --no-audit --no-fund
+      - name: Autenticar conta de serviço somente neste job
+        shell: bash
+        run: |
+          umask 077
+          printf '%s' "$FIREBASE_STAGE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-stage.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-stage.json" >> "$GITHUB_ENV"
+      - name: Implantar Firestore, Functions e Hosting SOMENTE no projeto isolado
+        run: npx firebase-tools deploy --project "$STAGE_PROJECT" --config firebase.homologacao.json --only firestore,functions,hosting --non-interactive
+      - name: Mostrar destino de homologacao
+        run: |
+          echo '### Homologacao Firebase separada' >> "$GITHUB_STEP_SUMMARY"
+          echo "Projeto Firebase: $STAGE_PROJECT" >> "$GITHUB_STEP_SUMMARY"
+          echo "Hosting: https://$STAGE_PROJECT.web.app" >> "$GITHUB_STEP_SUMMARY"
+          echo 'O projeto original toaki-cf058 nao foi alvo deste workflow.' >> "$GITHUB_STEP_SUMMARY"
