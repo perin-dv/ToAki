@@ -221,3 +221,19 @@ test("Após aprovação empresarial o painel pode atualizar claims sem desconect
   assert.ok(site.includes("Verificar se minha empresa foi aprovada"));
   assert.ok(site.includes("Atualizar permissão da minha conta"));
 });
+
+test("Diagnóstico do Firebase usa apenas metadados e não injeta segredo em PR",()=>{
+  const workflow=file(".github/workflows/firebase-diagnostico-readonly.yml");
+  const script=file("scripts/diagnostico-firebase-readonly.cjs");
+  assert.ok(workflow.includes("workflow_dispatch:"));
+  assert.ok(workflow.includes("github.ref == 'refs/heads/main'"));
+  assert.ok(workflow.includes("persist-credentials: false"));
+  assert.ok(workflow.includes("secrets.FIREBASE_SERVICE_ACCOUNT_TOAKI_CF058"));
+  assert.ok(!/^[ ]+(pull_request|pull_request_target|push):/m.test(workflow));
+  assert.ok(!/firebase(?:-tools)?\s+deploy|hosting:channel:deploy/.test(workflow));
+  assert.ok(script.includes("getFirestore(app).listCollections()"));
+  assert.ok(script.includes('method:"GET"'));
+  assert.ok(!/\.set\(|\.create\(|\.update\(|\.delete\(|setCustomUserClaims\(/.test(script));
+  assert.ok(script.includes("resultado.firestore"));
+  assert.ok(script.includes("resultado.functions"));
+});
