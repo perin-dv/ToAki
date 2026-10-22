@@ -61,3 +61,11 @@ Nova decisão do responsável registrada em `ROADMAP_SITE_OFICIAL.md`: terminar 
 - Não ocorreu implantação de Cloud Functions, Firestore Rules ou Hosting a partir desta branch.
 - Próximas funcionalidades reais: cadastros empresariais e autorização piloto publicados e validados, CRUD completo e vínculos de equipe, edição/exclusão, transições de pedido, mapa definitivo com endereços geocodificados, comprovantes, links seguros para clientes, relatórios, planos e cobranças.
 - Antes de qualquer deploy, consultar regras e dados atuais, backup, IAM, admin autorizado e lista de empresas piloto. `main`, `develop` e Hosting `live` continuam protegidos.
+
+## Incremento adicional — relatório real de NFs (22/10/2026)
+- O módulo **Histórico e relatórios** consulta NFs do Firestore por empresa autorizada via `onSnapshot`; não inventa números.
+- Filtros por situação, NF/endereço e data de cadastro no horário de São Paulo. Contagens deixam explícito que refletem **até 100 registros lidos**, não o total da empresa.
+- CSV exportável somente por interação do usuário, com proteção para células interpretadas como fórmulas em planilhas.
+- Histórico de auditoria permanece separado e acessível apenas a gestores.
+- Pendente: paginação real/contagens agregadas, agrupamento por dia/mês, cálculo de desempenho do entregador, histórico de rota GPS, integração de comprovantes/assinaturas e implantação/validação do backend.
+- A execução automática precisa terminar e ser conferida antes de declarar aprovação deste incremento.
