@@ -48,3 +48,16 @@ O responsável copiou do console `toaki-cf058` o conteúdo atual da aba Firestor
 **Verificações ainda NÃO realizadas:** essas regras foram **informadas pelo responsável**, não obtidas por uma chamada administrativa autenticada à API do projeto; o conteúdo copiado não confirma se o Firestore já possui empresa aprovada, se Functions estão implantadas, se há `admin_toaki` ou se o Hosting apresenta o código novo. A execução do CI com Emulator cobre o arquivo do repositório, **não verifica as regras remotas**.
 
 **Conclusão:** nenhuma substituição das regras existentes agora. Próxima conferência com o responsável: **Firestore Database > Dados**, para identificar nomes das coleções e empresas pré-existentes **sem editar nada**, seguida de estado da conta em Authentication > Users. Só depois planejar backup e implantação mínima segura de Functions e um Preview operacional, mediante autorização específica.
+
+## Diagnóstico automático read-only preparado (22/10/2026)
+
+Verificação existente: o workflow **`firebase-preview-fase-a.yml` já autenticou com sucesso** no Firebase em execução anterior e publicou apenas um Preview. Isso valida acesso ao Hosting, **NÃO prova permissão de leitura no Firestore nem lista Functions implantadas**.
+
+Novo código:
+- `scripts/diagnostico-firebase-readonly.cjs`: confirma `project_id=toaki-cf058` antes de abrir conexão; lê SOMENTE nomes de coleções raiz por `listCollections()` (sem IDs de documentos, valores ou dados pessoais); consulta via API `GET` somente a existência das Functions esperadas. Nunca registra credenciais, nomes de coleções não permitidas ou IDs pessoais. Falhas IAM são resumidas sem log de exceções brutas.
+- `.github/workflows/firebase-diagnostico-readonly.yml`: execução **manual e apenas na `main`** depois de revisão/autorização de inclusão. Usa o secret de service account já previsto no repositório, em arquivo temporário, sem `firebase deploy` e sem qualquer escrita.
+- O workflow NÃO recebe secrets em PRs e não tem gatilho `pull_request`, `pull_request_target` ou `push`; isso evita que uma branch de código em revisão acesse credenciais de produção.
+
+**Resultado até agora:** script e workflow **preparados**, mas o diagnóstico remoto não foi executado porque o workflow não está na `main` e **não será mesclado sem autorização**. Mesmo depois de executado, somente provamos capacidades de leitura; ativação de empresa, backups, permissão administrativa e publicação do Preview continuam verificações separadas.
+
+Próximo passo antes de qualquer deploy: revisão/aprovação do PR, avaliação de backup e IAM, autorização para inserir workflow na branch principal e então executar manualmente o diagnóstico. A publicação do site continua bloqueada até confirmação de configuração e consentimento explícito.
