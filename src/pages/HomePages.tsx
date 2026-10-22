@@ -2,6 +2,11 @@ import {Link, Navigate} from "react-router-dom";
 import {useAuth} from "../auth/AuthProvider";
 import Brand from "../components/Brand";
 import MenuIcon from "../components/MenuIcon";
+import PwaPilotCard from "../components/PwaPilotCard";
+import {signOut} from "firebase/auth";
+import {auth} from "../lib/firebase";
+import {useNavigate} from "react-router-dom";
+import {useState} from "react";
 
 export function PublicHomePage(){
   const {user,loading}=useAuth();
@@ -35,14 +40,19 @@ export function PublicHomePage(){
 const nome=(name:string|null|undefined,email:string|null|undefined)=>(name?.trim()||email?.split("@")[0]||"Usuário").split(" ")[0];
 export function HomePage(){
   const {user,role}=useAuth();
+  const navigate=useNavigate();
+  const [saindo,setSaindo]=useState(false);
+  const [erroSaida,setErroSaida]=useState("");
+  const sair=async()=>{setSaindo(true);setErroSaida("");try{await signOut(auth);navigate("/",{replace:true});}catch{setErroSaida("Não foi possível sair agora. Tente novamente.");setSaindo(false);}};
   const isEmpresa=["dono_empresa","gestor","vendedor"].includes(role??"");
   const painel=isEmpresa?"/empresa":role==="admin_toaki"?"/admin":"/cliente";
   return <div className="private-app">
     <header className="private-header">
       <Brand compact/>
-      <nav className="home-top-actions" aria-label="Navegação do início"><Link to="/inicio" aria-current="page">Início</Link><Link to={painel}>Minha conta</Link><Link to={role==="admin_toaki"||isEmpresa?painel:"/cliente?aba=perfil"} className="home-avatar-link" aria-label="Meus dados">{(user?.displayName||user?.email||"T")[0].toUpperCase()}</Link></nav>
+      <nav className="home-top-actions" aria-label="Navegação do início"><Link to="/inicio" aria-current="page">Início</Link><Link to={painel}>Minha conta</Link><Link to={role==="admin_toaki"||isEmpresa?painel:"/cliente?aba=perfil"} className="home-avatar-link" aria-label="Meus dados">{(user?.displayName||user?.email||"T")[0].toUpperCase()}</Link><button type="button" className="home-logout" disabled={saindo} onClick={()=>void sair()}>{saindo?"Saindo...":"Sair"}</button></nav>
     </header>
     <main className="private-main home-main">
+      {erroSaida&&<p role="alert" className="form-error">{erroSaida}</p>}
       <div className="home-heading"><span>PAINEL INICIAL</span><h1>Olá, {nome(user?.displayName,user?.email)}!</h1><p>Escolha o que deseja fazer. Seu acesso está conectado ao Firebase Authentication.</p></div>
       <section className="home-intro" aria-label="Bem-vindo ao toAki">
         <div><span className="account-eyebrow">TOAKI • VISÃO GERAL</span><h2>Seu ponto de partida para todas as entregas.</h2><p>O toAki está em fase de testes. Sua conta é real, mas os cadastros operacionais ainda estão sendo conectados com segurança.</p><Link to={painel} className="primary button-link">Abrir minha conta →</Link></div>
@@ -53,8 +63,9 @@ export function HomePage(){
         <Link to={isEmpresa?"/empresa":"/cliente?aba=entregas"} className="home-feature-card"><span className="home-feature-icon"><MenuIcon name="entregas" size={24}/></span><strong>{isEmpresa?"Painel empresarial":"Minhas entregas"}</strong><p>{isEmpresa?"Cadastros e operações da empresa, quando autorizados.":"Consulte entregas quando sua conta estiver vinculada a pedidos."}</p><span className="home-card-more">Acessar →</span></Link>
         <Link to={isEmpresa?"/empresa":"/cadastro/empresa/dados"} className="home-feature-card"><span className="home-feature-icon"><MenuIcon name="empresa" size={24}/></span><strong>{isEmpresa?"Minha empresa":"Cadastrar empresa"}</strong><p>{isEmpresa?"Consulte seu vínculo empresarial e as permissões.":"Seu CNPJ segue um processo separado do cadastro de cliente."}</p><span className="home-card-more">Acessar →</span></Link>
       </div>
+      <PwaPilotCard/>
       <section className="home-demo-strip"><div><strong>Experimentar o painel demonstrativo</strong><p>Use o mapa e os cadastros fictícios, sem criar notas fiscais reais.</p></div><Link className="secondary button-link" to="/demonstracao">Abrir simulação →</Link></section>
-      <p className="helper">Para sair da conta, abra Minha conta e selecione Sair. O login não é uma página inicial após autenticação.</p>
+      <p className="helper">A Home é seu ponto de partida depois do login. Você pode sair pelo cabeçalho a qualquer momento.</p>
     </main>
   </div>;
 }
