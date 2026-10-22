@@ -1,90 +1,121 @@
 "use strict";
 /**
- * Diagnóstico de metadados Firebase, sem gravações e sem acessar conteúdo de documentos.
- * Executar somente via workflow_dispatch de branch principal revisada.
+ * Diagnóstico só de metadados. Usa APIs oficiais com verbos de leitura, sem SDK
+ * externo, sem abrir documentos e sem imprimir credenciais ou identificadores.
+ * Executável em main via workflow_dispatch após revisão explícita.
  */
 const fs=require("node:fs");
 const path=require("node:path");
-const {createRequire}=require("node:module");
+const {createSign}=require("node:crypto");
 
 const PROJECT="toaki-cf058";
-const COLECOES_PERMITIDAS=[
+const COLECOES=[
   "solicitacoes_cadastro_empresas","empresas","usuarios","clientes",
   "entregadores","planos","assinaturas","auditoria"
 ];
-const FUNCOES_ESPERADAS=[
+const FUNCTIONS=[
   "analisarCadastroEmpresa","operarEmpresaHomologacao","alterarRegistroEmpresaPiloto"
 ];
-function statusErro(error){
-  const raw=error?.code??error?.status;
-  const code=Number(raw);
-  if(code===7||code===403||raw==="PERMISSION_DENIED")return "sem_permissao";
-  if(code===5||code===404)return "nao_encontrado";
-  if(code===16||code===401)return "sem_autenticacao";
-  return "indisponivel";
+const STATUS={
+  401:"sem_autenticacao",403:"sem_permissao",404:"nao_encontrado"
+};
+const apontar=(status)=>STATUS[status]||"indisponivel";
+const report=(data)=>process.stdout.write(JSON.stringify(data,null,2)+"\n");
+function jwtAssinado(cred){
+  const agora=Math.floor(Date.now()/1000);
+  const encode=x=>Buffer.from(JSON.stringify(x)).toString("base64url");
+  const header=encode({alg:"RS256",typ:"JWT"});
+  const payload=encode({
+    iss:cred.client_email,
+    scope:"https://www.googleapis.com/auth/datastore https://www.googleapis.com/auth/cloud-platform",
+    aud:"https://oauth2.googleapis.com/token",
+    iat:agora,
+    exp:agora+1800
+  });
+  const mensagem=header+"."+payload;
+  const assinador=createSign("RSA-SHA256");
+  assinador.update(mensagem);
+  assinador.end();
+  return mensagem+"."+assinador.sign(cred.private_key).toString("base64url");
 }
-function imprimir(objeto){
-  // Somente campos constantes e booleanos; nenhum ID de usuário, documento ou segredo.
-  process.stdout.write(JSON.stringify(objeto,null,2)+"\n");
+async function tokenSomenteLeitura(cred){
+  const response=await fetch("https://oauth2.googleapis.com/token",{
+    method:"POST",
+    headers:{"content-type":"application/x-www-form-urlencoded"},
+    body:new URLSearchParams({
+      grant_type:"urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion:jwtAssinado(cred)
+    }),
+    signal:AbortSignal.timeout(15000)
+  });
+  if(!response.ok)return {status:apontar(response.status),value:""};
+  const body=await response.json();
+  return typeof body.access_token==="string"?
+    {status:"ok",value:body.access_token}:{status:"indisponivel",value:""};
+}
+async function metadados(url,token,method="GET",body){
+  const response=await fetch(url,{
+    method,
+    headers:{
+      Authorization:"Bearer "+token,
+      Accept:"application/json",
+      ...(body?{"content-type":"application/json"}:{})
+    },
+    ...(body?{body:JSON.stringify(body)}:{}),
+    signal:AbortSignal.timeout(15000)
+  });
+  return response.ok?{status:"ok",body:await response.json()}:
+    {status:apontar(response.status),body:null};
 }
 async function main(){
   const arquivo=process.env.GOOGLE_APPLICATION_CREDENTIALS;
-  if(!arquivo||!path.isAbsolute(arquivo))throw Error("Credencial do executor não configurada.");
+  if(!arquivo||!path.isAbsolute(arquivo))throw Error("Credencial não configurada.");
   const cred=JSON.parse(fs.readFileSync(arquivo,"utf8"));
-  if(cred.project_id!==PROJECT||cred.type!=="service_account")
-    throw Error("Diagnóstico recusado: projeto Firebase ou tipo de credencial diferente.");
-  const requireFunctions=createRequire(path.resolve(__dirname,"../functions/package.json"));
-  const {initializeApp,applicationDefault}=requireFunctions("firebase-admin/app");
-  const {getFirestore}=requireFunctions("firebase-admin/firestore");
-  const app=initializeApp({credential:applicationDefault(),projectId:PROJECT},"toaki-diagnostico");
+  if(cred.project_id!==PROJECT||cred.type!=="service_account"||
+    typeof cred.private_key!=="string"||typeof cred.client_email!=="string")
+    throw Error("Credencial de projeto diferente ou formato inválido.");
   const resultado={
-    projeto:PROJECT,
-    somenteLeitura:true,
-    firestore:{status:"nao_verificado"},
-    functions:{status:"nao_verificado"}
+    projeto:PROJECT,somenteMetadados:true,
+    firestore:{status:"nao_verificado"},functions:{status:"nao_verificado"}
   };
-  try {
-    const colecoes=await getFirestore(app).listCollections();
-    const encontradas=new Set(colecoes.map(c=>c.id));
-    resultado.firestore={status:"ok",colecoes:Object.fromEntries(
-      COLECOES_PERMITIDAS.map(nome=>[nome,encontradas.has(nome)])
-    )};
-    // Coleções desconhecidas ou IDs de documentos jamais são incluídos no relatório.
-  }catch(error){
-    resultado.firestore={status:statusErro(error)};
+  const token=await tokenSomenteLeitura(cred);
+  if(token.status!=="ok"){
+    resultado.firestore={status:token.status};
+    resultado.functions={status:token.status};
+    report(resultado);return;
   }
-  try {
-    const credencial=app.options.credential;
-    const token=await credencial.getAccessToken();
-    const url="https://cloudfunctions.googleapis.com/v2/projects/"+PROJECT+
-      "/locations/southamerica-east1/functions?pageSize=100";
-    const resposta=await fetch(url,{
-      method:"GET",
-      headers:{Authorization:"Bearer "+token.access_token,Accept:"application/json"},
-      signal:AbortSignal.timeout(15000)
-    });
-    if(resposta.status===403){
-      resultado.functions={status:"sem_permissao"};
-    }else if(resposta.status===401){
-      resultado.functions={status:"sem_autenticacao"};
-    }else if(resposta.status===404){
-      resultado.functions={status:"nao_encontrado"};
-    }else if(!resposta.ok){
-      resultado.functions={status:"indisponivel"};
-    }else{
-      const body=await resposta.json();
-      const nomes=new Set((body.functions||[]).map(f=>String(f.name||"").split("/").pop()));
-      resultado.functions={status:"ok",funcoes:Object.fromEntries(
-        FUNCOES_ESPERADAS.map(nome=>[nome,nomes.has(nome)])
-      ),paginacaoIncompleta:!!body.nextPageToken};
-    }
-  }catch(error){
-    resultado.functions={status:statusErro(error)};
-  }
-  imprimir(resultado);
+  try{
+    // listCollectionIds é endpoint de LEITURA de metadados, apesar do verbo POST.
+    // Não retorna documentos, dados de clientes ou IDs de usuários.
+    const response=await metadados(
+      "https://firestore.googleapis.com/v1/projects/"+PROJECT+
+      "/databases/(default)/documents:listCollectionIds",
+      token.value,"POST",{pageSize:100}
+    );
+    if(response.status==="ok"){
+      const encontradas=new Set(response.body.collectionIds||[]);
+      resultado.firestore={status:"ok",
+        colecoes:Object.fromEntries(COLECOES.map(nome=>[nome,encontradas.has(nome)])),
+        paginacaoIncompleta:!!response.body.nextPageToken};
+    }else resultado.firestore={status:response.status};
+  }catch{resultado.firestore={status:"indisponivel"};}
+  try{
+    const response=await metadados(
+      "https://cloudfunctions.googleapis.com/v2/projects/"+PROJECT+
+      "/locations/southamerica-east1/functions?pageSize=100",token.value
+    );
+    if(response.status==="ok"){
+      const encontradas=new Set((response.body.functions||[])
+        .map(f=>String(f.name||"").split("/").pop()));
+      resultado.functions={status:"ok",
+        funcoes:Object.fromEntries(FUNCTIONS.map(nome=>[nome,encontradas.has(nome)])),
+        paginacaoIncompleta:!!response.body.nextPageToken};
+    }else resultado.functions={status:response.status};
+  }catch{resultado.functions={status:"indisponivel"};}
+  report(resultado);
 }
-main().catch(error=>{
-  // Não imprimir stack trace com potenciais caminhos de credenciais.
-  process.stderr.write("Diagnóstico bloqueado: configuração local inválida ou falha de execução.\n");
+main().catch(()=>{
+  // Não imprimir exceções, arquivos, endpoints privados ou stack traces.
+  process.stderr.write("Diagnóstico indisponível: configuração inválida ou credencial ausente.\n");
   process.exitCode=1;
 });
