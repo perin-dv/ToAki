@@ -2,7 +2,7 @@ import { getIdTokenResult, type User } from "firebase/auth";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { collection, getDocs, limit, query, type DocumentData } from "firebase/firestore";
 import { db, firebaseApp } from "./firebase";
-import { exigirHomologacao } from "./ambiente";
+import { exigirAmbienteOperacional } from "./ambiente";
 
 export type TipoOperacional="cliente"|"veiculo"|"entregador"|"pedido";
 export type RegistroOperacional={
@@ -15,14 +15,14 @@ const colecao:Record<TipoOperacional,string>={
   cliente:"clientes",veiculo:"veiculos",entregador:"entregadores_vinculados",pedido:"pedidos"
 };
 export async function empresaAutorizada(user:User):Promise<string|null>{
-  exigirHomologacao();
+  exigirAmbienteOperacional();
   const token=await getIdTokenResult(user,true);
   if(!user.emailVerified)return null;
   const id=token.claims.empresa_id;
   return typeof id==="string" && /^empresa_[0-9]{14}$/.test(id)?id:null;
 }
 export async function listarRegistros(empresaId:string,tipo:TipoOperacional):Promise<RegistroOperacional[]>{
-  exigirHomologacao();
+  exigirAmbienteOperacional();
   if(!/^empresa_[0-9]{14}$/.test(empresaId))throw Error("Empresa inválida.");
   const snap=await getDocs(query(collection(db,"empresas",empresaId,colecao[tipo]),limit(50)));
   return snap.docs.map(doc=>{
@@ -48,7 +48,7 @@ export async function listarRegistros(empresaId:string,tipo:TipoOperacional):Pro
   });
 }
 export async function criarRegistro(empresaId:string,tipo:TipoOperacional,dados:Record<string,string>):Promise<string>{
-  exigirHomologacao();
+  exigirAmbienteOperacional();
   if(!/^empresa_[0-9]{14}$/.test(empresaId))throw Error("Empresa inválida.");
   const operar=httpsCallable<
     {empresaId:string;tipo:TipoOperacional;dados:Record<string,string>},
