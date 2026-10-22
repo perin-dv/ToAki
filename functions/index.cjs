@@ -126,7 +126,7 @@ exports.analisarCadastroEmpresa = onCall(
       // executar a mesma aprovação novamente é seguro e permite recuperação.
       try {
         const claimsAtuais=(await auth.getUser(uidSolicitante)).customClaims || {};
-        await auth.setCustomUserClaims(uidSolicitante,{...claimsAtuais,role:"dono_empresa"});
+        await auth.setCustomUserClaims(uidSolicitante,{...claimsAtuais,role:"dono_empresa",empresa_id:resultado.empresaId});
       } catch {
         throw new HttpsError("internal","Empresa aprovada, mas a permissão da conta está pendente. Reprocesse a aprovação.");
       }
@@ -134,3 +134,6 @@ exports.analisarCadastroEmpresa = onCall(
     return resultado;
   }
 );
+
+// Operações de dados reais só poderão executar no projeto de homologação separado.
+exports.operarEmpresaHomologacao=require("./operacoes.cjs").operarEmpresaHomologacao;
