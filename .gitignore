@@ -6,3 +6,6 @@ dist/
 !.env.example
 firebase-debug.log
 firebase-debug.*.log
+
+# Icons generated deterministically by npm run build
+public/icons/icon-*.png
