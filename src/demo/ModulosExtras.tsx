@@ -55,7 +55,7 @@ export function ClientesDemo({dados,atualizar}:Props) {
         {filtrados.map(c=>{
           const notas=dados.entregas.filter(n=>n.destinatario===c.nome);
           return <article key={c.id} className="demo-record">
-            <div><strong>{c.nome}</strong><small>{c.endereco?enderecoCompleto(c.endereco):"Endereço não informado no cadastro antigo"}</small><small>{notas.length} NFs associadas na simulação</small><small>{notas.map(n=>"NF "+n.nf+" ("+n.status+")").join(" · ")||"Sem notas"}</small></div>
+            <div><strong>{c.nome}</strong><small>{c.endereco?enderecoCompleto(c.endereco)+" · CEP "+c.endereco.cep:"Endereço não informado no cadastro antigo"}</small><small>{notas.length} NFs associadas na simulação</small><small>{notas.map(n=>"NF "+n.nf+" ("+n.status+")").join(" · ")||"Sem notas"}</small></div>
             <div className="demo-actions"><button type="button" className="demo-danger" onClick={()=>remover(c.id)} aria-label={"Excluir cliente "+c.nome}>Excluir</button></div>
           </article>;
         })}
