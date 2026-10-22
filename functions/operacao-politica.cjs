@@ -16,18 +16,30 @@ function validarOperacao(input){
   if(!dados||typeof dados!=="object"||Array.isArray(dados))throw Error("Dados inválidos.");
   const campos=Object.keys(dados);
   const permitidos={
-    cliente:["nome","telefone","endereco"],
+    cliente:["nome","telefone","cep","logradouro","numero","complemento","bairro","cidade","uf"],
     veiculo:["placa","categoria"],
     entregador:["nome","telefone"],
     pedido:["numero_nf","destinatario_id","entregador_id","endereco_entrega"]
   };
   if(!Object.prototype.hasOwnProperty.call(permitidos,tipo))throw Error("Tipo de cadastro inválido.");
   if(campos.some(c=>!permitidos[tipo].includes(c)))throw Error("Campo não autorizado.");
-  if(tipo==="cliente")return{empresaId,tipo,dados:{
-    nome:texto(dados.nome,3,100),
-    telefone:texto(dados.telefone,0,20,false),
-    endereco:texto(dados.endereco,0,180,false)
-  }};
+  if(tipo==="cliente"){
+    const cep=texto(dados.cep,8,9).replace(/\D/g,"");
+    if(!/^\d{8}$/.test(cep))throw Error("CEP inválido.");
+    const uf=texto(dados.uf,2,2).toUpperCase();
+    if(!/^(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)$/.test(uf))throw Error("UF inválida.");
+    return{empresaId,tipo,dados:{
+      nome:texto(dados.nome,3,100),
+      telefone:texto(dados.telefone,0,20,false),
+      cep,
+      logradouro:texto(dados.logradouro,2,120),
+      numero:texto(dados.numero,1,15),
+      complemento:texto(dados.complemento,0,80,false),
+      bairro:texto(dados.bairro,2,100),
+      cidade:texto(dados.cidade,2,100),
+      uf
+    }};
+  }
   if(tipo==="veiculo"){
     const placa=texto(dados.placa,7,7).toUpperCase();
     if(!/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(placa))throw Error("Placa inválida.");
