@@ -8,6 +8,7 @@ import Brand from "../components/Brand";
 import MenuIcon from "../components/MenuIcon";
 import EmpresaOperacao from "./EmpresaOperacao";
 import ColecaoEmpresaPage from "./ColecaoEmpresaPage";
+import RelatoriosEmpresaPage from "./RelatoriosEmpresaPage";
 import {ambienteOperacional} from "../lib/ambiente";
 import {empresaAutorizada,type RegistroOperacional,type TipoOperacional} from "../lib/operacaoEmpresa";
 
@@ -158,7 +159,7 @@ export default function SiteOperacionalPage(){
             <EmpresaOperacao key={secao} abaInicial={cadastroAba[secao]}/>:
             secao==="comprovantes"?<ColecaoEmpresaPage empresaId={empresaId!} grupo="comprovantes"/>:
             secao==="historico"?(["dono_empresa","gestor"].includes(role??"")?
-              <ColecaoEmpresaPage empresaId={empresaId!} grupo="historico"/>:
+              <><RelatoriosEmpresaPage empresaId={empresaId!}/><ColecaoEmpresaPage empresaId={empresaId!} grupo="historico"/></>:
               <section className="panel content-panel"><h2>Histórico de operações</h2><p>Seu perfil não tem acesso aos eventos administrativos. Peça autorização ao gestor.</p></section>):
             secao==="empresa"?(["dono_empresa","gestor"].includes(role??"")?
               <><ColecaoEmpresaPage empresaId={empresaId!} grupo="funcionarios"/><section className="panel content-panel"><Link to="/empresa" className="primary button-link">Ver perfil e permissões empresariais →</Link></section></>:
