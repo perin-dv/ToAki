@@ -1,7 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { AuthProvider } from "./auth/AuthProvider";
+import { AuthProvider, ContaTesteProvider } from "./auth/AuthProvider";
 import PrivateRoute from "./components/PrivateRoute";
 import { LoginPage, RegisterPage, PasswordPage, VerifyEmailPage, PendingPage } from "./pages/AuthPages";
 import { CompanyPage, CustomerPage, AdminPage } from "./pages/PrivatePages";
@@ -13,6 +13,7 @@ function App() {
     <Route path="/" element={<Navigate to="/login" replace/>}/>
     <Route path="/demonstracao" element={<PrivateRoute area="demo"><DemoPage/></PrivateRoute>}/>
     {import.meta.env.MODE === "e2e" && <Route path="/__e2e_demonstracao" element={<DemoPage/>}/>}
+    {import.meta.env.MODE === "e2e" && <Route path="/__e2e_conta" element={<ContaTesteProvider><CustomerPage/></ContaTesteProvider>}/> }
     <Route path="/login" element={<LoginPage/>}/>
     <Route path="/cadastro" element={<RegisterPage/>}/>
     <Route path="/recuperar-senha" element={<PasswordPage/>}/>
