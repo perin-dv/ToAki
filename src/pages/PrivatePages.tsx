@@ -1,12 +1,11 @@
 import { useState, type ReactNode } from "react";
 import { signOut } from "firebase/auth";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { auth } from "../lib/firebase";
 import { useAuth } from "../auth/AuthProvider";
 import Brand from "../components/Brand";
 import MenuIcon from "../components/MenuIcon";
 import PerfilConta from "./PerfilConta";
-import CompanyRegistration from "./CompanyRegistration";
 import AdminRequests from "./AdminRequests";
 import EmpresaOperacao from "./EmpresaOperacao";
 import { ambienteHomologacao } from "../lib/ambiente";
@@ -23,7 +22,6 @@ function nomeConta(nome:string|null|undefined,email:string|null|undefined){
 }
 function Shell({title,description,children}:{title:string;description:string;children:ReactNode}) {
   const {user,role}=useAuth();
-  const location=useLocation();
   const navigate=useNavigate();
   const [saindo,setSaindo]=useState(false);
   const [erro,setErro]=useState("");
@@ -32,12 +30,7 @@ function Shell({title,description,children}:{title:string;description:string;chi
     try{await signOut(auth);navigate("/login",{replace:true});}
     catch{setErro("Não foi possível encerrar a sessão. Tente novamente.");setSaindo(false);}
   };
-  const voltar=()=>{
-    // A página Minha conta deve ter uma saída navegável, inclusive após atualização.
-    if(location.state?.from==="/demonstracao"){navigate("/demonstracao");return;}
-    if(window.history.length>1){navigate(-1);return;}
-    navigate("/demonstracao");
-  };
+  const voltar=()=>navigate("/inicio");
   const avatar=(user?.displayName||user?.email||"T").trim().charAt(0).toLocaleUpperCase("pt-BR");
   return <div className="private-app">
     <header className="private-header">
@@ -54,7 +47,10 @@ function Shell({title,description,children}:{title:string;description:string;chi
 }
 export function CustomerPage() {
   const {user}=useAuth();
-  const [aba,setAba]=useState<AbaCliente>("inicio");
+  const [busca,setBusca]=useSearchParams();
+  const secao=busca.get("aba");
+  const aba:AbaCliente=secao==="entregas"||secao==="empresa"||secao==="perfil"?secao:"inicio";
+  const setAba=(proxima:AbaCliente)=>setBusca(proxima==="inicio"?{}:{aba:proxima});
   const [,atualizarPerfil]=useState(0);
   const nome=nomeConta(user?.displayName,user?.email);
   return <Shell title="Minha conta" description="Seus dados, entregas e solicitações em um só lugar.">
@@ -96,10 +92,10 @@ export function CustomerPage() {
       <div className="account-empty"><span className="account-empty-icon"><MenuIcon name="entregas" size={32}/></span><strong>A consulta das suas entregas ainda está sendo integrada.</strong><p>Estamos preparando a conexão entre empresas e clientes. NFs de terceiros não são mostradas sem autorização.</p></div>
     </section>}
     {aba==="perfil"&&<PerfilConta onSaved={()=>atualizarPerfil(n=>n+1)}/>}
-    {aba==="empresa"&&<div className="account-business">
-      <div className="account-business-intro"><h2>Vincular minha empresa</h2><p>O cadastro por CNPJ exige comprovação do vínculo e aprovação administrativa; consultar o CNPJ não concede acesso.</p></div>
-      <CompanyRegistration/>
-    </div>}
+    {aba==="empresa"&&<section className="panel content-panel account-full-panel">
+      <div className="account-business-intro"><h2>Cadastro empresarial separado</h2><p>O acesso de empresa não é igual ao cadastro de cliente. É necessário cadastrar o responsável, informar o CNPJ e obter aprovação.</p></div>
+      <div className="account-empty"><span className="account-empty-icon"><MenuIcon name="empresa" size={31}/></span><strong>Quer administrar entregas de uma empresa?</strong><p>Continue para o processo empresarial. A criação de uma conta pessoal, sozinha, não concede permissões para cadastrar notas fiscais.</p><Link to="/cadastro/empresa/dados" className="primary button-link">Continuar cadastro empresarial →</Link></div>
+    </section>}
     <div className="account-footer"><span>toAki · Ambiente em desenvolvimento</span><span>Seus dados de acesso são gerenciados pelo Firebase Authentication.</span></div>
   </Shell>;
 }
