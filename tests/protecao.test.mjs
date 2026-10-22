@@ -145,8 +145,11 @@ test('Cadastro real de usuario para piloto não libera cadastros empresariais',(
   assert.ok(register.includes('link de testes não é privado'));
   assert.ok(!register.includes('sendEmailVerification('));
   assert.ok(empresa.includes('if(!ambienteHomologacao) return'));
-  assert.ok(config.includes('exigirHomologacao'));
-  assert.ok(privatePage.includes('solicitações empresariais e operações de entregas reais continuam bloqueadas'));
+  assert.ok(config.includes('exigirAmbienteOperacional'));
+  assert.ok(config.includes('VITE_TOAKI_PILOTO_NO_ORIGINAL'));
+  assert.ok(config.includes('ambientePilotoOriginal'));
+  assert.ok(privatePage.includes('ambienteOperacional?<EmpresaOperacao/>'));
+  assert.ok(privatePage.includes('Cadastros empresariais e entregas reais continuam bloqueados'));
 });
 
 test('Fluxo correto: landing, cliente e empresa separados, home apos login, logo e voltar seguros',()=>{
