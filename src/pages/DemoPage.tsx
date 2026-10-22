@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {signOut} from "firebase/auth";
 import {auth} from "../lib/firebase";
@@ -64,7 +64,7 @@ export default function DemoPage() {
   const pendentes=entregas.filter(n=>n.status==="Aguardando coleta").length;
   const [menuAberto,setMenuAberto]=useState(false);
   const mudarAba=(novaAba:MenuKey)=>{setTab(novaAba);setMenuAberto(false)};
-  const voltarAoMapa=()=>{mudarAba("inicio");setSelected(0);};
+  const voltarAoMapa=(event:MouseEvent<HTMLAnchorElement>)=>{mudarAba("inicio");setSelected(0);if(window.location.pathname==="/inicio"||window.location.pathname==="/__e2e_inicio")event.preventDefault();};
   useEffect(()=>{
     if(!menuAberto)return;
     const anterior=document.body.style.overflow;
