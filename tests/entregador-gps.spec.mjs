@@ -11,6 +11,12 @@ test("GPS nunca inicia automaticamente na interface de testes",async({page})=>{
   await expect(page.getByText(/integração real só será habilitada no Preview do piloto/)).toBeVisible();
   await expect(page.getByText(/Confirme seu e-mail/).first()).toBeVisible();
   await expect(page.getByRole("button",{name:"Iniciar GPS desta entrega"})).toHaveCount(0);
+  await expect(page.locator('link[rel="manifest"]')).toHaveAttribute("href","/manifest-entregador.webmanifest");
+  const manifestResponse=await page.request.get("/manifest-entregador.webmanifest");
+  expect(manifestResponse.ok()).toBeTruthy();
+  const manifest=await manifestResponse.json();
+  expect(manifest.id).toBe("/entregador");
+  expect(manifest.start_url).toBe("/entregador");
 });
 
 test("app do entregador é responsivo em celular sem vazamento horizontal",async({page})=>{
