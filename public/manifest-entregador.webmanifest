@@ -1,0 +1,35 @@
+{
+  "name": "toAki Entregador — Minhas Entregas",
+  "short_name": "toAki Boy",
+  "description": "Aplicativo do entregador toAki: confira suas entregas e compartilhe o GPS durante a rota autorizada.",
+  "id": "/entregador",
+  "start_url": "/entregador",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "standalone"
+  ],
+  "background_color": "#0d1015",
+  "theme_color": "#0d1015",
+  "lang": "pt-BR",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "navigation",
+    "business",
+    "productivity"
+  ]
+}
