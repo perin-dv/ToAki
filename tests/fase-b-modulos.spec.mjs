@@ -34,7 +34,7 @@ test("Fase B: comprovante fictício, filtro e CSV sem dados reais",async({page})
   const nf=page.locator(".demo-delivery-card").filter({hasText:"NF 0045821"});
   await nf.getByRole("button",{name:"Concluir entrega"}).click();
   await menu.getByRole("button",{name:"Comprovantes"}).click();
-  await page.getByRole("combobox",{name:"NF entregue"}).selectOption({label:/NF 0045821/});
+  await page.getByRole("combobox",{name:"NF entregue"}).selectOption({label:"NF 0045821 · Oficina Exemplo A"});
   await page.getByRole("textbox",{name:"Recebido por (nome inventado)"}).fill("Cliente Exemplo");
   await page.getByRole("textbox",{name:"Observação fictícia"}).fill("Recebido no balcão");
   await page.getByRole("button",{name:"Registrar recibo fictício"}).click();
