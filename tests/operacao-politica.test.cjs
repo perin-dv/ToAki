@@ -13,7 +13,7 @@ test("rejeita payload com funções, papéis e status enviados pelo navegador",(
   assert.throws(()=>validarOperacao({empresaId:id,tipo:"cliente",dados:{nome:"Oficina Exemplo",role:"admin_toaki"}}),/não autorizado/);
   assert.throws(()=>validarOperacao({empresaId:id,tipo:"pedido",dados:{numero_nf:"1",destinatario_id:"cliente123",endereco_entrega:"Rua Exemplo",status:"entregue"}}),/não autorizado/);
   assert.throws(()=>validarOperacao({empresaId:id,tipo:"funcionario",dados:{nome:"Teste"}}),/inválido/);
-  assert.throws(()=>validarOperacao({empresaId:"empresa_de_outro",tipo:"cliente",dados:{nome:"Teste Usuário"}}),/Empresa inválida|/);
+  assert.throws(()=>validarOperacao({empresaId:"empresa_de_outro",tipo:"cliente",dados:{nome:"Teste Usuário"}}),/Empresa inválida/);
   assert.throws(()=>validarOperacao({empresaId:id,tipo:"veiculo",dados:{placa:"1111111",categoria:"Moto"}}),/Placa inválida/);
 });
 test("não há operação de exclusão nem mudanças de papel no validador inicial",()=>{
