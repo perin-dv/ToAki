@@ -75,7 +75,7 @@ test('Fundo lateral preto uniforme e logo integrados no login e prototipo', () =
   assert.ok(css.includes('.demo-sidebar,.auth-intro,.private-header,.mobile-top,.mobile-nav'));
   assert.ok(brand.includes('to={user?"/inicio":"/"}'));
   assert.ok(auth.includes('Já tem cadastro no Firebase Authentication?'));
-  assert.ok(auth.includes('O painel de demonstração e seus menus são acessíveis somente após entrar na sua conta.'));
+  assert.ok(auth.includes('O painel demonstrativo continua separado dos dados reais.'));
 });
 
 test('Cadastro de teste usa e-mail/senha sem link automático e protege dados empresariais', () => {
