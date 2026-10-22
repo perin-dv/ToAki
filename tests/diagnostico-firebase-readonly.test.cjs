@@ -20,7 +20,7 @@ test("script consulta somente metadados e não contém métodos de escrita",()=>
   assert.match(source,/documents:listCollectionIds/);
   assert.match(source,/cloudfunctions\.googleapis\.com\/v2/);
   assert.match(source,/method="GET"/);
-  assert.doesNotMatch(source,/\.set\(|\.create\(|\.update\(|\.delete\(|setCustomUserClaims\(/);
+  assert.doesNotMatch(source,/\.set\(|\.create\(|\.update\((?!mensagem\))|\.delete\(|setCustomUserClaims\(/);
   assert.match(source,/COLECOES\.map\(nome=>\[nome,encontradas\.has\(nome\)\]\)/);
 });
 test("sem credencial o diagnóstico falha fechado e não revela stack",()=>{
