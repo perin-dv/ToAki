@@ -20,6 +20,7 @@ type Solicitacao = {
 };
 const texto=(v: unknown)=>typeof v==="string"?v:"";
 const backendAtivado=import.meta.env.VITE_ENABLE_ADMIN_APPROVAL === "true";
+// Este sinalizador só exibe controles; o servidor sempre valida cargo e allowlist.
 
 function formatarCnpj(value:string) {
   const n=value.replace(/[^0-9]/g,"");
