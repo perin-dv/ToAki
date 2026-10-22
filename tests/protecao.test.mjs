@@ -213,3 +213,11 @@ test("Planos e assinaturas consultam apenas documentos permitidos pelo Firestore
   assert.ok(painel.includes("<AssinaturaEmpresaPage empresaId={empresaId!}/>"));
   assert.ok(!modulo.includes("sessionStorage"));
 });
+
+test("Após aprovação empresarial o painel pode atualizar claims sem desconectar a conta",()=>{
+  const site=file("src/pages/SiteOperacionalPage.tsx");
+  assert.ok(site.includes("const {user,role,refreshClaims}=useAuth()"));
+  assert.ok(site.includes("await refreshClaims()"));
+  assert.ok(site.includes("Verificar se minha empresa foi aprovada"));
+  assert.ok(site.includes("Atualizar permissão da minha conta"));
+});
