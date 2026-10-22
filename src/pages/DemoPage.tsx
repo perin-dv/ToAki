@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import {signOut} from "firebase/auth";
+import {auth} from "../lib/firebase";
 import Brand from "../components/Brand";
 import MenuIcon from "../components/MenuIcon";
 import { useAuth } from "../auth/AuthProvider";
@@ -41,6 +43,10 @@ function MapIllustration({items,selected,onSelect}:{items:Delivery[];selected:nu
 }
 export default function DemoPage() {
   const {user,role}=useAuth();
+  const navigate=useNavigate();
+  const [saindo,setSaindo]=useState(false);
+  const [erroSaida,setErroSaida]=useState("");
+  const sair=async()=>{setSaindo(true);setErroSaida("");try{await signOut(auth);navigate("/login",{replace:true});}catch{setErroSaida("Não foi possível sair. Tente novamente.");setSaindo(false);}};
   const uid=user?.uid??"e2e";
   const [dados,setDados]=useState<DemoDados>(()=>carregarDados(uid));
   useEffect(()=>{salvarDados(uid,dados)},[uid,dados]);
@@ -58,6 +64,7 @@ export default function DemoPage() {
   const pendentes=entregas.filter(n=>n.status==="Aguardando coleta").length;
   const [menuAberto,setMenuAberto]=useState(false);
   const mudarAba=(novaAba:MenuKey)=>{setTab(novaAba);setMenuAberto(false)};
+  const voltarAoMapa=()=>{mudarAba("inicio");setSelected(0);};
   useEffect(()=>{
     if(!menuAberto)return;
     const anterior=document.body.style.overflow;
@@ -78,20 +85,21 @@ export default function DemoPage() {
     {menuAberto&&<button className="drawer-backdrop" type="button" aria-label="Fechar menu lateral" onClick={()=>setMenuAberto(false)}/>}
     <aside id="demo-sidebar-menu" className={"demo-sidebar "+(menuAberto?"drawer-open":"")}>
       <div className="drawer-heading">
-        <Brand/>
+        <Brand onHomeClick={voltarAoMapa}/>
         <button className="drawer-close" type="button" aria-label="Fechar menu" onClick={()=>setMenuAberto(false)}>✕</button>
       </div>
       <nav aria-label="Menu completo do protótipo">
         {menu.map(m=><button type="button" key={m.key} onClick={()=>mudarAba(m.key)} className={"nav "+(tab===m.key?"active":"")} aria-current={tab===m.key?"page":undefined}><span className="nav-icon" aria-hidden="true"><MenuIcon name={m.key}/></span>{m.name}</button>)}
       </nav>
-      <div className="sidebar-foot"><strong>Soma Distribuidora</strong><span>Filial Maringá · Simulação</span><Link to={accountPath} state={{from:"/demonstracao"}}>Minha conta →</Link></div>
+      <div className="sidebar-foot"><strong>Empresa de exemplo</strong><span>Painel empresarial de testes · Sem dados reais</span><Link to={accountPath} state={{from:"/inicio"}}>Minha conta →</Link></div>
     </aside>
     <div className="demo-body"><header className="mobile-top">
       <button className="mobile-menu-button" type="button" aria-label="Abrir menu completo" aria-controls="demo-sidebar-menu" aria-expanded={menuAberto} onClick={()=>setMenuAberto(true)}><MenuIcon name="menu" size={22}/> <span>Menu</span></button>
-      <Brand compact/><Link to={accountPath} state={{from:"/demonstracao"}} className="top-signin">Minha conta →</Link>
+      <Brand compact onHomeClick={voltarAoMapa}/><Link to={accountPath} state={{from:"/inicio"}} className="top-signin">Minha conta →</Link>
     </header>
       <main className="demo-main">
-        <div className="demo-head"><div><h1>{tab==="inicio"?"Central de rastreamento":panelTitle}</h1><p>toAki Business • Ambiente de demonstração</p></div><div className="head-right"><span className="fake-status">● Dados simulados</span><Link to={accountPath} state={{from:"/demonstracao"}} className="secondary">Minha conta</Link></div></div>
+        <div className="demo-head"><div><h1>{tab==="inicio"?"Central de rastreamento":panelTitle}</h1><p>Painel da empresa • Simulação para computador e celular</p></div><div className="head-right"><span className="fake-status">● Dados simulados</span><Link to={accountPath} state={{from:"/inicio"}} className="secondary">Minha conta</Link><button className="secondary" type="button" disabled={saindo} onClick={()=>void sair()}>{saindo?"Saindo...":"Sair"}</button></div></div>
+        {erroSaida&&<p role="alert" className="form-error">{erroSaida}</p>}
         <div className="demo-warning">SIMULAÇÃO: cadastros de teste salvos somente nesta aba do navegador; sem Firestore, GPS real, cobranças ou dados fiscais verdadeiros.</div>
         {tab==="inicio"?<><div className="stats">{[["📦",String(entregas.length),"Entregas hoje"],["🛵",String(emRota),"Em rota"],["✅",String(entregues),"Entregues"],["⏱",String(pendentes),"Pendentes"]].map(([icon,value,label])=><div key={label} className="stat"><span className="stat-icon">{icon}</span><div><strong>{value}</strong><small>{label}</small></div></div>)}</div>
           <div className="content-grid"><section className="panel map-shell"><div className="panel-head maphead"><h2>Mapa dos entregadores</h2><label className="search">⌕ <input type="search" placeholder="Buscar NF, pedido ou entregador..." value={search} onChange={e=>setSearch(e.target.value)} aria-label="Buscar entregas fictícias"/></label></div><MapIllustration items={entregas} selected={selected} onSelect={setSelected}/></section>
