@@ -8,7 +8,8 @@ export type TipoOperacional="cliente"|"veiculo"|"entregador"|"pedido";
 export type RegistroOperacional={
   id:string;titulo_registro:string;status:string;nome?:string;
   numero_nf?:string;placa?:string;categoria?:string;telefone?:string;
-  endereco?:string;endereco_entrega?:string;criado_em?:unknown;
+  cep?:string;logradouro?:string;numero?:string;complemento?:string;bairro?:string;cidade?:string;uf?:string;
+  endereco_entrega?:string;criado_em?:unknown;
 };
 const colecao:Record<TipoOperacional,string>={
   cliente:"clientes",veiculo:"veiculos",entregador:"entregadores_vinculados",pedido:"pedidos"
@@ -34,7 +35,13 @@ export async function listarRegistros(empresaId:string,tipo:TipoOperacional):Pro
       placa:typeof d.placa==="string"?d.placa:undefined,
       categoria:typeof d.categoria==="string"?d.categoria:undefined,
       telefone:typeof d.telefone==="string"?d.telefone:undefined,
-      endereco:typeof d.endereco==="string"?d.endereco:undefined,
+      cep:typeof d.cep==="string"?d.cep:undefined,
+      logradouro:typeof d.logradouro==="string"?d.logradouro:undefined,
+      numero:typeof d.numero==="string"?d.numero:undefined,
+      complemento:typeof d.complemento==="string"?d.complemento:undefined,
+      bairro:typeof d.bairro==="string"?d.bairro:undefined,
+      cidade:typeof d.cidade==="string"?d.cidade:undefined,
+      uf:typeof d.uf==="string"?d.uf:undefined,
       endereco_entrega:typeof d.endereco_entrega==="string"?d.endereco_entrega:undefined,
       criado_em:d.criado_em
     };
