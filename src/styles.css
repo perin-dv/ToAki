@@ -421,3 +421,25 @@
   .home-top-actions{gap:7px}
   .home-top-actions .home-logout{padding:7px 9px}
 }
+
+/* Desktop-first enterprise operations dashboard, also adapts to tablets and phones. */
+@media (min-width:1121px){
+  .fake-map{height:clamp(435px,51vh,710px)}
+  .demo-main{width:100%;max-width:1920px;margin:0 auto;padding:28px clamp(22px,2.5vw,52px)}
+  .demo-sidebar{width:clamp(232px,16.5vw,280px)}
+}
+@media (min-width:761px) and (max-width:1120px){
+  .fake-map{height:clamp(390px,44vh,560px)}
+}
+.head-right{flex-wrap:wrap;justify-content:flex-end}
+.head-right button.secondary{min-height:38px;white-space:nowrap}
+@media (max-width:760px){
+  .head-right button.secondary{display:inline-flex}
+  .demo-head{align-items:flex-start}
+  .fake-map{height:clamp(300px,45vh,430px)}
+}
+@media (max-width:380px){
+  .demo-head{flex-wrap:wrap}
+  .head-right{width:100%;justify-content:flex-start}
+  .head-right button.secondary{min-height:35px}
+}
