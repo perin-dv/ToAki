@@ -11,7 +11,7 @@ test("Fase B demo: cadastrar entregador e NF, atribuir e concluir sem Firestore"
 
   await menu.getByRole("button",{name:"Entregas e NFs"}).click();
   await page.getByRole("textbox",{name:"Número da NF"}).fill("0045824");
-  await page.getByRole("textbox",{name:"Destinatário fictício"}).fill("Oficina Exemplo D");
+  await page.getByRole("combobox",{name:"Destinatário fictício"}).fill("Oficina Exemplo D");
   await page.getByRole("textbox",{name:"Destino fictício"}).fill("Maringá, Zona 02");
   await page.getByRole("combobox",{name:"Entregador",exact:true}).selectOption({label:"Roberto Exemplo"});
   await page.getByRole("button",{name:"Cadastrar NF fictícia"}).click();
