@@ -28,7 +28,7 @@ type Secao=typeof menu[number]["key"];
 const empresaPapeis=["dono_empresa","gestor","vendedor"];
 
 export default function SiteOperacionalPage(){
-  const {user,role}=useAuth();
+  const {user,role,refreshClaims}=useAuth();
   const navegar=useNavigate();
   const [secao,setSecao]=useState<Secao>("inicio");
   const [menuAberto,setMenuAberto]=useState(false);
@@ -40,6 +40,7 @@ export default function SiteOperacionalPage(){
   const [nfSelecionada,setNfSelecionada]=useState<string|null>(null);
   const [mostrarMapa,setMostrarMapa]=useState(false);
   const [saindo,setSaindo]=useState(false);
+  const [atualizandoAcesso,setAtualizandoAcesso]=useState(false);
 
   const acessoEmpresa=!!role&&empresaPapeis.includes(role);
   useEffect(()=>{
@@ -90,6 +91,19 @@ export default function SiteOperacionalPage(){
     try{await signOut(auth);navegar("/login",{replace:true});}
     catch{setErro("Não foi possível sair.");setSaindo(false);}
   };
+  const atualizarAcesso=async()=>{
+    if(!user)return;
+    setAtualizandoAcesso(true);setErro("");
+    try{
+      await refreshClaims();
+      const id=await empresaAutorizada(user);
+      setEmpresaId(id);
+      if(!id)setErro("A empresa ainda não está aprovada ou a permissão da sua conta está pendente.");
+    }catch{
+      setEmpresaId(null);
+      setErro("Não foi possível verificar a autorização empresarial no Firebase.");
+    }finally{setAtualizandoAcesso(false);}
+  };
   const pendentes=registros.filter(r=>r.status==="pendente").length;
   const emRota=registros.filter(r=>r.status==="em_rota").length;
   const entregues=registros.filter(r=>r.status==="entregue").length;
@@ -120,9 +134,11 @@ export default function SiteOperacionalPage(){
         </div>
         {!ambienteOperacional&&<div className="demo-warning" role="status">A integração operacional com o Firebase ainda não foi habilitada. Nenhum dado fictício está sendo exibido como entrega real. <Link to="/demonstracao">Ver demonstração separada</Link>.</div>}
         {ambienteOperacional&&!acessoEmpresa&&<section className="panel content-panel"><h2>Você ainda não tem um painel empresarial autorizado</h2><p>As entregas só aparecem após aprovação da empresa e vínculo da sua conta. Não mostramos dados de outras empresas.</p>
-          {role==="admin_toaki"?<Link className="primary button-link" to="/admin">Abrir administração</Link>:<Link className="primary button-link" to="/cadastro/empresa/dados">Solicitar cadastro de empresa</Link>}</section>}
+          {role==="admin_toaki"?<Link className="primary button-link" to="/admin">Abrir administração</Link>:<Link className="primary button-link" to="/cadastro/empresa/dados">Solicitar cadastro de empresa</Link>}
+          <button type="button" className="secondary" disabled={atualizandoAcesso} onClick={()=>void atualizarAcesso()}>{atualizandoAcesso?"Consultando Firebase...":"Atualizar permissão da minha conta"}</button></section>}
         {carregando&&<p role="status">Verificando autorização no Firebase...</p>}
-        {ambienteOperacional&&acessoEmpresa&&!carregando&&!empresaId&&<section className="panel content-panel"><h2>Empresa ainda não liberada</h2><p>O vínculo precisa ser aprovado por um administrador e confirmado no Firebase. Os dados de exemplo foram removidos da tela operacional.</p><Link to="/cadastro/empresa/dados" className="secondary button-link">Consultar solicitação</Link></section>}
+        {ambienteOperacional&&acessoEmpresa&&!carregando&&!empresaId&&<section className="panel content-panel"><h2>Empresa ainda não liberada</h2><p>O vínculo precisa ser aprovado por um administrador e confirmado no Firebase. Os dados de exemplo foram removidos da tela operacional.</p><Link to="/cadastro/empresa/dados" className="secondary button-link">Consultar solicitação</Link>
+          <button type="button" className="secondary" disabled={atualizandoAcesso} onClick={()=>void atualizarAcesso()}>{atualizandoAcesso?"Consultando Firebase...":"Verificar se minha empresa foi aprovada"}</button></section>}
         {erro&&<p role="alert" className="form-error">{erro}</p>}
         {destinosAutorizados&&secao==="inicio"&&<>
           <div className="stats">
