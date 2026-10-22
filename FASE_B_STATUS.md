@@ -69,3 +69,9 @@ Nova decisão do responsável registrada em `ROADMAP_SITE_OFICIAL.md`: terminar 
 - Histórico de auditoria permanece separado e acessível apenas a gestores.
 - Pendente: paginação real/contagens agregadas, agrupamento por dia/mês, cálculo de desempenho do entregador, histórico de rota GPS, integração de comprovantes/assinaturas e implantação/validação do backend.
 - A execução automática precisa terminar e ser conferida antes de declarar aprovação deste incremento.
+
+## Leitura real de assinaturas sem checkout fictício (22/10/2026)
+- A aba `Assinatura` do novo painel agora consulta `planos` publicados e `assinaturas` vinculadas à empresa usando as regras atuais do Firestore.
+- A tela exige cargo de gestor ou proprietário e diferencia **sem assinatura** de **erro de consulta**. Se não houver planos publicados, exibe lista vazia e não inventa preços.
+- A contratação, o pagamento e o webhook **ainda não estão implementados**, portanto não há simulação de confirmação ou cobrança.
+- Este código depende da implantação e autorização do piloto operacional; não prova faturamento ativo no Firebase atual.
