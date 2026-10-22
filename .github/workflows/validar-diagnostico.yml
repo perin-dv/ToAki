@@ -1,0 +1,23 @@
+name: Validar diagnóstico Firebase sem credencial
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar sintaxe sem instalar dependências
+        run: node --check scripts/diagnostico-firebase-readonly.cjs
+      - name: Testar isolamento e proteção das credenciais
+        run: node --test tests/diagnostico-firebase-readonly.test.cjs
