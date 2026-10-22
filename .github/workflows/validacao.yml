@@ -35,6 +35,8 @@ jobs:
           java-version: '21'
       - name: Verificar configuracao e arquivos
         run: node --test tests/protecao.test.mjs
+      - name: Validar fluxo do Preview piloto sem deploy
+        run: node --test tests/preview-piloto-policy.test.cjs
       - name: Testar isolamento de dados no Firestore Emulator
         run: npm run test:security
       - name: Testar regras de aprovação de empresas (sem acessar produção)
