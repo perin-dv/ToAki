@@ -1,7 +1,7 @@
 import {useEffect,useState} from "react";
 import {estaInstalado,instalarPwa,ouvirInstalacao} from "../lib/pwa";
 
-const link="https://toaki-cf058--fase-a-go3l94zk.web.app/";
+const link=typeof window==="undefined"?"":window.location.origin+"/";
 const apple=()=>/iPad|iPhone|iPod/i.test(navigator.userAgent);
 const android=()=>/Android/i.test(navigator.userAgent);
 
