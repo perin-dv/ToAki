@@ -54,10 +54,13 @@ O responsável copiou do console `toaki-cf058` o conteúdo atual da aba Firestor
 Verificação existente: o workflow **`firebase-preview-fase-a.yml` já autenticou com sucesso** no Firebase em execução anterior e publicou apenas um Preview. Isso valida acesso ao Hosting, **NÃO prova permissão de leitura no Firestore nem lista Functions implantadas**.
 
 Novo código:
-- `scripts/diagnostico-firebase-readonly.cjs`: confirma `project_id=toaki-cf058` antes de abrir conexão; lê SOMENTE nomes de coleções raiz por `listCollections()` (sem IDs de documentos, valores ou dados pessoais); consulta via API `GET` somente a existência das Functions esperadas. Nunca registra credenciais, nomes de coleções não permitidas ou IDs pessoais. Falhas IAM são resumidas sem log de exceções brutas.
+- `scripts/diagnostico-firebase-readonly.cjs`: confirma `project_id=toaki-cf058` antes de autenticar; consulta somente nomes das coleções raiz via API de metadados `documents:listCollectionIds` (endpoint read-only que usa HTTP POST, sem ler documentos ou dados pessoais); consulta via API `GET` apenas a existência das Functions esperadas. Usa Node.js nativo, sem baixar pacotes. Nunca registra credenciais, nomes de coleções não permitidas ou IDs pessoais. Falhas IAM são resumidas sem log de exceções brutas.
 - `.github/workflows/firebase-diagnostico-readonly.yml`: execução **manual e apenas na `main`** depois de revisão/autorização de inclusão. Usa o secret de service account já previsto no repositório, em arquivo temporário, sem `firebase deploy` e sem qualquer escrita.
 - O workflow NÃO recebe secrets em PRs e não tem gatilho `pull_request`, `pull_request_target` ou `push`; isso evita que uma branch de código em revisão acesse credenciais de produção.
 
 **Resultado até agora:** script e workflow **preparados**, mas o diagnóstico remoto não foi executado porque o workflow não está na `main` e **não será mesclado sem autorização**. Mesmo depois de executado, somente provamos capacidades de leitura; ativação de empresa, backups, permissão administrativa e publicação do Preview continuam verificações separadas.
 
 Próximo passo antes de qualquer deploy: revisão/aprovação do PR, avaliação de backup e IAM, autorização para inserir workflow na branch principal e então executar manualmente o diagnóstico. A publicação do site continua bloqueada até confirmação de configuração e consentimento explícito.
+
+### Pull Request independente para destravar o diagnóstico
+Foi criado o PR [#10](https://github.com/perin-dv/ToAki/pull/10) diretamente sobre `main`, contendo somente script de metadados, workflows de leitura manual e testes sem segredos; não inclui o site nem qualquer publicação. **PR #10 permanece em rascunho, não mesclado.** A liberação para merge/execução precisa ser expressamente autorizada, após revisão. PR #9 permanece separado e sem deploy.
