@@ -26,8 +26,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Instalar dependencias do Firebase Admin (sem segredo no processo)
-        run: npm install --prefix functions --no-audit --no-fund --ignore-scripts
       - name: Diagnosticar METADADOS, sem alterar Firestore, Auth ou Hosting
         env:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TOAKI_CF058 }}
