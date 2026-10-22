@@ -4,17 +4,26 @@ test("Fase B: destinatário, equipe e plano de teste com sessões isoladas",asyn
   await page.goto("/__e2e_demonstracao");
   const menu=page.getByRole("navigation",{name:"Menu completo do protótipo"});
 
+  await page.route("https://viacep.com.br/ws/**",route=>route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({cep:"01001-000",logradouro:"Praça da Sé",bairro:"Sé",localidade:"São Paulo",uf:"SP"})}));
   await menu.getByRole("button",{name:"Clientes e links"}).click();
   await expect(page.getByRole("heading",{name:"Cadastrar destinatário fictício"})).toBeVisible();
   await page.getByRole("textbox",{name:"Nome da oficina fictícia"}).fill("Oficina Exemplo D");
+  await page.getByRole("textbox",{name:"CEP"}).fill("01001000");
+  await expect(page.getByRole("textbox",{name:"Rua / Logradouro"})).toHaveValue("Praça da Sé");
+  await expect(page.getByRole("textbox",{name:"Bairro"})).toHaveValue("Sé");
+  await expect(page.getByRole("textbox",{name:"Cidade"})).toHaveValue("São Paulo");
+  await expect(page.getByRole("textbox",{name:"UF"})).toHaveValue("SP");
+  await page.getByRole("textbox",{name:"Número"}).fill("123");
   await page.getByRole("button",{name:"Cadastrar destinatário"}).click();
   await expect(page.getByText("Oficina Exemplo D",{exact:true})).toBeVisible();
+  await expect(page.getByText("Praça da Sé, 123, Sé, São Paulo, SP",{exact:true})).toBeVisible();
 
   await menu.getByRole("button",{name:"Empresa e equipe"}).click();
   await page.getByRole("textbox",{name:"Nome fictício do funcionário"}).fill("Marina Exemplo");
-  await page.getByRole("combobox",{name:"Função fictícia"}).selectOption("Gestor");
+  await page.getByRole("combobox",{name:"Função fictícia"}).selectOption("Motoboy");
   await page.getByRole("button",{name:"Cadastrar funcionário fictício"}).click();
   await expect(page.getByText("Marina Exemplo",{exact:true})).toBeVisible();
+  await expect(page.getByText("Motoboy · não tem login nem acesso real")).toBeVisible();
 
   await menu.getByRole("button",{name:"Assinatura"}).click();
   await expect(page.getByText("Nenhuma cobrança",{exact:true})).toBeVisible();
