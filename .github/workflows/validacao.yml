@@ -53,6 +53,6 @@ jobs:
       - name: Instalar Playwright para testar navegação móvel real
         run: npm install --no-save --no-audit --no-fund @playwright/test
       - name: Preparar navegador Chromium de teste
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
       - name: Testar menus no celular e desktop
         run: npx playwright test
