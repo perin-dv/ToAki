@@ -3,19 +3,25 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider, ContaTesteProvider } from "./auth/AuthProvider";
 import PrivateRoute from "./components/PrivateRoute";
-import { LoginPage, RegisterPage, PasswordPage, VerifyEmailPage, PendingPage } from "./pages/AuthPages";
+import { LoginPage, RegisterPage, RegisterChoicePage, PasswordPage, VerifyEmailPage, PendingPage } from "./pages/AuthPages";
+import { PublicHomePage, HomePage } from "./pages/HomePages";
+import CompanyOnboardingPage from "./pages/CompanyOnboardingPage";
 import { CompanyPage, CustomerPage, AdminPage } from "./pages/PrivatePages";
 import DemoPage from "./pages/DemoPage";
 import "./styles.css";
 
 function App() {
   return <BrowserRouter><AuthProvider><Routes>
-    <Route path="/" element={<Navigate to="/login" replace/>}/>
+    <Route path="/" element={<PublicHomePage/>}/>
+    <Route path="/inicio" element={<PrivateRoute area="demo"><HomePage/></PrivateRoute>}/>
     <Route path="/demonstracao" element={<PrivateRoute area="demo"><DemoPage/></PrivateRoute>}/>
     {import.meta.env.MODE === "e2e" && <Route path="/__e2e_demonstracao" element={<DemoPage/>}/>}
     {import.meta.env.MODE === "e2e" && <Route path="/__e2e_conta" element={<ContaTesteProvider><CustomerPage/></ContaTesteProvider>}/> }
     <Route path="/login" element={<LoginPage/>}/>
-    <Route path="/cadastro" element={<RegisterPage/>}/>
+    <Route path="/cadastro" element={<RegisterChoicePage/>}/>
+    <Route path="/cadastro/cliente" element={<RegisterPage tipo="cliente"/>}/>
+    <Route path="/cadastro/empresa" element={<RegisterPage tipo="empresa"/>}/>
+    <Route path="/cadastro/empresa/dados" element={<PrivateRoute area="demo"><CompanyOnboardingPage/></PrivateRoute>}/>
     <Route path="/recuperar-senha" element={<PasswordPage/>}/>
     <Route path="/verificar-email" element={<VerifyEmailPage/>}/>
     <Route path="/acesso-pendente" element={<PendingPage/>}/>
