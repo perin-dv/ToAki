@@ -18,6 +18,7 @@ function App() {
     <Route path="/demonstracao" element={<PrivateRoute area="demo"><DemoPage/></PrivateRoute>}/>
     {import.meta.env.MODE === "e2e" && <Route path="/__e2e_demonstracao" element={<DemoPage/>}/>}
     {import.meta.env.MODE === "e2e" && <Route path="/__e2e_conta" element={<ContaTesteProvider><CustomerPage/></ContaTesteProvider>}/> }
+    {import.meta.env.MODE === "e2e" && <Route path="/__e2e_inicio" element={<ContaTesteProvider><HomePage/></ContaTesteProvider>}/>}
     <Route path="/login" element={<LoginPage/>}/>
     <Route path="/cadastro" element={<RegisterChoicePage/>}/>
     <Route path="/cadastro/cliente" element={<RegisterPage tipo="cliente"/>}/>
