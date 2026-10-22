@@ -20,6 +20,7 @@ function App() {
     {import.meta.env.MODE === "e2e" && <Route path="/__e2e_demonstracao" element={<DemoPage/>}/>}
     {import.meta.env.MODE === "e2e" && <Route path="/__e2e_conta" element={<ContaTesteProvider><CustomerPage/></ContaTesteProvider>}/> }
     {import.meta.env.MODE === "e2e" && <Route path="/__e2e_inicio" element={<ContaTesteProvider><DemoPage/></ContaTesteProvider>}/>}
+    {import.meta.env.MODE === "e2e" && <Route path="/__e2e_entregador" element={<ContaTesteProvider><EntregadorPage/></ContaTesteProvider>}/>}
     <Route path="/login" element={<LoginPage/>}/>
     <Route path="/cadastro" element={<RegisterChoicePage/>}/>
     <Route path="/cadastro/cliente" element={<RegisterPage tipo="cliente"/>}/>
