@@ -1,7 +1,7 @@
 import { useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
 import {
   novoId, placasValidas, proximoEstado, registrar, validarNota,
-  type DemoDados, type DemoEntrega, type DemoEntregador, type DemoVeiculo, type EstadoEntrega
+  type DemoDados, type DemoEntrega, type DemoVeiculo, type EstadoEntrega
 } from "./dadosDemo";
 
 type Atualizar=Dispatch<SetStateAction<DemoDados>>;
