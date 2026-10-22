@@ -109,3 +109,29 @@ test("dados desconhecidos são bloqueados por padrão",async()=>{
   await assertFails(getDoc(doc(dono(),"dados_privados","qualquer")));
   await assertFails(setDoc(doc(admin(),"auditoria","evento_forjado"),{status:"inventado"}));
 });
+
+test("cadastros de motos, motoristas, clientes e NFs são isolados por empresa e não aceitam escrita direta",async()=>{
+  const empresaA="empresa_11222333000181";
+  const empresaB="empresa_44555666000177";
+  await env.withSecurityRulesDisabled(async c=>{
+    const store=c.firestore();
+    await setDoc(doc(store,"empresas",empresaA),{status:"ativa"});
+    await setDoc(doc(store,"empresas",empresaB),{status:"ativa"});
+    await setDoc(doc(store,"empresas",empresaA,"funcionarios","uid-dono"),{ativo:true,papel:"gestor"});
+    await setDoc(doc(store,"empresas",empresaA,"veiculos","moto1"),{placa:"ABC1D23",categoria:"Moto",ativo:true});
+    await setDoc(doc(store,"empresas",empresaA,"entregadores_vinculados","motorista1"),{nome:"Motorista A",veiculo_id:"moto1",ativo:true});
+    await setDoc(doc(store,"empresas",empresaA,"clientes","cliente1"),{nome:"Cliente A",ativo:true});
+    await setDoc(doc(store,"empresas",empresaA,"pedidos","nf1"),{numero_nf:"124",entregador_id:"motorista1",veiculo_id:"moto1",destinatario_id:"cliente1",status:"pendente"});
+    await setDoc(doc(store,"empresas",empresaA,"historico","evento1"),{acao:"cadastrar_pedido"});
+    await setDoc(doc(store,"empresas",empresaB,"clientes","clienteSecreto"),{nome:"Cliente da outra empresa",ativo:true});
+    await setDoc(doc(store,"empresas",empresaB,"pedidos","nfSecreta"),{numero_nf:"999",status:"pendente"});
+  });
+  for(const sub of ["veiculos","entregadores_vinculados","clientes","pedidos","historico"]){
+    await assertSucceeds(getDocs(query(collection(dono(),"empresas",empresaA,sub),limit(20))));
+    await assertFails(getDocs(query(collection(dono(),"empresas",empresaB,sub),limit(20))));
+  }
+  await assertFails(getDoc(doc(dono(),"empresas",empresaB,"pedidos","nfSecreta")));
+  await assertFails(setDoc(doc(dono(),"empresas",empresaA,"veiculos","moto2"),{placa:"DDD2F34",categoria:"Moto",ativo:true}));
+  await assertFails(updateDoc(doc(dono(),"empresas",empresaA,"pedidos","nf1"),{status:"entregue"}));
+  await assertFails(deleteDoc(doc(dono(),"empresas",empresaA,"clientes","cliente1")));
+});
