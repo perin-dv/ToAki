@@ -231,8 +231,10 @@ test("Diagnóstico do Firebase usa apenas metadados e não injeta segredo em PR"
   assert.ok(workflow.includes("secrets.FIREBASE_SERVICE_ACCOUNT_TOAKI_CF058"));
   assert.ok(!/^[ ]+(pull_request|pull_request_target|push):/m.test(workflow));
   assert.ok(!/firebase(?:-tools)?\s+deploy|hosting:channel:deploy/.test(workflow));
-  assert.ok(script.includes("getFirestore(app).listCollections()"));
-  assert.ok(script.includes('method:"GET"'));
+  assert.ok(script.includes("documents:listCollectionIds"));
+  assert.ok(script.includes('"POST",{pageSize:100}'));
+  assert.ok(script.includes('method="GET"'));
+  assert.ok(!workflow.includes("npm install"));
   assert.ok(!/\.set\(|\.create\(|\.update\(|\.delete\(|setCustomUserClaims\(/.test(script));
   assert.ok(script.includes("resultado.firestore"));
   assert.ok(script.includes("resultado.functions"));
