@@ -65,7 +65,7 @@ export function CustomerPage() {
       </div>
       <div className="account-hero-art" aria-hidden="true"><span className="account-hero-route"/><span className="account-hero-pin">⌖</span></div>
     </section>
-    {!ambienteHomologacao&&<div className="demo-warning" role="status">Este preview ainda compartilha o Firebase Authentication com o projeto original. O cadastro de novos testadores e as solicitações de empresas estão pausados até a homologação separada.</div>}
+    {!ambienteHomologacao&&<div className="demo-warning" role="status">Este preview ainda compartilha o Firebase Authentication com o projeto original. O cadastro de usuário funciona para testes autorizados; solicitações empresariais e operações de entregas reais continuam bloqueadas até o ambiente separado.</div>}
     <nav className="account-tabs" aria-label="Seções da minha conta">
       {abasCliente.map(a=><button type="button" key={a.id} className={"account-tab "+(aba===a.id?"account-tab-active":"")} aria-current={aba===a.id?"page":undefined} onClick={()=>setAba(a.id)}>
         <MenuIcon name={a.icone} size={18}/><span>{a.titulo}</span>
