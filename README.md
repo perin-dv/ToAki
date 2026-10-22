@@ -49,3 +49,6 @@ planos/
 5. Comprovantes, relatórios, links e assinaturas.
 
 A hospedagem comercial deverá respeitar as condições de uso do provedor. O plano Vercel Hobby é destinado a uso pessoal não comercial.
+
+## Plano mestre
+Acompanhe as tarefas do produto em [PLANO_MVP.md](./PLANO_MVP.md). O tema hibrido foi adicionado na branch `develop` em `public/tema-hibrido.css`; ainda nao foi aprovado nem publicado. As telas de login, portal do cliente, banco e GPS permanecem pendentes.

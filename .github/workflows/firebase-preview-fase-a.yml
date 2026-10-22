@@ -1,0 +1,86 @@
+name: Publicar Fase A no Firebase Preview
+
+on:
+  pull_request:
+    branches: [develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+concurrency:
+  group: firebase-preview-fase-a
+  cancel-in-progress: true
+
+jobs:
+  preview-fase-a:
+    name: Preview Firebase (nunca canal live)
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'feature/fase-a-base-react'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Conferir credencial de publicação
+        id: firebase_credentials
+        shell: bash
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TOAKI_CF058 }}
+        run: |
+          if [[ -n "$FIREBASE_SERVICE_ACCOUNT_JSON" ]]; then
+            echo 'available=yes' >> "$GITHUB_OUTPUT"
+          else
+            echo 'available=no' >> "$GITHUB_OUTPUT"
+            echo '### Preview não publicado' >> "$GITHUB_STEP_SUMMARY"
+            echo 'Configure o secret FIREBASE_SERVICE_ACCOUNT_TOAKI_CF058 em Settings → Secrets and variables → Actions. Não envie o JSON no chat.' >> "$GITHUB_STEP_SUMMARY"
+            echo '::error::Preview não publicado: falta a credencial Firebase no GitHub Actions.'
+            exit 1
+          fi
+      - name: Instalar dependências
+        if: steps.firebase_credentials.outputs.available == 'yes'
+        run: npm install --no-audit --no-fund
+      - name: Testar estrutura e permissões antes de publicar
+        run: |
+          npm test
+          node --test tests/company-policy.test.cjs tests/operacao-politica.test.cjs
+      - name: Compilar aplicativo de testes (rota de teste nao vai ao Hosting)
+        run: npm run build -- --mode e2e
+      - name: Preparar testes de navegador
+        run: |
+          npm install --no-save --no-audit --no-fund @playwright/test
+          npx playwright install --with-deps chromium
+      - name: Verificar fluxos do celular, cadastros e acesso sem login
+        run: npx playwright test
+      - name: Compilar aplicativo final sem rotas de teste
+        run: npm run build
+      # Publica pela CLI, em vez da action hospedagem que estava falhando na
+      # chamada de Check Runs do GitHub ANTES de chegar ao Firebase.
+      - name: Autenticar exclusivamente no projeto Preview
+        if: steps.firebase_credentials.outputs.available == 'yes'
+        shell: bash
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TOAKI_CF058 }}
+        run: |
+          set -euo pipefail
+          umask 077
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/toaki-preview-service.json"
+          node -e 'const fs=require("fs");const a=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));if(a.project_id!=="toaki-cf058") {console.error("Credencial de outro projeto: bloqueando deploy");process.exit(1)}' "$RUNNER_TEMP/toaki-preview-service.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/toaki-preview-service.json" >> "$GITHUB_ENV"
+      - name: Publicar APENAS no canal de testes
+        if: steps.firebase_credentials.outputs.available == 'yes'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Apenas Hosting Preview; nao publica Firestore, Functions ou canal live.
+          npx --yes firebase-tools@latest hosting:channel:deploy fase-a --project toaki-cf058 --expires 7d --non-interactive
+      - name: Exibir endereço da versão de testes
+        if: steps.firebase_credentials.outputs.available == 'yes'
+        shell: bash
+        run: |
+          echo '### Preview Fase A do toAki' >> "$GITHUB_STEP_SUMMARY"
+          echo 'URL: https://toaki-cf058--fase-a-go3l94zk.web.app' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Apenas Firebase Hosting Preview Channel fase-a; sem deploy live ou alteracao de regras.' >> "$GITHUB_STEP_SUMMARY"
