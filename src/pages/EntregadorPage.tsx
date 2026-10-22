@@ -27,6 +27,14 @@ export default function EntregadorPage(){
   const envioPendente=useRef(false);
   const ultimoMomento=useRef(0);
   const token=params.get("convite")||"";
+  useEffect(()=>{
+    const manifest=document.querySelector('link[rel="manifest"]');
+    const anterior=manifest?.getAttribute("href")||"/manifest.webmanifest";
+    manifest?.setAttribute("href","/manifest-entregador.webmanifest");
+    const titleAnterior=document.title;
+    document.title="toAki Entregador — Minhas Entregas";
+    return ()=>{manifest?.setAttribute("href",anterior);document.title=titleAnterior;};
+  },[]);
   const parar=useCallback(()=>{
     if(watchId.current!==null&&typeof navigator!=="undefined"&&navigator.geolocation){
       navigator.geolocation.clearWatch(watchId.current);
