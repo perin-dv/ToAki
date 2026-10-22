@@ -166,5 +166,6 @@ test('Fluxo correto: landing, cliente e empresa separados, home apos login, logo
  assert.ok(!privatePages.includes('navigate(-1)'));
  assert.ok(start.includes('Cadastrar como cliente'));
  assert.ok(start.includes('Cadastrar minha empresa'));
- assert.ok(routes.includes('<PrivateRoute area="demo"><HomePage/></PrivateRoute>'));
+ assert.ok(routes.includes('<Route path="/inicio" element={<PrivateRoute area="demo"><DemoPage/></PrivateRoute>}/>'));
+ assert.ok(file("src/pages/DemoPage.tsx").includes("onHomeClick={voltarAoMapa}"));
 });
