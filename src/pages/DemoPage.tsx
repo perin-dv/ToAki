@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import Brand from "../components/Brand";
 import MenuIcon from "../components/MenuIcon";
 import { useAuth } from "../auth/AuthProvider";
-import { EntregadoresDemo, EntregasDemo, OutrosModulosDemo } from "../demo/ModulosDemo";
+import { EntregadoresDemo, EntregasDemo } from "../demo/ModulosDemo";
+import { ClientesDemo, ComprovantesDemo, HistoricoDemo, EmpresaDemo, AssinaturaDemo } from "../demo/ModulosExtras";
 import { carregarDados, dadosIniciais, limparDados, salvarDados, type DemoDados } from "../demo/dadosDemo";
 
 type Delivery = {id:string;nf:string;person:string;place:string;status:string;eta:string;pos:{left:string;top:string}};
@@ -91,7 +92,7 @@ export default function DemoPage() {
     </header>
       <main className="demo-main">
         <div className="demo-head"><div><h1>{tab==="inicio"?"Central de rastreamento":panelTitle}</h1><p>toAki Business • Ambiente de demonstração</p></div><div className="head-right"><span className="fake-status">● Dados simulados</span><Link to={accountPath} className="secondary">Minha conta</Link></div></div>
-        <div className="demo-warning">**SIMULAÇÃO:** cadastros de teste salvos somente nesta aba do navegador; sem Firebase, GPS real ou dados fiscais verdadeiros.</div>
+        <div className="demo-warning">SIMULAÇÃO: cadastros de teste salvos somente nesta aba do navegador; sem Firestore, GPS real, cobranças ou dados fiscais verdadeiros.</div>
         {tab==="inicio"?<><div className="stats">{[["📦",String(entregas.length),"Entregas hoje"],["🛵",String(emRota),"Em rota"],["✅",String(entregues),"Entregues"],["⏱",String(pendentes),"Pendentes"]].map(([icon,value,label])=><div key={label} className="stat"><span className="stat-icon">{icon}</span><div><strong>{value}</strong><small>{label}</small></div></div>)}</div>
           <div className="content-grid"><section className="panel map-shell"><div className="panel-head maphead"><h2>Mapa dos entregadores</h2><label className="search">⌕ <input type="search" placeholder="Buscar NF, pedido ou entregador..." value={search} onChange={e=>setSearch(e.target.value)} aria-label="Buscar entregas fictícias"/></label></div><MapIllustration items={entregas} selected={selected} onSelect={setSelected}/></section>
           <div className="right"><section className="panel"><div className="panel-head"><h2>Entregas em andamento</h2><span className="subtle">Fictícias</span></div>{filtered.length?filtered.map(e=>{const i=entregas.indexOf(e);return <button key={e.nf} className={"delivery "+(selected===i?"selected":"")} onClick={()=>setSelected(i)}><span className="bike">🛵</span><span className="copy"><strong>NF {e.nf}</strong><small>{e.person} · {e.place}</small></span><span className="delivery-side"><span className={"pill "+(e.status==="Em rota"?"":"muted")}>{e.status}</span><small>{e.eta}</small></span></button>;}):<p className="subtle">Nenhuma entrega encontrada.</p>}</section>
@@ -100,7 +101,11 @@ export default function DemoPage() {
         </>:<div className="demo-modulos">
           {tab==="entregas"?<EntregasDemo dados={dados} atualizar={setDados} verMapa={verMapa}/>:
            tab==="entregadores"?<EntregadoresDemo dados={dados} atualizar={setDados}/>:
-           <OutrosModulosDemo secao={tab} dados={dados}/>}
+           tab==="clientes"?<ClientesDemo dados={dados} atualizar={setDados}/>:
+           tab==="comprovantes"?<ComprovantesDemo dados={dados} atualizar={setDados}/>:
+           tab==="historico"?<HistoricoDemo dados={dados}/>:
+           tab==="empresa"?<EmpresaDemo dados={dados} atualizar={setDados}/>:
+           <AssinaturaDemo dados={dados} atualizar={setDados}/>}
           <div className="demo-footer-actions">
             <span>Ambiente fictício — nenhum dado é enviado ao Firebase.</span>
             <button type="button" className="secondary" onClick={()=>{limparDados(uid);setDados(dadosIniciais());setSelected(0);}}>Reiniciar simulação</button>
