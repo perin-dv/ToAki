@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 test("Minha conta: área de cliente tem navegação, perfil e segurança sem acesso fake",async({page})=>{
   await page.goto("/__e2e_conta");
-  await expect(page.getByRole("heading",{name:"Minha conta",exact:true})).toBeVisible();
+  await expect(page.getByRole("heading",{level:1,name:"Minha conta",exact:true})).toBeVisible();
   await expect(page.getByRole("heading",{name:/Olá, Teste/i})).toBeVisible();
   await expect(page.getByRole("button",{name:/Voltar/})).toBeVisible();
   await expect(page.getByRole("button",{name:"Sair"})).toBeVisible();
