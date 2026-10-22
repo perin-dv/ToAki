@@ -1,3 +1,4 @@
+import type {EnderecoCep} from "../lib/cep";
 // APENAS SIMULAÇÃO LOCAL. Este módulo NÃO envia dados ao Firebase nem compartilha entre usuários.
 // Não usar dados reais de pessoas, placas, clientes ou notas fiscais nesta demonstração.
 export type EstadoEntrega = "Aguardando coleta" | "Em rota" | "Entregue" | "Cancelada";
@@ -5,8 +6,8 @@ export type DemoVeiculo = {id:string;placa:string;tipo:"Moto"|"Carro"|"Van"};
 export type DemoEntregador = {id:string;nome:string;veiculoId:string};
 export type DemoEntrega = {id:string;nf:string;destinatario:string;destino:string;entregadorId:string;status:EstadoEntrega};
 export type DemoEvento = {id:string;descricao:string;data:string};
-export type DemoCliente = {id:string;nome:string};
-export type DemoFuncionario = {id:string;nome:string;funcao:"Gestor"|"Vendedor"};
+export type DemoCliente = {id:string;nome:string;endereco?:EnderecoCep};
+export type DemoFuncionario = {id:string;nome:string;funcao:"Gestor"|"Vendedor"|"Motoboy"|"Representante"|"Transportadora"};
 export type DemoComprovante = {id:string;entregaId:string;recebedor:string;observacao:string;data:string};
 export type DemoPlano = "Piloto"|"Profissional";
 export type DemoDados = {versao:2;veiculos:DemoVeiculo[];entregadores:DemoEntregador[];entregas:DemoEntrega[];historico:DemoEvento[];clientes:DemoCliente[];equipe:DemoFuncionario[];comprovantes:DemoComprovante[];plano:DemoPlano};
