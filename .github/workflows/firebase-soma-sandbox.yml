@@ -1,0 +1,82 @@
+name: Preparar empresa ficticia Soma (controle manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      operacao:
+        description: "Somente verificar ou criar sandbox SOMA (escrita explícita)"
+        required: true
+        default: verificar
+        type: choice
+        options:
+          - verificar
+          - provisionar
+      confirmacao:
+        description: "Para provisionar: digite PROVISIONAR_SOMA_TESTE"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: toaki-sandbox-soma
+  cancel-in-progress: false
+
+jobs:
+  preparar:
+    if: github.repository == 'perin-dv/ToAki' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Obter codigo da main revisada
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validar e instalar ferramentas antes de acessar credenciais
+        run: |
+          node --check scripts/preparar-soma-testes.cjs
+          node --test tests/soma-sandbox.test.cjs
+          npm --prefix functions install --no-audit --no-fund --ignore-scripts
+      - name: Confirmar escopo e carregar credencial de conta de servico
+        shell: bash
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TOAKI_CF058 }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$FIREBASE_SERVICE_ACCOUNT_JSON" ]]; then
+            echo '::error::Falta credencial Firebase utilizada no Hosting Preview.'
+            exit 1
+          fi
+          umask 077
+          CRED="$RUNNER_TEMP/toaki-sandbox-soma.json"
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$CRED"
+          node -e 'const fs=require("fs");const c=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));if(c.type!=="service_account"||c.project_id!=="toaki-cf058")process.exit(1)' "$CRED"
+          unset FIREBASE_SERVICE_ACCOUNT_JSON
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$CRED" >> "$GITHUB_ENV"
+      - name: Inspecionar somente cadastro vinculado e criar apenas com confirmacao
+        shell: bash
+        env:
+          TOAKI_EMAIL_PROPRIETARIO: ${{ secrets.TOAKI_EMAIL_PROPRIETARIO_SOMA }}
+          TOAKI_CONFIRMACAO: ${{ inputs.confirmacao }}
+          MODO: ${{ inputs.operacao }}
+        run: |
+          set -euo pipefail
+          trap 'rm -f "$GOOGLE_APPLICATION_CREDENTIALS"' EXIT
+          if [[ "$MODO" != "verificar" && "$MODO" != "provisionar" ]]; then
+            echo "::error::Modo inválido."
+            exit 1
+          fi
+          # O script revalida a string literal de autorização e a identidade do projeto.
+          node scripts/preparar-soma-testes.cjs "$MODO"
+          echo '### Soma — Ambiente de Testes' >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$MODO" == "verificar" ]]; then
+            echo 'Verificação de conta e Firestore apenas leitura concluída.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'Sandbox SOMA fictício provisionado para conta previamente verificada.' >> "$GITHUB_STEP_SUMMARY"
+            echo 'Cloud Functions operacionais continuam bloqueadas até allowlist/implantação revisadas.' >> "$GITHUB_STEP_SUMMARY"
+          fi
