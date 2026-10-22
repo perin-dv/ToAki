@@ -3,6 +3,7 @@ import {
   novoId, placasValidas, proximoEstado, registrar, validarNota,
   type DemoDados, type DemoEntrega, type DemoVeiculo, type EstadoEntrega
 } from "./dadosDemo";
+import {enderecoCompleto} from "../lib/cep";
 
 type Atualizar=Dispatch<SetStateAction<DemoDados>>;
 type Props={dados:DemoDados;atualizar:Atualizar;verMapa:(entregaId:string)=>void};
@@ -126,6 +127,14 @@ export function EntregasDemo({dados,atualizar,verMapa}:Props) {
   const [sucesso,setSucesso]=useState("");
 
   const limpar=()=>{setNf("");setDestinatario("");setDestino("");setEntregadorId("");setEditarId("");};
+  const selecionarDestinatario=(nome:string)=>{
+    setDestinatario(nome);
+    const cliente=dados.clientes.find(c=>c.nome.toLocaleLowerCase("pt-BR")===nome.trim().toLocaleLowerCase("pt-BR"));
+    if(cliente?.endereco){
+      const completo=enderecoCompleto(cliente.endereco);
+      if(completo.length<=160)setDestino(completo);
+    }
+  };
   const salvar=(e:FormEvent)=>{
     e.preventDefault();setErro("");setSucesso("");
     const nota=nf.trim(),cliente=destinatario.trim(),local=destino.trim();
@@ -164,8 +173,8 @@ export function EntregasDemo({dados,atualizar,verMapa}:Props) {
       <p className="helper">Você pode cadastrar uma NF, escolher o entregador e movimentar os status. Não preencha dados de clientes reais.</p>
       <form className="stack demo-form" onSubmit={salvar}>
         <label>Número da NF<input value={nf} onChange={e=>setNf(e.target.value)} inputMode="numeric" minLength={1} maxLength={9} required placeholder="Ex.: 0045824"/></label>
-        <label>Destinatário fictício<input value={destinatario} onChange={e=>setDestinatario(e.target.value)} list="clientes-ficticios" maxLength={80} minLength={3} required placeholder="Ex.: Oficina Exemplo D"/><datalist id="clientes-ficticios">{dados.clientes.map(c=><option key={c.id} value={c.nome}/>)}</datalist></label>
-        <label>Destino fictício<input value={destino} onChange={e=>setDestino(e.target.value)} minLength={5} maxLength={160} required placeholder="Ex.: Jardim Alvorada, Maringá"/></label>
+        <label>Destinatário fictício<input value={destinatario} onChange={e=>selecionarDestinatario(e.target.value)} list="clientes-ficticios" maxLength={80} minLength={3} required placeholder="Ex.: Oficina Exemplo D"/><datalist id="clientes-ficticios">{dados.clientes.map(c=><option key={c.id} value={c.nome}/>)}</datalist></label>
+        <label>Destino fictício<input value={destino} onChange={e=>setDestino(e.target.value)} minLength={5} maxLength={160} required placeholder="Ex.: Jardim Alvorada, Maringá"/><small>Ao escolher um cliente com CEP cadastrado, o destino é sugerido automaticamente. Confira antes de salvar.</small></label>
         <label>Entregador<select value={entregadorId} onChange={e=>setEntregadorId(e.target.value)}><option value="">Aguardando atribuição</option>{dados.entregadores.map(m=><option key={m.id} value={m.id}>{m.nome}</option>)}</select></label>
         <div className="demo-actions">
           <button className="primary" type="submit">{editarId?"Salvar alterações da NF":"Cadastrar NF fictícia"}</button>
