@@ -37,3 +37,12 @@ Novo incremento (PR #9, branch `feature/fase-b-busca-vinculos-crud`, baseado no 
 - Critérios de escala (busca remota/paginação acima de 100 registros) e conclusão de comprovantes, links, relatórios e cobrança continuam pendentes.
 
 Documentação detalhada: `WEB_CADASTROS_VINCULADOS.md`.
+
+## Revisão de continuidade — relatórios, assinatura e acesso (22/10/2026)
+
+Incrementos do PR #9 ainda não implantados:
+- Relatórios de NFs reais via `empresas/{empresaId}/pedidos`: filtros, resumo explicitamente limitado a 100 documentos consultados e exportação CSV.
+- Consulta de planos `publicado=true` e assinaturas `empresa_id=... ` diretamente do Firestore, respeitando cargo de gestor. **Não existe checkout/pagamento integrado ainda.**
+- Botão para atualizar permissões depois da aprovação administrativa, usando token renovado do Firebase Auth sem precisar desconectar a conta.
+- Cadastros de motos, motoristas, clientes e NFs continuam a depender de ativação segura do backend no Firebase atual.
+- **Pendente para implantação:** acesso administrativo autenticado às configurações remotas, estado das coleções, backup, empresa piloto, liberação de Functions e teste real. Não publicar live nem considerar pronto por CI isolado.
