@@ -1,0 +1,47 @@
+name: Diagnosticar Firebase (somente leitura, sem deploy)
+
+# Só poderá ser acionado manualmente depois de revisão e inclusão
+# desta rotina na branch main. Este PR NÃO executa com credenciais.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: diagnostico-firebase-somente-leitura
+  cancel-in-progress: false
+
+jobs:
+  diagnosticar:
+    if: github.repository == 'perin-dv/ToAki' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Obter codigo aprovado sem expor credenciais do GitHub
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Diagnosticar METADADOS, sem alterar Firestore, Auth ou Hosting
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TOAKI_CF058 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$FIREBASE_SERVICE_ACCOUNT_JSON" ]]; then
+            echo "::error::Credencial GitHub Actions de Preview não disponível."
+            exit 1
+          fi
+          umask 077
+          CRED="$RUNNER_TEMP/toaki-diagnostico.json"
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$CRED"
+          unset FIREBASE_SERVICE_ACCOUNT_JSON
+          trap 'rm -f "$CRED"' EXIT
+          GOOGLE_APPLICATION_CREDENTIALS="$CRED" node scripts/diagnostico-firebase-readonly.cjs
+
+# Nunca adicionar gatilho pull_request, pull_request_target ou push aqui:
+# qualquer código não revisado de PR jamais pode receber credenciais.
