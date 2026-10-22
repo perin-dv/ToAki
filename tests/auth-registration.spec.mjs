@@ -2,14 +2,14 @@ import { test, expect } from '@playwright/test';
 
 test('cadastro no celular: senha fraca vermelha, média amarela e forte verde', async ({browser})=>{
   const page=await browser.newPage({viewport:{width:375,height:812},isMobile:true,hasTouch:true});
-  await page.goto('/cadastro');
+  await page.goto('/cadastro/cliente');
   await page.getByRole('textbox',{name:'Nome de contato'}).fill('Ana Ferreira');
   await page.getByRole('textbox',{name:'E-mail'}).fill('ana@example.com');
 
   const senha=page.locator('input[autocomplete="new-password"]').first();
   const confirmar=page.locator('input[autocomplete="new-password"]').nth(1);
   const indicador=page.locator('[data-strength]');
-  const criar=page.getByRole('button',{name:'Criar conta'});
+  const criar=page.getByRole('button',{name:'Criar conta de cliente'});
 
   await senha.fill('123456');
   await expect(indicador).toHaveAttribute('data-strength','fraca');
