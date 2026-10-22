@@ -110,7 +110,7 @@ export default function EntregadorPage(){
     <main className="private-main">
       <div className="area-heading"><h1>Aplicativo do entregador</h1><p>Minhas entregas · localização somente durante uma rota autorizada</p></div>
       {!ambienteOperacional&&<div className="demo-warning">O aplicativo está em preparação. A integração real só será habilitada no Preview do piloto após aprovação e implantação.</div>}
-      {!user.emailVerified&&<section className="panel content-panel"><h2>Confirme seu e-mail</h2><p>O vínculo com a empresa exige confirmação de e-mail.</p><Link to="/verificar-email" className="primary button-link">Verificar e-mail</Link></section>}
+      {!user.emailVerified&&<section className="panel content-panel"><h2>Confirme seu e-mail</h2><p>O vínculo com a empresa exige confirmação de e-mail.</p><Link to="/verificar-email" state={{from:window.location.pathname+window.location.search}} className="primary button-link">Verificar e-mail</Link></section>}
       {ambienteOperacional&&user.emailVerified&&token&&<section className="panel content-panel">
         <h2>Convite para integrar a equipe</h2>
         <p>Ao confirmar, sua conta será vinculada ao entregador cadastrado pela empresa. O GPS não será ativado automaticamente.</p>
