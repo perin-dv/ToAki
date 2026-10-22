@@ -2,7 +2,7 @@ import {Link} from "react-router-dom";
 import Brand from "../components/Brand";
 import CompanyRegistration from "./CompanyRegistration";
 import {useAuth} from "../auth/AuthProvider";
-import {ambienteHomologacao} from "../lib/ambiente";
+import {ambienteOperacional, ambientePilotoOriginal} from "../lib/ambiente";
 export default function CompanyOnboardingPage(){
   const {user}=useAuth();
   return <div className="private-app">
@@ -23,7 +23,7 @@ export default function CompanyOnboardingPage(){
           <div className="account-info-row"><span>Conta pessoal</span><strong>{user?.email}</strong></div>
           <div className="account-info-row"><span>E-mail</span><strong className={user?.emailVerified?"account-verified":"account-unverified"}>{user?.emailVerified?"Confirmado":"Não confirmado"}</strong></div>
           <div className="account-info-row"><span>Permissão para NFs</span><strong>Não liberada</strong></div>
-          {!ambienteHomologacao&&<div className="demo-warning" role="status">Neste Preview, o cadastro do usuário já é real. O envio da solicitação empresarial está temporariamente desativado para não alterar empresas do projeto original.</div>}
+          {!ambienteOperacional&&<div className="demo-warning" role="status">Neste Preview, a conta de usuário usa Firebase Authentication. Solicitações de empresas permanecem bloqueadas até a ativação segura do piloto.</div>}{ambientePilotoOriginal&&<div className="demo-warning" role="status">Piloto controlado: seu pedido será analisado antes de habilitar qualquer acesso empresarial.</div>}
           {!user?.emailVerified&&<Link to="/verificar-email" state={{from:"/cadastro/empresa/dados"}} className="primary button-link">Confirmar meu e-mail →</Link>}
         </section>
       </div>
