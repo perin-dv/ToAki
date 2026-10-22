@@ -2,7 +2,7 @@ name: Validar front-end
 
 on:
   pull_request:
-    branches: [main, develop, feature/fase-a-base-react, feature/fase-b-piloto-firebase-unico, feature/fase-b-aprovacao-piloto]
+    branches: [main, develop, feature/fase-a-base-react, feature/fase-b-piloto-firebase-unico, feature/fase-b-aprovacao-piloto, feature/fase-b-site-firebase-real]
   push:
     branches: [develop]
   workflow_dispatch:
@@ -43,6 +43,7 @@ jobs:
         run: |
           node --check functions/index.cjs
           node --check functions/operacoes.cjs
+          node --check functions/alteracoes.cjs
           node --check functions/ambiente-operacao.cjs
       - name: Compilar front-end
         run: npm run build -- --mode e2e
