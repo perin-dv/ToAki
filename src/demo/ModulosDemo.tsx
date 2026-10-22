@@ -151,6 +151,7 @@ export function EntregasDemo({dados,atualizar,verMapa}:Props) {
   const remover=(entrega:DemoEntrega)=>{
     setErro("");setSucesso("");
     if(entrega.status==="Em rota"){setErro("Cancele a entrega em rota antes de removê-la da simulação.");return;}
+    if(dados.comprovantes.some(c=>c.entregaId===entrega.id)){setErro("Remova o recibo fictício antes de excluir esta NF.");return;}
     atualizar(d=>registrar({...d,entregas:d.entregas.filter(x=>x.id!==entrega.id)},"NF fictícia removida: "+entrega.nf));
     if(editarId===entrega.id)limpar();
     setSucesso("NF removida da simulação.");
@@ -163,7 +164,7 @@ export function EntregasDemo({dados,atualizar,verMapa}:Props) {
       <p className="helper">Você pode cadastrar uma NF, escolher o entregador e movimentar os status. Não preencha dados de clientes reais.</p>
       <form className="stack demo-form" onSubmit={salvar}>
         <label>Número da NF<input value={nf} onChange={e=>setNf(e.target.value)} inputMode="numeric" minLength={1} maxLength={9} required placeholder="Ex.: 0045824"/></label>
-        <label>Destinatário fictício<input value={destinatario} onChange={e=>setDestinatario(e.target.value)} maxLength={80} minLength={3} required placeholder="Ex.: Oficina Exemplo D"/></label>
+        <label>Destinatário fictício<input value={destinatario} onChange={e=>setDestinatario(e.target.value)} list="clientes-ficticios" maxLength={80} minLength={3} required placeholder="Ex.: Oficina Exemplo D"/><datalist id="clientes-ficticios">{dados.clientes.map(c=><option key={c.id} value={c.nome}/>)}</datalist></label>
         <label>Destino fictício<input value={destino} onChange={e=>setDestino(e.target.value)} minLength={5} maxLength={160} required placeholder="Ex.: Jardim Alvorada, Maringá"/></label>
         <label>Entregador<select value={entregadorId} onChange={e=>setEntregadorId(e.target.value)}><option value="">Aguardando atribuição</option>{dados.entregadores.map(m=><option key={m.id} value={m.id}>{m.nome}</option>)}</select></label>
         <div className="demo-actions">
