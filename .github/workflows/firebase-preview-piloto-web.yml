@@ -1,0 +1,88 @@
+name: Preview Fase B — solicitação empresarial no Firebase
+
+# Este workflow NÃO instala Rules nem Functions e NUNCA atualiza Hosting live.
+# Rodar manualmente APENAS depois da revisão do código na branch main.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: toaki-preview-piloto-web
+  cancel-in-progress: false
+
+jobs:
+  preview-piloto:
+    name: Publicar somente Hosting Preview da Fase B
+    if: github.repository == 'perin-dv/ToAki' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VITE_TOAKI_ENV: piloto
+      VITE_TOAKI_PILOTO_NO_ORIGINAL: habilitado
+      VITE_FIREBASE_PROJECT_ID: toaki-cf058
+      VITE_ENABLE_ADMIN_APPROVAL: 'false'
+    steps:
+      - name: Obter codigo revisado da main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Conferir projeto, alvo e politicas de deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs=require('node:fs');
+          const f=JSON.parse(fs.readFileSync('firebase.json','utf8'));
+          const original=JSON.parse(fs.readFileSync('.firebaserc','utf8'));
+          if(original.projects.default!=='toaki-cf058')process.exit(1);
+          if(f.hosting.public!=='dist'||!Array.isArray(f.hosting.rewrites))process.exit(1);
+          if(process.env.VITE_TOAKI_ENV!=='piloto'||process.env.VITE_ENABLE_ADMIN_APPROVAL!=='false')process.exit(1);
+          NODE
+      - name: Instalar e validar site sem autenticar na nuvem
+        run: |
+          npm install --no-audit --no-fund
+          npm test
+          node --test tests/company-policy.test.cjs tests/operacao-politica.test.cjs
+          npm run build
+      - name: Conferir ausencia de rotas de teste E2E na compilacao final
+        run: |
+          node - <<'NODE'
+          const fs=require('node:fs');
+          const dir='dist/assets';
+          if(!fs.existsSync('dist/index.html')||!fs.existsSync(dir))process.exit(1);
+          const bundle=fs.readdirSync(dir).filter(x=>x.endsWith('.js')).map(x=>fs.readFileSync(dir+'/'+x,'utf8')).join('\n');
+          if(bundle.includes('/__e2e_site_real')||bundle.includes('/__e2e_demonstracao'))process.exit(1);
+          NODE
+      - name: Autenticar apenas a conta de servico de Hosting Preview
+        shell: bash
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TOAKI_CF058 }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$FIREBASE_SERVICE_ACCOUNT_JSON" ]]; then
+            echo "::error::Secret Firebase do Preview nao configurado."
+            exit 1
+          fi
+          umask 077
+          CRED="$RUNNER_TEMP/toaki-preview-piloto.json"
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$CRED"
+          node -e 'const fs=require("fs");const k=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));if(k.project_id!=="toaki-cf058"||k.type!=="service_account")process.exit(1)' "$CRED"
+          unset FIREBASE_SERVICE_ACCOUNT_JSON
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$CRED" >> "$GITHUB_ENV"
+      - name: Publicar apenas canal Preview, nunca Live ou backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          trap 'rm -f "$GOOGLE_APPLICATION_CREDENTIALS"' EXIT
+          npx firebase hosting:channel:deploy fase-b-web --project toaki-cf058 --expires 7d --non-interactive
+          echo '### Firebase Hosting Preview publicado' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Canal: fase-b-web (7 dias)' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Alvo: toaki-cf058 — somente Hosting Preview.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Firestore Rules, Functions, Auth Claims e Hosting live NAO foram alterados.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Solicitacao de empresa salva no Firestore somente apos login, e-mail verificado e confirmacao do responsavel.' >> "$GITHUB_STEP_SUMMARY"
