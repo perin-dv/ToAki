@@ -10,6 +10,7 @@ import EmpresaOperacao from "./EmpresaOperacao";
 import ColecaoEmpresaPage from "./ColecaoEmpresaPage";
 import RelatoriosEmpresaPage from "./RelatoriosEmpresaPage";
 import AssinaturaEmpresaPage from "./AssinaturaEmpresaPage";
+import {EMPRESA_TESTE_SOMA} from "../lib/empresaId";
 import {ambienteOperacional} from "../lib/ambiente";
 import {empresaAutorizada,type RegistroOperacional,type TipoOperacional} from "../lib/operacaoEmpresa";
 
@@ -129,6 +130,7 @@ export default function SiteOperacionalPage(){
     <div className="demo-body">
       <header className="mobile-top"><button type="button" className="mobile-menu-button" aria-label="Abrir menu completo" aria-controls="demo-sidebar-menu" aria-expanded={menuAberto} onClick={()=>setMenuAberto(true)}><MenuIcon name="menu"/> Menu</button><Brand compact onHomeClick={voltar}/><Link className="top-signin" to={acessoEmpresa?"/empresa":"/cliente"}>Minha conta →</Link></header>
       <main className="demo-main">
+        {empresaId===EMPRESA_TESTE_SOMA&&<div className="demo-warning" role="status"><strong>Soma — Ambiente de Testes.</strong> Este cadastro é fictício, não possui CNPJ e não deve receber notas fiscais, documentos ou dados pessoais verdadeiros. Use somente exemplos de teste.</div>}
         <div className="demo-head"><div><h1>{secao==="inicio"?"Central de rastreamento":secaoNome}</h1><p>Painel operacional — informações do Firebase autorizado</p></div>
           <div className="head-right"><Link to={role==="admin_toaki"?"/admin":acessoEmpresa?"/empresa":"/cliente"} className="secondary">Minha conta</Link><button className="secondary" type="button" disabled={saindo} onClick={()=>void sair()}>{saindo?"Saindo...":"Sair"}</button></div>
         </div>
