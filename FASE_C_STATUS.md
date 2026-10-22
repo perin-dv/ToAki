@@ -35,3 +35,10 @@
 7. Depois: mapa real, atualizações em tempo real, previsão de chegada e relatórios.
 
 **A Fase C não é considerada concluída nem implantada; este é o primeiro incremento de integração entre empresa, motoboy e GPS.**
+
+## Melhorias de integração do app do motoboy
+
+- Manifesto PWA independente: `/manifest-entregador.webmanifest`, nome **toAki Entregador**, identificador e `start_url` específicos para `/entregador`. A troca do manifesto é feita ao abrir a página.
+- Convites individuais preservam o token durante **login, cadastro de novo usuário e confirmação de e-mail**, por redirecionamentos restritos a caminhos internos autorizados (evita redirecionamentos externos arbitrários).
+- A conta do motoboy continua separada do cargo de gestor. Se a conta tiver outro cargo empresarial, o vínculo é recusado e exige um acesso próprio do entregador.
+- O painel `/inicio` segue demonstrativo nesta etapa; a operação persistente fica na área `/empresa` da empresa autorizada. A incorporação do mapa real no painel principal será feita após os testes de leitura e atualização em tempo real.
