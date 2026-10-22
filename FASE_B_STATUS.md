@@ -29,3 +29,9 @@
 2. Vincular empresa/filial aprovada e equipe com convites com validade.
 3. Criar operações multitenant em backend seguro e as regras correspondentes com testes de isolamento.
 4. Migrar os formulários demonstrativos para Firestore somente após testes e autorização de deploy de regras.
+
+## Continuidade — piloto com o mesmo Firebase (22/10/2026)
+- Decisão atual: utilizar `toaki-cf058` para um piloto controlado, sem criar novo projeto.
+- Proteção preparada em branch própria; veja `PILOTO_FIREBASE_UNICO.md`.
+- O backend só permitirá gravações no original com ativação manual, empresa aprovada e marcada como piloto e inclusão explícita na lista de empresas autorizadas.
+- **Não foi executado deploy de Functions, alteração de regras ou migração.** A versão publicada continua com dados simulados.
