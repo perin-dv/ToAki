@@ -2,7 +2,7 @@ name: Validar front-end
 
 on:
   pull_request:
-    branches: [main, develop, feature/fase-a-base-react]
+    branches: [main, develop, feature/fase-a-base-react, feature/fase-b-piloto-firebase-unico]
   push:
     branches: [develop]
   workflow_dispatch:
