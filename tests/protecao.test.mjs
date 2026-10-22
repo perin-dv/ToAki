@@ -61,7 +61,7 @@ test('Entrada pública tem escolha e demonstração é protegida', () => {
   const main = file('src/main.tsx');
   const login = file('src/pages/AuthPages.tsx');
   assert.ok(main.includes('<Route path="/" element={<PublicHomePage/>}/>'));
-  assert.ok(main.includes('<Route path="/inicio" element={<PrivateRoute area="demo"><HomePage/></PrivateRoute>}/>'));
+  assert.ok(main.includes('<Route path="/inicio" element={<PrivateRoute area="demo"><DemoPage/></PrivateRoute>}/>'));
   assert.ok(main.includes('<Route path="/demonstracao" element={<PrivateRoute area="demo"><DemoPage/></PrivateRoute>}/>'));
   assert.ok(login.includes('O painel demonstrativo continua separado dos dados reais.'));
 });
