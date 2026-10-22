@@ -10,6 +10,7 @@ const { initializeApp, getApps } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { getAuth } = require("firebase-admin/auth");
 const { validarPedidoAdministrativo, validarRegistroSolicitado } = require("./politica.cjs");
+const { autorizarAprovacaoEmpresa } = require("./ambiente-operacao.cjs");
 
 if (!getApps().length) initializeApp();
 
@@ -56,6 +57,22 @@ exports.analisarCadastroEmpresa = onCall(
       catch(e) { invalido(e); }
       const {cnpj,empresaId,status}=registro;
 
+      // Nenhuma aprovação ou concessão de claim no projeto original sem
+      // autorização explícita do piloto para esse CNPJ específico.
+      let ambienteOperacao=null;
+      if(acao==="aprovar"){
+        try {
+          ambienteOperacao=autorizarAprovacaoEmpresa({
+            projeto:process.env.GCLOUD_PROJECT||process.env.GCP_PROJECT||process.env.GOOGLE_CLOUD_PROJECT||"",
+            empresaId,
+            habilitacao:process.env.TOAKI_PILOTO_NO_ORIGINAL,
+            empresasPermitidas:process.env.TOAKI_PILOTO_EMPRESAS
+          });
+        }catch(error){
+          throw new HttpsError("failed-precondition",error instanceof Error?error.message:"Piloto não autorizado.");
+        }
+      }
+
       if(status==="aprovada" && acao==="aprovar"){
         if(pedido.empresa_id!==empresaId)
           throw new HttpsError("failed-precondition","Empresa aprovada com vínculo inconsistente.");
@@ -92,7 +109,7 @@ exports.analisarCadastroEmpresa = onCall(
         cnpj,razao_social:pedido.razao_social,nome_fantasia:pedido.nome_fantasia,
         municipio:pedido.municipio,uf:pedido.uf,
         responsavel_uid:uidSolicitante,
-        status:"ativa",criado_em:agora
+        status:"ativa",ambiente:ambienteOperacao,criado_em:agora
       });
       tx.create(reservaRef,{
         tipo_registro:"reserva_cnpj_empresa",
@@ -116,7 +133,7 @@ exports.analisarCadastroEmpresa = onCall(
         titulo_registro:"Cadastro aprovado — "+pedido.razao_social,
         acao:"aprovar_cadastro_empresa",responsavel_uid:operador.uid,
         solicitante_uid:uidSolicitante,empresa_id:empresaId,cnpj,
-        justificativa,criado_em:agora
+        justificativa,ambiente_operacao:ambienteOperacao,criado_em:agora
       });
       return {status:"aprovada",empresaId,reprocessamento:false};
     });
@@ -135,5 +152,5 @@ exports.analisarCadastroEmpresa = onCall(
   }
 );
 
-// Operações de dados reais só poderão executar no projeto de homologação separado.
+// Operações reais: homologação isolada ou empresa piloto explicitamente autorizada no Firebase atual.
 exports.operarEmpresaHomologacao=require("./operacoes.cjs").operarEmpresaHomologacao;
