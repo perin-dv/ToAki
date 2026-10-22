@@ -3,6 +3,7 @@ import {useAuth} from "../auth/AuthProvider";
 import {empresaAutorizada,listarRegistros,criarRegistro,type TipoOperacional,type RegistroOperacional} from "../lib/operacaoEmpresa";
 import EnderecoPorCep from "../components/EnderecoPorCep";
 import {enderecoVazio,validarEndereco} from "../lib/cep";
+import {ambientePilotoOriginal} from "../lib/ambiente";
 
 const abas:{id:TipoOperacional;nome:string}[]=[
   {id:"cliente",nome:"Clientes"},
@@ -63,7 +64,7 @@ export default function EmpresaOperacao(){
       if(aba==="cliente")setClientes(await listarRegistros(empresaId,"cliente"));
       if(aba==="entregador")setEntregadores(await listarRegistros(empresaId,"entregador"));
       setCampos({...dadosEmBranco});
-      setAviso("Registro confirmado no Firestore de homologação com auditoria. Nenhum dado foi gravado no projeto original.");
+      setAviso(ambientePilotoOriginal?"Registro confirmado no Firestore do piloto autorizado, com auditoria.":"Registro confirmado no Firestore de homologação, com auditoria.");
     }catch(e){
       const msg=e instanceof Error?e.message:"Não foi possível cadastrar.";
       setErro("Cadastro não realizado. "+msg);
@@ -78,7 +79,7 @@ export default function EmpresaOperacao(){
   </section>;
   return <div className="account-content">
     <section className="account-operational-banner">
-      <div><strong>Operação real — Homologação</strong><p>Registros persistidos no Firestore do projeto de testes, separados do Firebase original.</p></div>
+      <div><strong>Operação real — {ambientePilotoOriginal?"Piloto autorizado":"Homologação"}</strong><p>{ambientePilotoOriginal?"Registros persistidos na empresa piloto autorizada dentro do Firebase atual.":"Registros persistidos no Firestore do projeto de homologação separado."}</p></div>
       <span className="pill">Empresa autorizada</span>
     </section>
     <nav className="account-tabs account-operational-tabs" aria-label="Cadastros operacionais">
@@ -103,7 +104,7 @@ export default function EmpresaOperacao(){
             <label>Entregador (opcional)<select value={campos.entregador_id} onChange={e=>alterar("entregador_id",e.target.value)}><option value="">Aguardando atribuição</option>{entregadores.map(x=><option key={x.id} value={x.id}>{x.nome||x.titulo_registro}</option>)}</select></label>
             <label>Endereço da entrega<input required minLength={5} maxLength={180} value={campos.endereco_entrega} onChange={e=>alterar("endereco_entrega",e.target.value)} placeholder="Destino autorizado"/></label>
           </>}
-          <button type="submit" disabled={salvando} className="primary">{salvando?"Salvando...":"Salvar no Firestore de homologação"}</button>
+          <button type="submit" disabled={salvando} className="primary">{salvando?"Salvando...":"Salvar no Firestore autorizado"}</button>
         </form>
         {erro&&<p role="alert" className="form-error">{erro}</p>}
         {aviso&&<p role="status" className="form-info">{aviso}</p>}
