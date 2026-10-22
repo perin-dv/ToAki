@@ -60,7 +60,8 @@ test('Arquivos privados permanecem excluídos do Git', () => {
 test('Entrada inicial é login e demonstração fica como opção separada', () => {
   const main = file('src/main.tsx');
   const login = file('src/pages/AuthPages.tsx');
-  assert.ok(main.includes('<Route path="/" element={<Navigate to="/login" replace/>}/>'));
+  assert.ok(main.includes('<Route path="/" element={<PublicHomePage/>}/>'));
+  assert.ok(main.includes('<Route path="/inicio" element={<PrivateRoute area="demo"><HomePage/></PrivateRoute>}/>'));
   assert.ok(main.includes('<Route path="/demonstracao" element={<PrivateRoute area="demo"><DemoPage/></PrivateRoute>}/>'));
   assert.ok(login.includes('O painel de demonstração e seus menus são acessíveis somente após entrar na sua conta.'));
 });
@@ -72,22 +73,22 @@ test('Fundo lateral preto uniforme e logo integrados no login e prototipo', () =
   assert.ok(css.includes('--toaki-sidebar:#000000'));
   assert.ok(css.includes('filter:contrast(1.2) saturate(1.02)'));
   assert.ok(css.includes('.demo-sidebar,.auth-intro,.private-header,.mobile-top,.mobile-nav'));
-  assert.ok(brand.includes('to="/login"'));
+  assert.ok(brand.includes('to={user?"/inicio":"/"}'));
   assert.ok(auth.includes('Já tem cadastro no Firebase Authentication?'));
   assert.ok(auth.includes('O painel de demonstração e seus menus são acessíveis somente após entrar na sua conta.'));
 });
 
 test('Cadastro de teste usa e-mail/senha sem link automático e protege dados empresariais', () => {
   const pages = file('src/pages/AuthPages.tsx');
-  const cadastro = pages.split('export function RegisterPage()')[1].split('export function PasswordPage()')[0];
+  const cadastro = pages.split('export function RegisterPage({tipo}')[1].split('export function PasswordPage()')[0];
   const login = pages.split('export function LoginPage()')[1].split('export function RegisterPage()')[0];
   const confirmacao = pages.split('export function VerifyEmailPage()')[1];
   const guard = file('src/components/PrivateRoute.tsx');
   const empresa = file('src/pages/CompanyRegistration.tsx');
   assert.ok(cadastro.includes('createUserWithEmailAndPassword'));
   assert.ok(!cadastro.includes('sendEmailVerification('));
-  assert.ok(cadastro.includes('navigate("/cliente")'));
-  assert.ok(login.includes('if(!user.emailVerified){navigate(voltarAoDemo?"/demonstracao":"/cliente");return}'));
+  assert.ok(cadastro.includes('navigate(tipo==="empresa"?"/cadastro/empresa/dados":"/inicio"'));
+  assert.ok(login.includes('navigate(returnTo,{replace:true})'));
   assert.ok(guard.includes('!user.emailVerified && area!=="cliente"'));
   assert.ok(empresa.includes('if(!user?.emailVerified)return;getDoc('));
   assert.ok(empresa.includes('Confirmar e-mail para cadastrar empresa'));
@@ -129,21 +130,41 @@ test('Demonstracao exige sessao; icones SVG correspondem a cada modulo', () => {
   for (const name of ['inicio','entregas','entregadores','clientes','comprovantes','historico','empresa','assinatura']) {
     assert.ok(icons.includes(name + ':'), 'SVG ausente: ' + name);
   }
-  assert.ok(login.includes('voltarAoDemo'));
+  assert.ok(login.includes('returnTo'));
   assert.ok(!login.includes('<Link to="/demonstracao">'));
 });
 
 test('Cadastro real de usuario para piloto não libera cadastros empresariais',()=>{
   const auth=file('src/pages/AuthPages.tsx');
-  const register=auth.split('export function RegisterPage()')[1].split('export function PasswordPage()')[0];
+  const register=auth.split('export function RegisterPage({tipo}')[1].split('export function PasswordPage()')[0];
   const empresa=file('src/pages/CompanyRegistration.tsx');
   const config=file('src/lib/ambiente.ts');
   const privatePage=file('src/pages/PrivatePages.tsx');
   assert.ok(register.includes('createUserWithEmailAndPassword(auth,'));
   assert.ok(!register.includes('if(!ambienteHomologacao)'));
-  assert.ok(register.includes('link do preview não é privado'));
+  assert.ok(register.includes('link de testes não é privado'));
   assert.ok(!register.includes('sendEmailVerification('));
   assert.ok(empresa.includes('if(!ambienteHomologacao) return'));
   assert.ok(config.includes('exigirHomologacao'));
   assert.ok(privatePage.includes('solicitações empresariais e operações de entregas reais continuam bloqueadas'));
+});
+
+test('Fluxo correto: landing, cliente e empresa separados, home apos login, logo e voltar seguros',()=>{
+ const routes=file('src/main.tsx');
+ const auth=file('src/pages/AuthPages.tsx');
+ const brand=file('src/components/Brand.tsx');
+ const privatePages=file('src/pages/PrivatePages.tsx');
+ const start=file('src/pages/HomePages.tsx');
+ assert.ok(routes.includes('<Route path="/cadastro/cliente" element={<RegisterPage tipo="cliente"/>}/>'));
+ assert.ok(routes.includes('<Route path="/cadastro/empresa" element={<RegisterPage tipo="empresa"/>}/>'));
+ assert.ok(routes.includes('<Route path="/cadastro/empresa/dados" element={<PrivateRoute area="demo"><CompanyOnboardingPage/></PrivateRoute>}/>'));
+ assert.ok(auth.includes('export function RegisterChoicePage()'));
+ assert.ok(auth.includes('navigate(returnTo,{replace:true})'));
+ assert.ok(auth.includes('navigate(tipo==="empresa"?"/cadastro/empresa/dados":"/inicio"'));
+ assert.ok(brand.includes('to={user?"/inicio":"/"}'));
+ assert.ok(privatePages.includes('const voltar=()=>navigate("/inicio")'));
+ assert.ok(!privatePages.includes('navigate(-1)'));
+ assert.ok(start.includes('Cadastrar como cliente'));
+ assert.ok(start.includes('Cadastrar minha empresa'));
+ assert.ok(routes.includes('<PrivateRoute area="demo"><HomePage/></PrivateRoute>'));
 });
