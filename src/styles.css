@@ -484,3 +484,15 @@
  .real-map-empty{min-height:250px}
  .real-map-frame{height:280px}
 }
+
+/* Fase B — vínculos e pesquisa de cadastros persistentes */
+.form-search-reference{display:grid;gap:8px;min-width:0;margin:7px 0;font-size:12px;color:#4c6071}
+.form-search-reference label{display:grid;gap:7px;min-width:0}
+.form-search-reference input,.form-search-reference select{width:100%;min-width:0;max-width:100%;min-height:42px;border:1px solid #dfe5e9;border-radius:9px;background:#fff;color:#223142;padding:10px 12px;font:inherit}
+.form-search-reference input:focus,.form-search-reference select:focus{outline:2px solid #ffad66;border-color:#e97a1a}
+.form-operational-buttons,.operational-record-actions{display:flex;gap:8px;flex-wrap:wrap}
+.form-operational-buttons button,.operational-record-actions button{min-height:37px}
+.operational-record{display:flex;justify-content:space-between;align-items:center;gap:12px;min-width:0;flex-wrap:wrap}
+.operational-record>div:first-child{min-width:0;overflow-wrap:anywhere}
+.operational-record-actions{justify-content:flex-end}
+@media(max-width:560px){.operational-record-actions{justify-content:flex-start;width:100%}.operational-record-actions button{flex:1}}
