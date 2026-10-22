@@ -19,7 +19,7 @@ jobs:
     name: Preview Firebase (nunca canal live)
     if: github.event_name == 'workflow_dispatch' || github.head_ref == 'feature/fase-a-base-react'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -43,8 +43,19 @@ jobs:
       - name: Instalar dependências
         if: steps.firebase_credentials.outputs.available == 'yes'
         run: npm install --no-audit --no-fund
-      - name: Compilar aplicativo
-        if: steps.firebase_credentials.outputs.available == 'yes'
+      - name: Testar estrutura e permissões antes de publicar
+        run: |
+          npm test
+          node --test tests/company-policy.test.cjs
+      - name: Compilar aplicativo de testes (rota de teste nao vai ao Hosting)
+        run: npm run build -- --mode e2e
+      - name: Preparar testes de navegador
+        run: |
+          npm install --no-save --no-audit --no-fund @playwright/test
+          npx playwright install --with-deps chromium
+      - name: Verificar fluxos do celular, cadastros e acesso sem login
+        run: npx playwright test
+      - name: Compilar aplicativo final sem rotas de teste
         run: npm run build
       - name: Publicar APENAS no canal de testes
         if: steps.firebase_credentials.outputs.available == 'yes'
