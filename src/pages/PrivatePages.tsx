@@ -8,6 +8,8 @@ import MenuIcon from "../components/MenuIcon";
 import PerfilConta from "./PerfilConta";
 import CompanyRegistration from "./CompanyRegistration";
 import AdminRequests from "./AdminRequests";
+import EmpresaOperacao from "./EmpresaOperacao";
+import { ambienteHomologacao } from "../lib/ambiente";
 
 type AbaCliente="inicio"|"entregas"|"empresa"|"perfil";
 const abasCliente:{id:AbaCliente;titulo:string;icone:"inicio"|"entregas"|"empresa"|"clientes"}[]=[
@@ -62,6 +64,7 @@ export function CustomerPage() {
       </div>
       <div className="account-hero-art" aria-hidden="true"><span className="account-hero-route"/><span className="account-hero-pin">⌖</span></div>
     </section>
+    {!ambienteHomologacao&&<div className="demo-warning" role="status">Este preview ainda compartilha o Firebase Authentication com o projeto original. O cadastro de novos testadores e as solicitações de empresas estão pausados até a homologação separada.</div>}
     <nav className="account-tabs" aria-label="Seções da minha conta">
       {abasCliente.map(a=><button type="button" key={a.id} className={"account-tab "+(aba===a.id?"account-tab-active":"")} aria-current={aba===a.id?"page":undefined} onClick={()=>setAba(a.id)}>
         <MenuIcon name={a.icone} size={18}/><span>{a.titulo}</span>
@@ -101,9 +104,9 @@ export function CustomerPage() {
 }
 export function CompanyPage(){
   return <Shell title="Painel da empresa" description="Acesso reservado a usuários com permissão empresarial.">
-    <section className="panel content-panel account-full-panel"><div className="account-section-heading"><div><h2>Estrutura da empresa</h2><p>Somente dados da sua empresa, após vínculo e autorização.</p></div></div>
-      <div className="account-empty"><span className="account-empty-icon"><MenuIcon name="empresa" size={31}/></span><strong>Estamos preparando o painel operacional.</strong><p>Entregadores, veículos e pedidos reais serão habilitados após vinculá-los a uma empresa aprovada em um Firebase de homologação.</p></div>
-    </section>
+    {ambienteHomologacao?<EmpresaOperacao/>:<section className="panel content-panel account-full-panel"><div className="account-section-heading"><div><h2>Estrutura da empresa</h2><p>Somente dados da sua empresa, após vínculo e autorização.</p></div></div>
+      <div className="account-empty"><span className="account-empty-icon"><MenuIcon name="empresa" size={31}/></span><strong>Estamos preparando o painel operacional.</strong><p>Os cadastros reais serão habilitados depois que tivermos um Firebase de homologação separado e uma empresa aprovada.</p></div>
+    </section>}
     <div className="account-profile-shortcut"><PerfilConta/></div>
   </Shell>;
 }
