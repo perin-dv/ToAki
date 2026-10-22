@@ -27,3 +27,24 @@
 - Somente após aceite explícito, seguir para a publicação principal da interface.
 
 **Pendente:** análise do Firebase real, aprovação de administrador/empresa piloto, autorização de deploy e teste ponta a ponta. Não declarar o site pronto antes disso.
+
+## Conferência das regras Firestore atualmente exibidas no Console (22/10/2026)
+
+O responsável copiou do console `toaki-cf058` o conteúdo atual da aba Firestore Database > Regras. Comparação feita com `firestore.rules` da branch `feature/fase-b-busca-vinculos-crud`. **Não publicar regras novamente só para alinhar textos.**
+
+**Compatível com os cadastros e consultas principais:**
+- `solicitacoes_cadastro_empresas/{uid}`: dono autenticado e com e-mail verificado pode criar apenas solicitação `aguardando_analise`; admin consulta; ninguém altera diretamente.
+- `empresas/{empresaId}/funcionarios/{uid}`: autorização por associação ativa; somente gestor consulta lista; escrita pelo cliente negada.
+- `empresas/{empresaId}/{clientes,entregadores_vinculados,veiculos,pedidos,comprovantes,historico}`: leitura segregada por empresa/cargo; escrita do navegador negada.
+- `clientes/{uid}`, `entregadores/{uid}`, `planos`, `assinaturas`, `auditoria`: protegidos por identidade/papel e bloqueio de escrita direta.
+- `/{document=**}`: default deny.
+
+**Diferenças identificadas entre Console informado e GitHub:**
+1. Na criação de solicitação, repositório exige `titulo_registro.size() > 10`; a regra atual do Console apenas exige `<= 200`. É pequena diferença de validação, não autorização extra para virar empresa ou admin. **Não bloquear o desenvolvimento por isso**, mas manter no plano de hardening.
+2. `usuarios/{uid}`: Console usa `allow read: proprietario(uid)` (engloba `get` e `list` sob essa condição); repositório permite só `get` e nega explicitamente `list`. A forma do repositório é mais restritiva e preferível em futura revisão controlada.
+3. `planos/{planoId}`: Console usa `allow read` e repo explicita `allow get, list`, com a mesma condição de acesso. Sem alteração prática relevante no contexto atual.
+4. Comentários, extração de `funcionarioPath` e formatação variam; não há necessidade de publicar só por essas diferenças.
+
+**Verificações ainda NÃO realizadas:** essas regras foram **informadas pelo responsável**, não obtidas por uma chamada administrativa autenticada à API do projeto; o conteúdo copiado não confirma se o Firestore já possui empresa aprovada, se Functions estão implantadas, se há `admin_toaki` ou se o Hosting apresenta o código novo. A execução do CI com Emulator cobre o arquivo do repositório, **não verifica as regras remotas**.
+
+**Conclusão:** nenhuma substituição das regras existentes agora. Próxima conferência com o responsável: **Firestore Database > Dados**, para identificar nomes das coleções e empresas pré-existentes **sem editar nada**, seguida de estado da conta em Authentication > Users. Só depois planejar backup e implantação mínima segura de Functions e um Preview operacional, mediante autorização específica.
