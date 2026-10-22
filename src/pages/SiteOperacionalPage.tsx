@@ -7,6 +7,7 @@ import {useAuth} from "../auth/AuthProvider";
 import Brand from "../components/Brand";
 import MenuIcon from "../components/MenuIcon";
 import EmpresaOperacao from "./EmpresaOperacao";
+import ColecaoEmpresaPage from "./ColecaoEmpresaPage";
 import {ambienteOperacional} from "../lib/ambiente";
 import {empresaAutorizada,type RegistroOperacional,type TipoOperacional} from "../lib/operacaoEmpresa";
 
@@ -139,7 +140,7 @@ export default function SiteOperacionalPage(){
               </div>
             </section>
             <div className="right">
-              <section className="panel"><div className="panel-head"><h2>Últimas NFs consultadas</h2><span className="subtle">Até 50 registros</span></div>
+              <section className="panel"><div className="panel-head"><h2>NFs consultadas</h2><span className="subtle">Até 50 registros</span></div>
                 {!filtrados.length?<p className="subtle">Nenhuma NF cadastrada ou encontrada.</p>:filtrados.map(r=><button type="button" key={r.id} className={"delivery "+(selecionada?.id===r.id?"selected":"")} onClick={()=>{setNfSelecionada(r.id);setMostrarMapa(false);}}>
                   <span className="bike">📦</span><span className="copy"><strong>NF {r.numero_nf??r.id}</strong><small>{r.endereco_entrega??"Endereço não informado"}</small></span>
                   <span className="delivery-side"><span className={"pill "+(r.status==="em_rota"?"":"muted")}>{r.status==="em_rota"?"Em rota":r.status==="entregue"?"Entregue":r.status==="pendente"?"Pendente":r.status}</span></span>
@@ -155,9 +156,15 @@ export default function SiteOperacionalPage(){
         {destinosAutorizados&&secao!=="inicio"&&<div className="demo-modulos">
           {(secao==="entregas"||secao==="entregadores"||secao==="clientes")?
             <EmpresaOperacao key={secao} abaInicial={cadastroAba[secao]}/>:
+            secao==="comprovantes"?<ColecaoEmpresaPage empresaId={empresaId!} grupo="comprovantes"/>:
+            secao==="historico"?(["dono_empresa","gestor"].includes(role??"")?
+              <ColecaoEmpresaPage empresaId={empresaId!} grupo="historico"/>:
+              <section className="panel content-panel"><h2>Histórico de operações</h2><p>Seu perfil não tem acesso aos eventos administrativos. Peça autorização ao gestor.</p></section>):
+            secao==="empresa"?(["dono_empresa","gestor"].includes(role??"")?
+              <><ColecaoEmpresaPage empresaId={empresaId!} grupo="funcionarios"/><section className="panel content-panel"><Link to="/empresa" className="primary button-link">Ver perfil e permissões empresariais →</Link></section></>:
+              <section className="panel content-panel"><h2>Equipe</h2><p>Somente gestores autorizados podem visualizar a equipe.</p></section>):
             <section className="panel content-panel"><h2>{secaoNome}</h2>
-              <p>Esta funcionalidade ainda não está disponível no backend operacional. Nenhum comprovante, cobrança, relatório ou vínculo de equipe fictício será apresentado como real.</p>
-              {secao==="empresa"&&<Link to="/empresa" className="primary button-link">Ver conta e permissões empresariais →</Link>}
+              <p>Assinaturas e pagamentos reais ainda não estão habilitados. Nenhuma cobrança fictícia será apresentada como confirmada.</p>
             </section>}
         </div>}
       </main>
