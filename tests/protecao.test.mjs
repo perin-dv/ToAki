@@ -90,7 +90,7 @@ test('Cadastro de teste usa e-mail/senha sem link automático e protege dados em
   assert.ok(cadastro.includes('navigate(tipo==="empresa"?"/cadastro/empresa/dados":"/inicio"'));
   assert.ok(login.includes('navigate(returnTo,{replace:true})'));
   assert.ok(guard.includes('!user.emailVerified && area!=="cliente"'));
-  assert.ok(empresa.includes('if(!user?.emailVerified)return;getDoc(') || empresa.includes('if(!ambienteHomologacao)return;if(!user?.emailVerified)return;getDoc('));
+  assert.ok(empresa.includes('if(!user?.emailVerified)return;getDoc(') || empresa.includes('if(!ambienteOperacional)return;if(!user?.emailVerified)return;getDoc('));
   assert.ok(empresa.includes('Confirmar e-mail para cadastrar empresa'));
   assert.ok(confirmacao.includes('sendEmailVerification(user)'));
 });
@@ -144,7 +144,9 @@ test('Cadastro real de usuario para piloto não libera cadastros empresariais',(
   assert.ok(!register.includes('if(!ambienteHomologacao)'));
   assert.ok(register.includes('link de testes não é privado'));
   assert.ok(!register.includes('sendEmailVerification('));
-  assert.ok(empresa.includes('if(!ambienteHomologacao) return'));
+  assert.ok(empresa.includes('if(!ambienteOperacional) return'));
+  assert.ok(empresa.includes('ambientePilotoOriginal'));
+  assert.ok(empresa.includes('A empresa só receberá acesso após análise administrativa'));
   assert.ok(config.includes('exigirAmbienteOperacional'));
   assert.ok(config.includes('VITE_TOAKI_PILOTO_NO_ORIGINAL'));
   assert.ok(config.includes('ambientePilotoOriginal'));
