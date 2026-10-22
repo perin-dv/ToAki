@@ -44,3 +44,16 @@ export function useAuth() {
   if(!ctx) throw new Error("AuthProvider ausente");
   return ctx;
 }
+
+/** E2E: somente importado em builds --mode e2e. Não autentica usuários nem acessa Firestore. */
+export function ContaTesteProvider({children}:{children:ReactNode}) {
+  const falso={
+    uid:"e2e-usuario-exemplo",
+    email:"teste@example.com",
+    displayName:"Teste Exemplo",
+    emailVerified:false,
+    metadata:{creationTime:"2026-10-22T10:00:00.000Z"}
+  } as User;
+  const value:AuthState={user:falso,role:null,loading:false,refreshClaims:async()=>{}};
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
