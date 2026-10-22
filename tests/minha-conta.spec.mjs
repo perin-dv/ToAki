@@ -17,7 +17,8 @@ test("Minha conta: área de cliente tem navegação, perfil e segurança sem ace
   await page.getByRole("navigation",{name:"Seções da minha conta"}).getByRole("button",{name:"Minhas entregas"}).click();
   await expect(page.getByText("A consulta das suas entregas ainda está sendo integrada.")).toBeVisible();
   await page.getByRole("navigation",{name:"Seções da minha conta"}).getByRole("button",{name:"Minha empresa"}).click();
-  await expect(page.getByRole("heading",{name:"Vincular minha empresa"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:"Cadastro empresarial separado"})).toBeVisible();
+  await expect(page.getByRole("link",{name:"Continuar cadastro empresarial →"})).toHaveAttribute("href","/cadastro/empresa/dados");
 });
 
 test("Minha conta: navegação mobile a 320px não fica cortada",async({browser})=>{
