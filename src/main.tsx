@@ -8,13 +8,14 @@ import { PublicHomePage } from "./pages/HomePages";
 import CompanyOnboardingPage from "./pages/CompanyOnboardingPage";
 import { CompanyPage, CustomerPage, AdminPage } from "./pages/PrivatePages";
 import DemoPage from "./pages/DemoPage";
+import SiteOperacionalPage from "./pages/SiteOperacionalPage";
 import "./styles.css";
 import {registrarPwa} from "./lib/pwa";
 
 function App() {
   return <BrowserRouter><AuthProvider><Routes>
     <Route path="/" element={<PublicHomePage/>}/>
-    <Route path="/inicio" element={<PrivateRoute area="demo"><DemoPage/></PrivateRoute>}/>
+    <Route path="/inicio" element={<PrivateRoute area="demo"><SiteOperacionalPage/></PrivateRoute>}/>
     <Route path="/demonstracao" element={<PrivateRoute area="demo"><DemoPage/></PrivateRoute>}/>
     {import.meta.env.MODE === "e2e" && <Route path="/__e2e_demonstracao" element={<DemoPage/>}/>}
     {import.meta.env.MODE === "e2e" && <Route path="/__e2e_conta" element={<ContaTesteProvider><CustomerPage/></ContaTesteProvider>}/> }
