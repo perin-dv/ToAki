@@ -50,22 +50,39 @@ exports.operarEmpresaHomologacao=onCall(
       tipo==="pedido"?empresaRef.collection("nfs_reservadas").doc(dados.numero_nf):null;
 
     await db.runTransaction(async tx=>{
+      const registro={...dados};
       if(reserva){
         const existente=await tx.get(reserva);
         if(existente.exists)throw new HttpsError("already-exists","Esse número já está cadastrado nesta empresa.");
+      }
+      if(tipo==="entregador"&&dados.veiculo_id){
+        const veiculo=await tx.get(empresaRef.collection("veiculos").doc(dados.veiculo_id));
+        if(!veiculo.exists||veiculo.data()?.ativo===false)
+          throw new HttpsError("failed-precondition","Veículo não está ativo nesta empresa.");
       }
       if(tipo==="pedido"){
         const cliente=await tx.get(empresaRef.collection("clientes").doc(dados.destinatario_id));
         if(!cliente.exists||cliente.data()?.ativo===false)
           throw new HttpsError("failed-precondition","Destinatário não encontrado nesta empresa.");
+        if(dados.veiculo_id&&!dados.entregador_id)
+          throw new HttpsError("invalid-argument","Selecione o entregador antes de vincular um veículo à NF.");
         if(dados.entregador_id){
           const courier=await tx.get(empresaRef.collection("entregadores_vinculados").doc(dados.entregador_id));
           if(!courier.exists||courier.data()?.ativo===false)
             throw new HttpsError("failed-precondition","Entregador não encontrado nesta empresa.");
+          const associado=courier.data()?.veiculo_id||"";
+          if(associado&&dados.veiculo_id&&associado!==dados.veiculo_id)
+            throw new HttpsError("failed-precondition","A moto selecionada não corresponde ao veículo vinculado ao motorista.");
+          registro.veiculo_id=dados.veiculo_id||associado;
+        }
+        if(registro.veiculo_id){
+          const veiculo=await tx.get(empresaRef.collection("veiculos").doc(registro.veiculo_id));
+          if(!veiculo.exists||veiculo.data()?.ativo===false)
+            throw new HttpsError("failed-precondition","Veículo da NF não está ativo nesta empresa.");
         }
       }
       tx.create(novo,{
-        ...dados,empresa_id:empresaId,tipo_registro:tipo,ambiente_operacao:ambiente,
+        ...registro,empresa_id:empresaId,tipo_registro:tipo,ambiente_operacao:ambiente,
         titulo_registro:titulo,status:tipo==="pedido"?"pendente":"ativo",
         ativo:true,criado_por_uid:uid,criado_em:agora,atualizado_em:agora
       });
