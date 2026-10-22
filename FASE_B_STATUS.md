@@ -42,3 +42,22 @@
 - O backend de aprovação administrativa recebeu proteção por ambiente, habilitação explícita e allowlist exata de empresa piloto, além das verificações já existentes.
 - Foi criada `firebase.piloto.json` sem Hosting e adicionados testes para prevenir aprovação indevida.
 - **Pendente:** validação CI e Firestore Emulator, conferir regras implantadas e dados atuais, administrador confiável e empresa piloto autorizada, revisão e implantação aprovada de Rules/Functions. **Sem deploy ou merge**.
+
+## Prioridade oficial — site web antes de Flutter (22/10/2026)
+
+Nova decisão do responsável registrada em `ROADMAP_SITE_OFICIAL.md`: terminar completamente a web, conectar Firestore e mapa real, validar, e **somente depois** fazer aplicativo Flutter para motoboy e WebAdmin completo. PR #7 de PWA/GPS motoboy colocado em espera; não integrar neste trabalho.
+
+### Incremento preparado na branch feature/fase-b-site-firebase-real
+- `/inicio` deixa de apontar para `DemoPage` e passa a `SiteOperacionalPage`. O simulador continua exclusivamente em `/demonstracao` (além de rotas isoladas de teste E2E).
+- A tela operacional não usa `sessionStorage`, NFs de exemplo nem mapa SVG com marcadores inventados.
+- Para empresa autorizada e ambiente operacional habilitado, NFs vêm diretamente de `empresas/{empresaId}/pedidos` via snapshot do Firestore. Contagens limitadas à amostra consultada e identificadas como tal.
+- Consulta de endereço real em mapa externo ocorre após clique e é explicitamente rotulada como **mapa por endereço**, não GPS de motoboy.
+- Navegação dos cadastros da web utiliza `EmpresaOperacao` real com aba inicial determinada pelo menu, preservando o design aprovado.
+- Histórico, equipe e comprovantes consultam suas coleções reais, com controle de cargo; geração de comprovante continua **pendente**, não é simulada na operação.
+- Usuário sem empresa autorizada recebe estado de acesso pendente, nunca visualiza entregas inventadas.
+
+### Validações e pendências
+- Testes de rota e UI preparados em `tests/site-operacional.spec.mjs`; resultado do GitHub Actions deve ser confirmado antes de dizer que passou.
+- Não ocorreu implantação de Cloud Functions, Firestore Rules ou Hosting a partir desta branch.
+- Próximas funcionalidades reais: cadastros empresariais e autorização piloto publicados e validados, CRUD completo e vínculos de equipe, edição/exclusão, transições de pedido, mapa definitivo com endereços geocodificados, comprovantes, links seguros para clientes, relatórios, planos e cobranças.
+- Antes de qualquer deploy, consultar regras e dados atuais, backup, IAM, admin autorizado e lista de empresas piloto. `main`, `develop` e Hosting `live` continuam protegidos.
