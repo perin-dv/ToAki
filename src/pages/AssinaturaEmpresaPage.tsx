@@ -1,6 +1,7 @@
 import {useEffect,useState} from "react";
 import {collection,limit,onSnapshot,query,where} from "firebase/firestore";
 import {db} from "../lib/firebase";
+import {identificadorEmpresaValido} from "../lib/empresaId";
 import {exigirAmbienteOperacional} from "../lib/ambiente";
 
 type Plano={id:string;nome:string;descricao:string};
@@ -21,7 +22,7 @@ export default function AssinaturaEmpresaPage({empresaId}:{empresaId:string}){
       setEstado({carregando:false,erroPlanos:e instanceof Error?e.message:"Ambiente não autorizado.",erroAssinatura:"",planos:[],assinaturas:[]});
       return;
     }
-    if(!/^empresa_[0-9]{14}$/.test(empresaId)){
+    if(!identificadorEmpresaValido(empresaId)){
       setEstado({carregando:false,erroPlanos:"Empresa inválida.",erroAssinatura:"",planos:[],assinaturas:[]});return;
     }
     // O filtro publicado==true é necessário às regras do Firestore.

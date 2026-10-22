@@ -46,3 +46,14 @@ Incrementos do PR #9 ainda não implantados:
 - Botão para atualizar permissões depois da aprovação administrativa, usando token renovado do Firebase Auth sem precisar desconectar a conta.
 - Cadastros de motos, motoristas, clientes e NFs continuam a depender de ativação segura do backend no Firebase atual.
 - **Pendente para implantação:** acesso administrativo autenticado às configurações remotas, estado das coleções, backup, empresa piloto, liberação de Functions e teste real. Não publicar live nem considerar pronto por CI isolado.
+
+## Soma — empresa de testes sem CNPJ (preparação, 22/10/2026)
+
+O usuário autorizou usar suas contas existentes apenas para testes, sem exigir CNPJ real. Não escolher CNPJ de terceiros e não confundir a empresa fictícia com representação jurídica da Soma.
+
+- ID técnico dedicado: `empresa_teste_soma` (não é CNPJ), com marcador obrigatório `modo_teste:true`, `tipo_registro:"empresa_teste"` e `cnpj:null`.
+- Validação de acesso ao backend conserva verificação de usuário, papel, membro ativo, empresa marcada piloto e allowlist explícita. Nenhum acesso autorizado pelo navegador sozinho.
+- Provisionamento manual via workflow com dois modos: consultar Auth/Firestore e criar sandbox SOMA sob confirmação explícita; e-mail proprietário vem de GitHub Secret, não do repositório.
+- Testes do novo ID sem CNPJ e bloqueios de acesso precisam passar no CI.
+- **Pendente:** verificar permissão Firebase Auth/IAM, provisionar o tenant, identificar com segurança a segunda conta, implantar Functions permitidas sem atingir produção live e confirmar cadastros após relogin.
+- PR #7 de motoboy continua fora do escopo até a web ser concluída. Ver `SOMA_SANDBOX_SEM_CNPJ.md`.

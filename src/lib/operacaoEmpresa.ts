@@ -3,6 +3,7 @@ import { getFunctions, httpsCallable } from "firebase/functions";
 import { collection, getDocs, limit, query, onSnapshot, type DocumentData } from "firebase/firestore";
 import { db, firebaseApp } from "./firebase";
 import { exigirAmbienteOperacional } from "./ambiente";
+import {identificadorEmpresaValido} from "./empresaId";
 
 export type TipoOperacional="cliente"|"veiculo"|"entregador"|"pedido";
 export type RegistroOperacional={
@@ -20,7 +21,7 @@ export async function empresaAutorizada(user:User):Promise<string|null>{
   const token=await getIdTokenResult(user,true);
   if(!user.emailVerified)return null;
   const id=token.claims.empresa_id;
-  return typeof id==="string" && /^empresa_[0-9]{14}$/.test(id)?id:null;
+  return typeof id==="string" && identificadorEmpresaValido(id)?id:null;
 }
 function converterRegistro(doc:{id:string;data:()=>DocumentData}):RegistroOperacional{
     const d:DocumentData=doc.data();
@@ -49,7 +50,7 @@ function converterRegistro(doc:{id:string;data:()=>DocumentData}):RegistroOperac
 }
 function caminho(empresaId:string,tipo:TipoOperacional){
   exigirAmbienteOperacional();
-  if(!/^empresa_[0-9]{14}$/.test(empresaId))throw Error("Empresa inválida.");
+  if(!identificadorEmpresaValido(empresaId))throw Error("Empresa inválida.");
   return query(collection(db,"empresas",empresaId,colecao[tipo]),limit(100));
 }
 export function escutarRegistros(empresaId:string,tipo:TipoOperacional,receber:(items:RegistroOperacional[])=>void,falha:(erro:Error)=>void){

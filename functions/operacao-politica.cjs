@@ -1,6 +1,7 @@
 "use strict";
 
 // Validações puras para operações administrativas reais EM HOMOLOGAÇÃO.
+const {identificadorEmpresaValido}=require("./empresa-identidade.cjs");
 const idOk=s=>typeof s==="string"&&/^[A-Za-z0-9_-]{1,128}$/.test(s);
 function texto(s,min,max,obrigatorio=true){
   if((s===undefined||s===null||s==="")&&!obrigatorio)return "";
@@ -17,7 +18,7 @@ function referenciaOpcional(valor,nome){
 function validarOperacao(input){
   if(!input||typeof input!=="object"||Array.isArray(input))throw Error("Operação inválida.");
   const {empresaId,tipo,dados}=input;
-  if(!idOk(empresaId)||!/^empresa_[0-9]{14}$/.test(empresaId))throw Error("Empresa inválida.");
+  if(!idOk(empresaId)||!identificadorEmpresaValido(empresaId))throw Error("Empresa inválida.");
   if(!dados||typeof dados!=="object"||Array.isArray(dados))throw Error("Dados inválidos.");
   const campos=Object.keys(dados);
   const permitidos={
@@ -71,7 +72,7 @@ function validarOperacao(input){
 function validarAlteracao(input){
   if(!input||typeof input!=="object"||Array.isArray(input))throw Error("Operação inválida.");
   const {empresaId,tipo,registroId,acao,dados,novoStatus}=input;
-  if(!/^empresa_[0-9]{14}$/.test(empresaId||""))throw Error("Empresa inválida.");
+  if(!identificadorEmpresaValido(empresaId))throw Error("Empresa inválida.");
   if(!idOk(registroId))throw Error("Registro inválido.");
   if(!["cliente","entregador","veiculo","pedido"].includes(tipo))throw Error("Tipo inválido.");
   if(!["atualizar","desativar","mudar_status"].includes(acao))throw Error("Ação inválida.");
