@@ -12,7 +12,7 @@ function texto(s,min,max,obrigatorio=true){
 function validarOperacao(input){
   if(!input||typeof input!=="object"||Array.isArray(input))throw Error("Operação inválida.");
   const {empresaId,tipo,dados}=input;
-  if(!idOk(empresaId)||!empresaId.startsWith("empresa_"))throw Error("Empresa inválida.");
+  if(!idOk(empresaId)||!/^empresa_[0-9]{14}$/.test(empresaId))throw Error("Empresa inválida.");
   if(!dados||typeof dados!=="object"||Array.isArray(dados))throw Error("Dados inválidos.");
   const campos=Object.keys(dados);
   const permitidos={
