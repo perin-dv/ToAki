@@ -61,7 +61,7 @@ test('Entrada pública tem escolha e demonstração é protegida', () => {
   const main = file('src/main.tsx');
   const login = file('src/pages/AuthPages.tsx');
   assert.ok(main.includes('<Route path="/" element={<PublicHomePage/>}/>'));
-  assert.ok(main.includes('<Route path="/inicio" element={<PrivateRoute area="demo"><DemoPage/></PrivateRoute>}/>'));
+  assert.ok(main.includes('<Route path="/inicio" element={<PrivateRoute area="demo"><SiteOperacionalPage/></PrivateRoute>}/>'));
   assert.ok(main.includes('<Route path="/demonstracao" element={<PrivateRoute area="demo"><DemoPage/></PrivateRoute>}/>'));
   assert.ok(login.includes('O painel demonstrativo continua separado dos dados reais.'));
 });
@@ -171,6 +171,21 @@ test('Fluxo correto: landing, cliente e empresa separados, home apos login, logo
  assert.ok(!privatePages.includes('navigate(-1)'));
  assert.ok(start.includes('Cadastrar como cliente'));
  assert.ok(start.includes('Cadastrar minha empresa'));
- assert.ok(routes.includes('<Route path="/inicio" element={<PrivateRoute area="demo"><DemoPage/></PrivateRoute>}/>'));
+ assert.ok(routes.includes('<Route path="/inicio" element={<PrivateRoute area="demo"><SiteOperacionalPage/></PrivateRoute>}/>'));
  assert.ok(file("src/pages/DemoPage.tsx").includes("onHomeClick={voltarAoMapa}"));
+});
+
+test('O painel operacional não usa dados simulados ou SVG fictício no /inicio',()=>{
+  const main=file('src/main.tsx');
+  const site=file('src/pages/SiteOperacionalPage.tsx');
+  const demo=file('src/pages/DemoPage.tsx');
+  assert.ok(main.includes('<Route path="/inicio" element={<PrivateRoute area="demo"><SiteOperacionalPage/></PrivateRoute>}/>'));
+  assert.ok(main.includes('<Route path="/demonstracao" element={<PrivateRoute area="demo"><DemoPage/></PrivateRoute>}/>'));
+  assert.ok(site.includes('onSnapshot(query(caminho,limit(50))'));
+  assert.ok(site.includes('Nenhuma localização fictícia'));
+  assert.ok(!site.includes('dadosIniciais('));
+  assert.ok(!site.includes('sessionStorage'));
+  assert.ok(!site.includes('MapIllustration'));
+  assert.ok(demo.includes('MAPA FICTÍCIO'));
+  assert.ok(file('ROADMAP_SITE_OFICIAL.md').includes('Flutter'));
 });
