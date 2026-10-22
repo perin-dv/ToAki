@@ -443,3 +443,30 @@
   .head-right{width:100%;justify-content:flex-start}
   .head-right button.secondary{min-height:35px}
 }
+
+/* CEP: responsive automatic address lookup for customer registrations. */
+.cep-fields{border:1px solid #e4eaf0;border-radius:13px;padding:15px 16px 17px;min-width:0;margin:3px 0 5px;background:#fbfcfd}
+.cep-fields legend{font-size:12px;font-weight:800;color:#314251;padding:0 7px}
+.cep-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 90px;gap:12px}
+.cep-grid label{display:grid;gap:7px;font-size:11px;color:#546477;font-weight:700;min-width:0}
+.cep-grid input{width:100%;max-width:100%;min-width:0;height:43px;background:#fff;color:#273647;padding:9px 11px;border:1px solid #dae2e9;border-radius:9px;font:inherit;font-weight:450}
+.cep-grid input:focus{outline:3px solid #ffac6450;border-color:#f78a31}
+.cep-postal{grid-column:span 1}
+.cep-status{grid-column:span 2;display:flex;align-items:center;font-size:11px;line-height:1.55;color:#788898;min-height:40px;padding:7px 10px;background:#f3f5f8;border-radius:9px}
+.cep-encontrado{background:#eaf8f1;color:#117d50}
+.cep-falha,.cep-incompleto{background:#fff3e9;color:#9c5a1c}
+.cep-street{grid-column:span 2}
+.cep-number{grid-column:span 1}
+.cep-complement,.cep-district{grid-column:span 3}
+.cep-city{grid-column:span 2}
+.cep-state{grid-column:span 1}
+@media(max-width:780px){
+  .cep-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .cep-postal,.cep-number,.cep-state{grid-column:span 1}
+  .cep-status,.cep-street,.cep-complement,.cep-district,.cep-city{grid-column:span 2}
+}
+@media(max-width:410px){
+  .cep-fields{padding:13px 10px}
+  .cep-grid{gap:10px}
+  .cep-status{font-size:10px}
+}
