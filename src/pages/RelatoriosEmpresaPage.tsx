@@ -1,6 +1,7 @@
 import {useEffect,useMemo,useState} from "react";
 import {collection,limit,onSnapshot,query,type Timestamp} from "firebase/firestore";
 import {db} from "../lib/firebase";
+import {identificadorEmpresaValido} from "../lib/empresaId";
 import {exigirAmbienteOperacional} from "../lib/ambiente";
 
 type Filtro="todas"|"hoje"|"pendente"|"em_rota"|"entregue"|"cancelada";
@@ -46,7 +47,7 @@ export default function RelatoriosEmpresaPage({empresaId}:{empresaId:string}){
   const [referenciaHoje,setReferenciaHoje]=useState(()=>inicioDoDia(new Date()));
 
   useEffect(()=>{
-    if(!/^empresa_[0-9]{14}$/.test(empresaId)){
+    if(!identificadorEmpresaValido(empresaId)){
       setEstado({carregando:false,erro:"Identificador de empresa inválido.",pedidos:[]});return;
     }
     try{exigirAmbienteOperacional();}
