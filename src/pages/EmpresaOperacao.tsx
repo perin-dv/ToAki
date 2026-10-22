@@ -12,13 +12,13 @@ const abas:{id:TipoOperacional;nome:string}[]=[
   {id:"pedido",nome:"Pedidos / NFs"}
 ];
 const dadosEmBranco={nome:"",telefone:"",...enderecoVazio(),placa:"",categoria:"Moto",numero_nf:"",destinatario_id:"",entregador_id:"",endereco_entrega:""};
-export default function EmpresaOperacao(){
+export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:TipoOperacional}){
   const {user}=useAuth();
   const [empresaId,setEmpresaId]=useState<string|null>(null);
   const [carregando,setCarregando]=useState(true);
   const [erro,setErro]=useState("");
   const [aviso,setAviso]=useState("");
-  const [aba,setAba]=useState<TipoOperacional>("cliente");
+  const [aba,setAba]=useState<TipoOperacional>(abaInicial);
   const [registros,setRegistros]=useState<RegistroOperacional[]>([]);
   const [clientes,setClientes]=useState<RegistroOperacional[]>([]);
   const [entregadores,setEntregadores]=useState<RegistroOperacional[]>([]);
