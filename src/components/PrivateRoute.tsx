@@ -7,8 +7,8 @@ export default function PrivateRoute({area,children}:{area:Area; children:ReactN
   const {user,role,loading}=useAuth();
   const location=useLocation();
   if (loading) return <div className="loading" role="status">Verificando acesso...</div>;
-  if (!user) return <Navigate to="/login" replace state={{from:location.pathname}}/>;
-  if (!user.emailVerified && area!=="cliente" && area!=="demo") return <Navigate to="/verificar-email" replace />;
+  if (!user) return <Navigate to="/login" replace state={{from:location.pathname+location.search}}/>;
+  if (!user.emailVerified && area!=="cliente" && area!=="demo") return <Navigate to="/verificar-email" replace state={{from:location.pathname+location.search}}/>;
   // Acesso por cargo é emitido por servidor confiável (custom claims).
   // Usuário sem cargo só vê um portal cliente vazio, SEM acesso a dados.
   const allowed=area==="demo"?true

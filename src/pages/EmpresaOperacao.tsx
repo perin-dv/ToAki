@@ -4,6 +4,7 @@ import {empresaAutorizada,listarRegistros,criarRegistro,type TipoOperacional,typ
 import EnderecoPorCep from "../components/EnderecoPorCep";
 import {enderecoVazio,validarEndereco} from "../lib/cep";
 import {ambientePilotoOriginal} from "../lib/ambiente";
+import {criarConviteEntregador,iniciarEntrega} from "../lib/rastreamento";
 
 const abas:{id:TipoOperacional;nome:string}[]=[
   {id:"cliente",nome:"Clientes"},
@@ -13,7 +14,7 @@ const abas:{id:TipoOperacional;nome:string}[]=[
 ];
 const dadosEmBranco={nome:"",telefone:"",...enderecoVazio(),placa:"",categoria:"Moto",numero_nf:"",destinatario_id:"",entregador_id:"",endereco_entrega:""};
 export default function EmpresaOperacao(){
-  const {user}=useAuth();
+  const {user,role}=useAuth();
   const [empresaId,setEmpresaId]=useState<string|null>(null);
   const [carregando,setCarregando]=useState(true);
   const [erro,setErro]=useState("");
@@ -24,6 +25,9 @@ export default function EmpresaOperacao(){
   const [entregadores,setEntregadores]=useState<RegistroOperacional[]>([]);
   const [campos,setCampos]=useState({...dadosEmBranco});
   const [salvando,setSalvando]=useState(false);
+  const [operando,setOperando]=useState("");
+  const [destinos,setDestinos]=useState<Record<string,string>>({});
+  const [conviteGerado,setConviteGerado]=useState<{nome:string;url:string}|null>(null);
 
   useEffect(()=>{
     let ativo=true;
@@ -71,10 +75,42 @@ export default function EmpresaOperacao(){
     }finally{setSalvando(false)}
   };
 
+  const atualizarLista=async()=>{
+    if(!empresaId)return;
+    setErro("");
+    try{
+      setRegistros(await listarRegistros(empresaId,aba));
+      if(aba==="entregador"||aba==="pedido")setEntregadores(await listarRegistros(empresaId,"entregador"));
+    }catch(e){setErro(e instanceof Error?e.message:"Não foi possível atualizar os registros.");}
+  };
+  const gerarConvite=async(r:RegistroOperacional)=>{
+    if(!empresaId)return;
+    setOperando(r.id);setErro("");setConviteGerado(null);
+    try{
+      const {token}=await criarConviteEntregador(empresaId,r.id);
+      const url=window.location.origin+"/entregador?convite="+encodeURIComponent(token);
+      setConviteGerado({nome:r.nome||"Entregador",url});
+      setAviso("Convite individual válido por 24 horas. Compartilhe somente com o entregador cadastrado.");
+    }catch(e){setErro(e instanceof Error?e.message:"Falha ao criar convite.");}
+    finally{setOperando("");}
+  };
+  const iniciarRota=async(r:RegistroOperacional)=>{
+    if(!empresaId)return;
+    const entregadorId=destinos[r.id]||r.entregador_id||"";
+    if(!entregadorId){setErro("Selecione um entregador com aplicativo vinculado.");return;}
+    setOperando(r.id);setErro("");setAviso("");
+    try{
+      await iniciarEntrega(empresaId,r.id,entregadorId);
+      setAviso("Entrega iniciada. A NF já aparecerá no aplicativo do entregador vinculado.");
+      await atualizarLista();
+    }catch(e){setErro(e instanceof Error?e.message:"Não foi possível iniciar a rota.");}
+    finally{setOperando("");}
+  };
+
   if(carregando)return <div role="status" className="loading">Validando vínculo da empresa...</div>;
   if(!empresaId)return <section className="panel content-panel account-full-panel">
     <h2>Empresa ainda não vinculada à sua conta</h2>
-    <p className="helper">Cadastre sua empresa e aguarde a aprovação no ambiente de homologação. Somente usuários com vínculo ativo e cargo autorizado podem acessar clientes, veículos e notas reais.</p>
+    <p className="helper">Sua empresa precisa estar aprovada e autorizada para o piloto. Somente usuários com vínculo ativo e cargo permitido podem cadastrar clientes, veículos e notas reais.</p>
     {erro&&<p role="alert" className="form-error">{erro}</p>}
   </section>;
   return <div className="account-content">
@@ -110,12 +146,39 @@ export default function EmpresaOperacao(){
         {aviso&&<p role="status" className="form-info">{aviso}</p>}
       </section>
       <section className="panel content-panel">
-        <div className="account-section-heading"><div><h2>Registros da empresa</h2><p>Dados lidos diretamente do Firestore autorizado.</p></div><span className="pill muted">{registros.length} exibidos</span></div>
+        <div className="account-section-heading"><div><h2>Registros da empresa</h2><p>Dados lidos diretamente do Firestore autorizado.</p></div>
+          <button type="button" className="secondary" onClick={()=>void atualizarLista()}>Atualizar</button><span className="pill muted">{registros.length} exibidos</span></div>
         <div className="demo-record-list">
           {!registros.length&&<div className="account-empty"><strong>Sem registros nesta categoria</strong><p>Cadastre o primeiro registro no formulário ao lado.</p></div>}
-          {registros.map(r=><article className="demo-record" key={r.id}><div><strong>{r.titulo_registro}</strong><small>{r.placa||r.nome||r.numero_nf||""}</small>{r.cep&&<small>{[r.logradouro,r.numero,r.bairro,r.cidade,r.uf].filter(Boolean).join(", ")} · CEP {r.cep}</small>}<small>Status: {r.status}</small></div></article>)}
+          {registros.map(r=><article className="demo-record" key={r.id}>
+            <div><strong>{r.titulo_registro}</strong><small>{r.placa||r.nome||r.numero_nf||""}</small>
+              {r.cep&&<small>{[r.logradouro,r.numero,r.bairro,r.cidade,r.uf].filter(Boolean).join(", ")} · CEP {r.cep}</small>}
+              <small>Status: {r.status==="em_rota"?"Em rota":r.status==="entregue"?"Entregue":r.status}</small>
+              {aba==="entregador"&&<small>{r.uid_conta?"Aplicativo do entregador conectado":"Ainda não conectado ao aplicativo"}</small>}
+              {aba==="pedido"&&r.posicao_atual&&r.status==="em_rota"&&<div className="courier-position">
+                <small>GPS recebido · precisão de {Math.round(r.posicao_atual.precisao)} m</small>
+                <a href={"https://www.google.com/maps?q="+r.posicao_atual.latitude+","+r.posicao_atual.longitude} target="_blank" rel="noopener noreferrer">Ver última posição no mapa ↗</a>
+              </div>}
+            </div>
+            {aba==="entregador"&&!r.uid_conta&&["dono_empresa","gestor"].includes(role||"")&&
+              <button type="button" className="secondary" disabled={operando===r.id} onClick={()=>void gerarConvite(r)}>Gerar convite do app</button>}
+            {aba==="pedido"&&r.status==="pendente"&&<div className="courier-assignment">
+              <label>Selecionar entregador com aplicativo
+                <select aria-label={"Entregador da NF "+(r.numero_nf||r.id)} value={destinos[r.id]??r.entregador_id??""} onChange={e=>setDestinos(p=>({...p,[r.id]:e.target.value}))}>
+                  <option value="">Selecione</option>
+                  {entregadores.filter(e=>!!e.uid_conta).map(e=><option key={e.id} value={e.id}>{e.nome||e.titulo_registro}</option>)}
+                </select>
+              </label>
+              <button type="button" className="primary" disabled={operando===r.id} onClick={()=>void iniciarRota(r)}>Iniciar rota</button>
+            </div>}
+          </article>)}
+          {conviteGerado&&aba==="entregador"&&<div className="demo-warning courier-invite"><strong>Convite para {conviteGerado.nome}</strong>
+            <p>Envie o link em particular ao entregador. Qualquer pessoa que obtiver o convite antes do uso poderá tentar vinculá-lo.</p>
+            <input aria-label="Link privado do aplicativo de entregador" readOnly value={conviteGerado.url}/>
+            <button className="secondary" type="button" onClick={()=>void navigator.clipboard?.writeText(conviteGerado.url)}>Copiar link do aplicativo</button>
+          </div>}
         </div>
-        <p className="helper">Primeiro incremento: cadastro e consulta. Edição, cancelamento de notas e atribuições de rota dependerão de novas validações no backend.</p>
+        <p className="helper">O vínculo com o entregador é feito por convite individual. O GPS aparece apenas nas entregas em rota; confira a posição atualizada no botão Atualizar. Rastreamento contínuo em segundo plano dependerá do app Android.</p>
       </section>
     </div>
   </div>;

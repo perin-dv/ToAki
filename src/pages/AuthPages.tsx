@@ -5,6 +5,7 @@ import { auth } from "../lib/firebase";
 import { useAuth } from "../auth/AuthProvider";
 import Brand from "../components/Brand";
 import { avaliarSenha } from "../lib/passwordStrength";
+import {destinoAposLogin,ehConviteEntregador} from "../lib/destinoAposLogin";
 
 function message(error:unknown):string {
   const code=(error && typeof error==="object" && "code" in error)?String(error.code):"";
@@ -24,7 +25,7 @@ function Layout({title,description,children}:{title:string;description:string;ch
 export function LoginPage() {
   const {user,loading}=useAuth();const navigate=useNavigate();
   const location=useLocation();
-  const returnTo=location.state?.from==="/cadastro/empresa/dados"?"/cadastro/empresa/dados":"/inicio";
+  const returnTo=destinoAposLogin(location.state?.from);
   const [email,setEmail]=useState("");const[password,setPassword]=useState("");const[mostrarSenha,setMostrarSenha]=useState(false);const[busy,setBusy]=useState(false);const[error,setError]=useState("");
   if(!loading&&user)return <Navigate to={returnTo} replace/>;
   const submit=async(e:FormEvent)=>{e.preventDefault();setBusy(true);setError("");try{
@@ -38,20 +39,22 @@ export function LoginPage() {
     <Link className="right-link" to="/recuperar-senha">Esqueceu sua senha?</Link>
     {error&&<p className="form-error" role="alert">{error}</p>}
     <button className="primary" disabled={busy}>{busy?"Entrando...":"Entrar"}</button></form>
-    <p className="auth-footer">Ainda não tem conta? <Link to="/cadastro">Criar conta</Link></p>
+    <p className="auth-footer">Ainda não tem conta? <Link to="/cadastro" state={{from:returnTo}}>Criar conta</Link></p>
     <p className="helper">Já tem cadastro no Firebase Authentication? Use Entrar com o mesmo e-mail e senha. Criar conta é somente para novos usuários. O acesso empresarial exige autorização específica.</p>
     <p className="helper">Após entrar, você será direcionado à página inicial do toAki. O painel demonstrativo continua separado dos dados reais.</p>
   </Layout>;
 }
 export function RegisterChoicePage(){
   const {user}=useAuth();
-  if(user)return <Navigate to="/inicio" replace/>;
+  const location=useLocation();
+  const retorno=destinoAposLogin(location.state?.from);
+  if(user)return <Navigate to={retorno} replace/>;
   return <Layout title="Como você quer se cadastrar?" description="Escolha o tipo de acesso para continuar.">
     <div className="auth-choice-grid">
-      <Link className="auth-choice-card" to="/cadastro/cliente"><span className="auth-choice-label">PESSOA FÍSICA</span><strong>Sou cliente</strong><span>Crie seu acesso para acompanhar entregas. Não precisa de aprovação.</span><b>Cadastro de cliente →</b></Link>
-      <Link className="auth-choice-card" to="/cadastro/empresa"><span className="auth-choice-label">EMPRESA / LOJA</span><strong>Tenho uma empresa</strong><span>Crie seu acesso responsável. O CNPJ e a liberação da empresa são uma etapa separada.</span><b>Cadastro de empresa →</b></Link>
+      <Link className="auth-choice-card" to="/cadastro/cliente" state={{from:retorno}}><span className="auth-choice-label">PESSOA FÍSICA</span><strong>Sou cliente</strong><span>Crie seu acesso para acompanhar entregas. Não precisa de aprovação.</span><b>Cadastro de cliente →</b></Link>
+      <Link className="auth-choice-card" to="/cadastro/empresa" state={{from:retorno}}><span className="auth-choice-label">EMPRESA / LOJA</span><strong>Tenho uma empresa</strong><span>Crie seu acesso responsável. O CNPJ e a liberação da empresa são uma etapa separada.</span><b>Cadastro de empresa →</b></Link>
     </div>
-    <p className="auth-footer">Já tem conta? <Link to="/login">Entrar</Link></p>
+    <p className="auth-footer">Já tem conta? <Link to="/login" state={{from:retorno}}>Entrar</Link></p>
   </Layout>;
 }
 
@@ -65,6 +68,9 @@ export function RegisterPage({tipo}:{tipo:"cliente"|"empresa"}) {
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState("");
   const navigate=useNavigate();
+  const location=useLocation();
+  const retorno=destinoAposLogin(location.state?.from);
+  const destinoCadastro=tipo==="empresa"?"/cadastro/empresa/dados":ehConviteEntregador(retorno)?retorno:"/inicio";
   const avaliacao=avaliarSenha(password,email,name);
   const senhasIguais=confirmar.length>0 && password===confirmar;
 
@@ -80,11 +86,11 @@ export function RegisterPage({tipo}:{tipo:"cliente"|"empresa"}) {
       try{await updateProfile(user,{displayName:name.trim()})}catch{ /* O cadastro já existe; não solicitar nova conta. */ }
       // No modo de testes, criar conta NÃO dispara e-mail de confirmação.
       // A confirmação é solicitada somente para cadastro empresarial.
-      navigate(tipo==="empresa"?"/cadastro/empresa/dados":"/inicio",{replace:true});
+      navigate(destinoCadastro,{replace:true});
     }catch(e){setError(message(e))}finally{setBusy(false)}
   };
 
-  if(user)return <Navigate to={tipo==="empresa"?"/cadastro/empresa/dados":"/inicio"} replace/>;
+  if(user)return <Navigate to={destinoCadastro} replace/>;
   return <Layout title={tipo==="empresa"?"Cadastrar minha empresa":"Cadastro de cliente"} description={tipo==="empresa"?"Etapa 1 de 2: crie o acesso do responsável. Na próxima tela, confirme seu e-mail e informe o CNPJ.":"Crie sua conta para acompanhar as entregas vinculadas a você. Não exige aprovação."}>
     {tipo==="empresa"&&<div className="auth-step"><strong>1. Conta do responsável</strong><span>2. CNPJ e solicitação empresarial</span></div>}
     <p className="auth-privacy-note">Este piloto cria uma conta real no Firebase Authentication. Utilize apenas e-mail autorizado. O link de testes não é privado.</p>
@@ -102,7 +108,7 @@ export function RegisterPage({tipo}:{tipo:"cliente"|"empresa"}) {
       <button className="primary" disabled={busy||!avaliacao.aceita||!senhasIguais}>{busy?"Cadastrando...":tipo==="empresa"?"Criar acesso e continuar →":"Criar conta de cliente"}</button>
     </form>
     <p className="helper">Senha exclusiva recomendada. {tipo==="empresa"?"Criar a conta não concede cargo empresarial nem permite cadastrar NFs antes da aprovação.":"Como cliente, você não precisa de aprovação, mas também não pode cadastrar notas em nome de empresas."}</p>
-    <p className="auth-footer"><Link to="/cadastro">← Trocar tipo de cadastro</Link> · <Link to="/login">Já tenho conta</Link></p>
+    <p className="auth-footer"><Link to="/cadastro" state={{from:retorno}}>← Trocar tipo de cadastro</Link> · <Link to="/login" state={{from:retorno}}>Já tenho conta</Link></p>
   </Layout>;
 }
 export function PasswordPage() {
@@ -112,7 +118,7 @@ export function PasswordPage() {
 }
 export function VerifyEmailPage() {
   const {user,refreshClaims}=useAuth();const navigate=useNavigate();const location=useLocation();const[busy,setBusy]=useState(false);const[notice,setNotice]=useState("");
-  const check=async()=>{if(!user)return;setBusy(true);try{await user.reload();await refreshClaims();if(auth.currentUser?.emailVerified)navigate(location.state?.from==="/cadastro/empresa/dados"?"/cadastro/empresa/dados":"/inicio",{replace:true});else setNotice("E-mail ainda não confirmado.");}catch{setNotice("Não foi possível verificar agora.")}finally{setBusy(false)}};
+  const check=async()=>{if(!user)return;setBusy(true);try{await user.reload();await refreshClaims();if(auth.currentUser?.emailVerified)navigate(destinoAposLogin(location.state?.from),{replace:true});else setNotice("E-mail ainda não confirmado.");}catch{setNotice("Não foi possível verificar agora.")}finally{setBusy(false)}};
   const resend=async()=>{if(!user)return;setBusy(true);try{await sendEmailVerification(user);setNotice("O e-mail de confirmação foi enviado porque você solicitou.");}catch{setNotice("Tente reenviar mais tarde.")}finally{setBusy(false)}};
   return <Layout title="Verifique seu e-mail" description="Esta confirmação só é necessária para solicitar acesso empresarial e consultar dados privados quando estes serviços estiverem disponíveis. Nenhum e-mail é enviado automaticamente ao criar a conta."><div className="stack"><p className="helper">{user?.email||"Faça login para solicitar outro link."}</p>{notice&&<p className="form-info" role="status">{notice}</p>}<button className="primary" disabled={!user||busy} onClick={check}>Já confirmei meu e-mail</button><button className="secondary" disabled={!user||busy} onClick={resend}>Enviar e-mail de verificação</button><button className="text-button" onClick={async()=>{await signOut(auth);navigate("/login")}}>Sair</button></div></Layout>;
 }

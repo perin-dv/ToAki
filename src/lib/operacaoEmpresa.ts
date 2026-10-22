@@ -9,7 +9,9 @@ export type RegistroOperacional={
   id:string;titulo_registro:string;status:string;nome?:string;
   numero_nf?:string;placa?:string;categoria?:string;telefone?:string;
   cep?:string;logradouro?:string;numero?:string;complemento?:string;bairro?:string;cidade?:string;uf?:string;
-  endereco_entrega?:string;criado_em?:unknown;
+  endereco_entrega?:string;entregador_id?:string;entregador_uid?:string;uid_conta?:string;
+  posicao_atual?:{latitude:number;longitude:number;precisao:number;recebida_em?:unknown};
+  criado_em?:unknown;
 };
 const colecao:Record<TipoOperacional,string>={
   cliente:"clientes",veiculo:"veiculos",entregador:"entregadores_vinculados",pedido:"pedidos"
@@ -43,6 +45,10 @@ export async function listarRegistros(empresaId:string,tipo:TipoOperacional):Pro
       cidade:typeof d.cidade==="string"?d.cidade:undefined,
       uf:typeof d.uf==="string"?d.uf:undefined,
       endereco_entrega:typeof d.endereco_entrega==="string"?d.endereco_entrega:undefined,
+      entregador_id:typeof d.entregador_id==="string"?d.entregador_id:undefined,
+      entregador_uid:typeof d.entregador_uid==="string"?d.entregador_uid:undefined,
+      uid_conta:typeof d.uid_conta==="string"?d.uid_conta:undefined,
+      posicao_atual:d.posicao_atual&&Number.isFinite(d.posicao_atual.latitude)&&Number.isFinite(d.posicao_atual.longitude)?{latitude:d.posicao_atual.latitude,longitude:d.posicao_atual.longitude,precisao:d.posicao_atual.precisao,recebida_em:d.posicao_atual.recebida_em}:undefined,
       criado_em:d.criado_em
     };
   });

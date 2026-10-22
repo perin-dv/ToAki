@@ -80,7 +80,7 @@ export default function DemoPage() {
   const chosen=entregas[selected]??entregas[0];
   const verMapa=(id:string)=>{const i=entregas.findIndex(n=>n.id===id);setSelected(Math.max(i,0));mudarAba("inicio")};
   const panelTitle=menu.find(m=>m.key===tab)?.name??"Início";
-  const accountPath=role==="admin_toaki"?"/admin":["dono_empresa","gestor","vendedor"].includes(role??"")?"/empresa":"/cliente";
+  const accountPath=role==="admin_toaki"?"/admin":role==="entregador"?"/entregador":["dono_empresa","gestor","vendedor"].includes(role??"")?"/empresa":"/cliente";
   return <div className="demo-layout">
     {menuAberto&&<button className="drawer-backdrop" type="button" aria-label="Fechar menu lateral" onClick={()=>setMenuAberto(false)}/>}
     <aside id="demo-sidebar-menu" className={"demo-sidebar "+(menuAberto?"drawer-open":"")}>

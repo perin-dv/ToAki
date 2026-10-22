@@ -8,6 +8,7 @@ import { PublicHomePage } from "./pages/HomePages";
 import CompanyOnboardingPage from "./pages/CompanyOnboardingPage";
 import { CompanyPage, CustomerPage, AdminPage } from "./pages/PrivatePages";
 import DemoPage from "./pages/DemoPage";
+import EntregadorPage from "./pages/EntregadorPage";
 import "./styles.css";
 import {registrarPwa} from "./lib/pwa";
 
@@ -19,6 +20,7 @@ function App() {
     {import.meta.env.MODE === "e2e" && <Route path="/__e2e_demonstracao" element={<DemoPage/>}/>}
     {import.meta.env.MODE === "e2e" && <Route path="/__e2e_conta" element={<ContaTesteProvider><CustomerPage/></ContaTesteProvider>}/> }
     {import.meta.env.MODE === "e2e" && <Route path="/__e2e_inicio" element={<ContaTesteProvider><DemoPage/></ContaTesteProvider>}/>}
+    {import.meta.env.MODE === "e2e" && <Route path="/__e2e_entregador" element={<ContaTesteProvider><EntregadorPage/></ContaTesteProvider>}/>}
     <Route path="/login" element={<LoginPage/>}/>
     <Route path="/cadastro" element={<RegisterChoicePage/>}/>
     <Route path="/cadastro/cliente" element={<RegisterPage tipo="cliente"/>}/>
@@ -28,6 +30,7 @@ function App() {
     <Route path="/verificar-email" element={<VerifyEmailPage/>}/>
     <Route path="/acesso-pendente" element={<PendingPage/>}/>
     <Route path="/empresa" element={<PrivateRoute area="empresa"><CompanyPage/></PrivateRoute>}/>
+    <Route path="/entregador" element={<PrivateRoute area="demo"><EntregadorPage/></PrivateRoute>}/>
     <Route path="/cliente" element={<PrivateRoute area="cliente"><CustomerPage/></PrivateRoute>}/>
     <Route path="/admin" element={<PrivateRoute area="admin"><AdminPage/></PrivateRoute>}/>
     <Route path="*" element={<Navigate to="/" replace/>}/>
