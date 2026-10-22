@@ -17,6 +17,8 @@ function crc32(b){let c=0xffffffff;for(const x of b)c=crcTable[(c^x)&255]^(c>>>8
 function chunk(type,data){const len=Buffer.alloc(4);len.writeUInt32BE(data.length);const payload=Buffer.concat([Buffer.from(type),data]);const sum=Buffer.alloc(4);sum.writeUInt32BE(crc32(payload));return Buffer.concat([len,payload,sum]);}
 function pngFile(size){
   const image=new Uint8Array(size*size*4);
+  // Entire square has an opaque background so it is safe for adaptive maskable icons.
+  for(let i=0;i<image.length;i+=4){image[i]=13;image[i+1]=16;image[i+2]=21;image[i+3]=255;}
   const mix=(x,y,color,alpha=1)=>{
     if(x<0||y<0||x>=size||y>=size)return;
     const a=(y*size+x)*4;const p=alpha;
