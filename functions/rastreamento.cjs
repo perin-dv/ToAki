@@ -156,6 +156,9 @@ exports.enviarGpsEntregaPiloto=onCall(options,async req=>{
   const emp=await empresaRef(empresaId).get();
   if(!emp.exists||emp.data().status!=="ativa")throw new HttpsError("permission-denied","Empresa desativada.");
   ambiente(empresaId,emp.data());
+  const membro=await empresaRef(empresaId).collection("funcionarios").doc(uid).get();
+  if(!membro.exists||membro.data().ativo!==true||membro.data().papel!=="entregador")
+    throw new HttpsError("permission-denied","Vínculo do entregador foi suspenso.");
   const pedidoRef=empresaRef(empresaId).collection("pedidos").doc(pos.pedidoId);
   const tarefaRef=db().doc("entregadores/"+uid+"/tarefas/"+pos.pedidoId);
   await db().runTransaction(async tx=>{
@@ -186,6 +189,9 @@ exports.concluirEntregaPiloto=onCall(options,async req=>{
   const emp=await empresaRef(empresaId).get();
   if(!emp.exists||emp.data().status!=="ativa")throw new HttpsError("permission-denied","Empresa desativada.");
   ambiente(empresaId,emp.data());
+  const membro=await empresaRef(empresaId).collection("funcionarios").doc(uid).get();
+  if(!membro.exists||membro.data().ativo!==true||membro.data().papel!=="entregador")
+    throw new HttpsError("permission-denied","Vínculo do entregador foi suspenso.");
   const pedidoRef=empresaRef(empresaId).collection("pedidos").doc(pedidoId);
   const tarefaRef=db().doc("entregadores/"+uid+"/tarefas/"+pedidoId);
   await db().runTransaction(async tx=>{
