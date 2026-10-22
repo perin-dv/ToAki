@@ -21,3 +21,12 @@ test("não há operação de exclusão nem mudanças de papel no validador inici
   assert.throws(()=>validarOperacao({empresaId:id,tipo:"admin",dados:{papel:"admin"}}),/Tipo de cadastro inválido/);
   assert.throws(()=>validarOperacao({empresaId:id,tipo:"cliente",dados:{nome:"A",...endereco}}),/tamanho/);
 });
+
+test("cliente empresarial exige CEP completo, número e UF brasileira",()=>{
+  const base={empresaId:id,tipo:"cliente"};
+  assert.equal(validarOperacao({...base,dados:{nome:"Oficina Exemplo A",...endereco}}).dados.cep,"01001000");
+  assert.throws(()=>validarOperacao({...base,dados:{nome:"Oficina Exemplo A",...endereco,cep:"123"}}),/CEP|tamanho/);
+  assert.throws(()=>validarOperacao({...base,dados:{nome:"Oficina Exemplo A",...endereco,uf:"XX"}}),/UF inválida/);
+  assert.throws(()=>validarOperacao({...base,dados:{nome:"Oficina Exemplo A",...endereco,numero:""}}),/tamanho|Campo/);
+  assert.throws(()=>validarOperacao({...base,dados:{nome:"Oficina Exemplo A",...endereco,acesso_admin:"sim"}}),/não autorizado/);
+});
