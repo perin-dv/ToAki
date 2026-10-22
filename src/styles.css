@@ -391,3 +391,33 @@
  .company-onboarding .account-role{display:none}
  .auth-choice-card{padding:16px}
 }
+
+/* Piloto PWA: instalação transparente e compartilhamento no celular. */
+.pwa-pilot-panel{
+  display:flex;align-items:center;justify-content:space-between;gap:25px;
+  margin:20px 0 0;padding:26px 31px;background:linear-gradient(112deg,#fff,#fff9f2);
+  border:1px solid #f3d5b8;border-radius:16px;overflow:hidden;
+}
+.pwa-pilot-copy{min-width:0;flex:1}
+.pwa-pilot-eyebrow{font-size:10px;letter-spacing:1.5px;color:#da741b;font-weight:800}
+.pwa-pilot-copy h2{font-size:19px;letter-spacing:-.5px;margin:9px 0}
+.pwa-pilot-copy>p{color:#738295;font-size:12px;line-height:1.7;max-width:625px;margin:0}
+.pwa-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:18px}
+.pwa-actions button{min-height:40px;padding:10px 15px}
+.pwa-feedback{margin:13px 0 0;font-size:12px;color:#52687d}
+.pwa-instructions{border-top:1px solid #efdfce;margin-top:16px;padding-top:13px}
+.pwa-instructions p{line-height:1.7;font-size:12px;color:#66788b;margin:0 0 8px}
+.pwa-visible-link{overflow-wrap:anywhere;font-size:11px}
+.pwa-visible-link span{user-select:all}
+.pwa-mark{flex:0 0 110px;height:110px;display:flex;align-items:center;justify-content:center;border-radius:25px;background:#141518;color:#fff;box-shadow:0 5px 25px #11192223;font-size:23px;letter-spacing:-1px;font-weight:800}
+.pwa-mark strong{color:#ff8c23}
+.home-top-actions .home-logout{font-size:11px;padding:9px 12px;border:1px solid #44494e;border-radius:8px;background:#22262a;color:#fff;font-weight:750;min-height:35px}
+.home-top-actions .home-logout:hover{background:#303437}
+@media(max-width:650px){
+  .pwa-pilot-panel{padding:21px;gap:12px}
+  .pwa-mark{display:none}
+  .pwa-pilot-copy h2{font-size:17px}
+  .pwa-actions button{flex:1;min-width:140px}
+  .home-top-actions{gap:7px}
+  .home-top-actions .home-logout{padding:7px 9px}
+}
