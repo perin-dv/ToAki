@@ -9,7 +9,7 @@ const mostrarData = (data?:string) => {
   return Number.isNaN(d.getTime())?"Não informado":new Intl.DateTimeFormat("pt-BR",{dateStyle:"long"}).format(d);
 };
 
-export default function PerfilConta(){
+export default function PerfilConta({onSaved}:{onSaved?:()=>void}={}){
   const {user,refreshClaims}=useAuth();
   const [nome,setNome]=useState(user?.displayName??"");
   const [salvando,setSalvando]=useState(false);
@@ -27,6 +27,7 @@ export default function PerfilConta(){
     try {
       await updateProfile(atual,{displayName:novoNome});
       await refreshClaims();
+      onSaved?.();
       setMensagem("Seu nome foi atualizado no Firebase Authentication.");
     }catch {
       setErro("Não foi possível atualizar agora. Confira sua conexão e tente novamente.");
