@@ -43,7 +43,7 @@ test("Fase B demo no celular: formulário de veículo responsivo e histórico",a
   await page.getByRole("textbox",{name:"Placa de exemplo"}).fill("MNO7P89");
   await page.getByRole("combobox",{name:"Categoria"}).selectOption("Van");
   await page.getByRole("button",{name:"Cadastrar veículo"}).click();
-  await expect(page.getByText("MNO7P89")).toBeVisible();
+  await expect(page.getByText("MNO7P89",{exact:true})).toBeVisible();
   await mobile.getByRole("button",{name:"Abrir todos os módulos"}).click();
   await page.getByRole("navigation",{name:"Menu completo do protótipo"})
     .getByRole("button",{name:"Histórico e relatórios"}).click();
