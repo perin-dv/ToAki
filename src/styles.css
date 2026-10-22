@@ -303,3 +303,91 @@
   .account-security-actions button{width:100%}
   .account-footer{line-height:1.6}
 }
+
+
+/* Entrada pública, seletor de cadastro e home autenticada. */
+.start-page{min-height:100vh;background:#f6f8fa;color:#253547}
+.start-header{display:flex;align-items:center;justify-content:space-between;padding:15px max(20px,5vw);gap:14px;background:#101215}
+.start-header .brand{padding:0}
+.start-header nav,.home-top-actions{display:flex;align-items:center;gap:13px}
+.start-header-link,.home-top-actions a{color:#e7ecf2;font-size:12px;font-weight:700}
+.start-header-link:hover,.home-top-actions a:hover{color:#ff9b35;text-decoration:none}
+.start-header nav .primary{min-height:39px}
+.start-main{max-width:1150px;margin:0 auto;padding:38px 24px 60px}
+.start-hero{display:flex;align-items:center;justify-content:space-between;gap:30px;background:linear-gradient(125deg,#111317,#252629);border-radius:21px;padding:53px 58px;min-height:370px;color:#fff;overflow:hidden;position:relative}
+.start-hero>div:first-child{position:relative;z-index:2}
+.start-kicker,.start-section-head>span{color:#fa9538;font-weight:800;letter-spacing:2px;font-size:10px}
+.start-hero h1{font-size:clamp(35px,4.5vw,56px);line-height:1.07;letter-spacing:-2.4px;margin:19px 0}
+.start-hero h1 em{font-style:normal;color:#ff923b}
+.start-hero p{color:#bcc6d0;font-size:14px;line-height:1.8;max-width:475px}
+.start-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+.start-actions .secondary{background:transparent;color:#fff;border:1px solid #555d63}
+.start-illustration{flex:0 0 265px;min-height:250px;position:relative;display:grid;place-items:center}
+.start-circle{width:170px;height:170px;border-radius:50%;display:grid;place-items:center;background:#ff7c1730;border:1px solid #ff9b315a;color:#ff9940;box-shadow:0 0 0 35px #ff8b1021,0 0 0 74px #ff8b100d}
+.start-pin{position:absolute;right:25px;top:45px;color:#ff8b22;font-size:43px}
+.start-stroke{position:absolute;border:2px dashed #e6a4527a;border-radius:50%;height:100px;width:220px;transform:rotate(32deg)}
+.start-stroke-two{transform:rotate(-38deg);width:260px;height:145px;opacity:.3}
+.start-choices{margin-top:34px}
+.start-section-head{margin-bottom:21px}.start-section-head h2{font-size:25px;margin:7px 0}.start-section-head p{color:#8491a0;font-size:12px;margin:0}
+.start-choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:17px}
+.start-choice{padding:27px;background:#fff;border:1px solid #e7ecf0;border-radius:15px;display:flex;align-items:flex-start;flex-direction:column;gap:10px;box-shadow:0 5px 24px #11192208}
+.start-choice-icon{width:47px;height:47px;background:#fff1e4;border-radius:13px;color:#ea7413;display:grid;place-items:center}
+.start-choice h3{font-size:18px;color:#293848;margin:7px 0 0}
+.start-choice p{font-size:12px;color:#778696;line-height:1.75;flex:1;margin:0}
+.start-choice .button-link{margin-top:10px}
+.start-footer{text-align:center;font-size:11px;color:#99a5af;padding:15px 20px 30px}
+.auth-choice-grid{display:grid;gap:12px}
+.auth-choice-card{display:flex;flex-direction:column;gap:9px;padding:19px 20px;border:1px solid #e1e8ee;border-radius:12px;background:#fbfcfd;color:#273849;transition:border-color .15s,box-shadow .15s}
+.auth-choice-card:hover{text-decoration:none;border-color:#ff9f41;box-shadow:0 4px 16px #ee913518}
+.auth-choice-label{letter-spacing:1.1px;font-size:10px;color:#e77a25;font-weight:800}
+.auth-choice-card strong{font-size:17px;color:#273849}
+.auth-choice-card>span:not(.auth-choice-label){color:#778797;font-size:11px;line-height:1.7}
+.auth-choice-card>b{font-size:11px;color:#e46d13}
+.auth-step{display:flex;gap:9px;align-items:center;margin:0 0 15px;flex-wrap:wrap;font-size:11px}
+.auth-step strong{background:#fff1e7;color:#dc6b15;border-radius:9px;padding:9px 11px}
+.auth-step span{color:#97a3ac;padding:9px 4px}
+.auth-privacy-note{font-size:11px;color:#697c8d;line-height:1.6;background:#f6f8fb;border-left:3px solid #ff8a25;padding:10px 13px;margin:10px 0 17px}
+.home-top-actions{gap:17px}
+.home-avatar-link{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:linear-gradient(130deg,#ffa92b,#ff6412);color:#fff!important}
+.home-heading>span{display:block;color:#dc7422;font-size:10px;font-weight:800;letter-spacing:1.4px;margin-bottom:11px}
+.home-heading h1{font-size:27px;letter-spacing:-.8px;color:#273747;margin:0 0 7px}
+.home-heading p{font-size:12px;color:#8393a2;line-height:1.7;margin:0 0 24px}
+.home-intro{display:flex;align-items:center;justify-content:space-between;gap:22px;padding:34px 40px;background:linear-gradient(120deg,#15171a,#27292c);border-radius:17px;color:#fff;overflow:hidden;margin-bottom:21px}
+.home-intro h2{font-size:clamp(23px,3vw,31px);line-height:1.25;max-width:560px;letter-spacing:-.8px;margin:10px 0}
+.home-intro p{font-size:12px;color:#b9c5d0;line-height:1.75;max-width:600px}
+.home-intro .button-link{margin-top:12px}
+.home-intro-icon{min-width:175px;color:#ff922f;display:grid;place-items:center;opacity:.9}
+.home-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:17px}
+.home-feature-card{display:flex;flex-direction:column;align-items:flex-start;gap:12px;background:#fff;border:1px solid #e5ebf0;border-radius:14px;padding:23px;min-height:207px;color:#2c3c4c;box-shadow:0 5px 20px #11192207}
+.home-feature-card:hover{border-color:#ffa244;text-decoration:none}
+.home-feature-icon{width:46px;height:46px;background:#fff0e2;border-radius:12px;color:#eb7722;display:grid;place-items:center}
+.home-feature-card strong{font-size:14px}.home-feature-card p{font-size:11px;color:#8090a0;line-height:1.7;margin:0;flex:1}
+.home-card-more{font-size:11px;color:#dc6812;font-weight:800}
+.home-demo-strip{margin-top:18px;padding:21px 23px;background:#fff;border:1px solid #e5ebf0;border-radius:13px;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.home-demo-strip strong{font-size:13px}.home-demo-strip p{font-size:11px;line-height:1.6;color:#8492a1;margin:6px 0 0}
+.company-onboarding-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 20px}
+.company-stage{display:flex;gap:12px;align-items:center;background:#fff;padding:15px;border-radius:12px;border:1px solid #e6ebef}
+.company-stage>strong{width:33px;height:33px;border-radius:50%;background:#edf1f4;display:grid;place-items:center;color:#788997;flex-shrink:0}
+.company-stage-complete>strong{background:#e8f9ef;color:#14935c}
+.company-stage div{min-width:0}.company-stage b{font-size:12px;color:#2a3a49;display:block}.company-stage span{font-size:10px;color:#8c9aa7;line-height:1.5;display:block;margin-top:4px}
+.company-onboarding-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);align-items:start;gap:18px}
+.company-onboarding-grid>.panel{padding:23px}.company-onboarding-grid .demo-warning{margin-top:21px}
+@media(max-width:800px){
+ .start-hero{padding:35px}.start-illustration{display:none}
+ .home-grid{grid-template-columns:1fr 1fr}
+ .company-onboarding-steps{grid-template-columns:1fr}
+ .company-onboarding-grid{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+ .start-header{padding:13px 14px}.start-header .brand-compact img{width:122px}.start-header nav{gap:8px}.start-header .primary{padding:8px 10px}
+ .start-main{padding:16px 13px 35px}.start-hero{padding:31px 23px;min-height:280px}.start-hero h1{letter-spacing:-1.5px}
+ .start-hero p{font-size:12px}.start-actions{gap:9px}.start-actions .button-link{flex:1;min-width:145px;font-size:11px}
+ .start-choices{margin-top:28px}.start-section-head h2{font-size:21px}
+ .start-choice-grid{grid-template-columns:1fr;gap:12px}.start-choice{padding:21px}
+ .home-top-actions{gap:11px}.home-top-actions a{font-size:11px}.home-top-actions .home-avatar-link{width:29px;height:29px}
+ .home-heading h1{font-size:24px}.home-intro{padding:24px 21px}.home-intro-icon{display:none}
+ .home-grid{grid-template-columns:1fr;gap:10px}.home-feature-card{min-height:163px;padding:18px}
+ .home-demo-strip{padding:19px}.home-demo-strip .button-link{width:100%}
+ .company-onboarding .account-role{display:none}
+ .auth-choice-card{padding:16px}
+}
