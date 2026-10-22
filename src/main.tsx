@@ -9,6 +9,7 @@ import CompanyOnboardingPage from "./pages/CompanyOnboardingPage";
 import { CompanyPage, CustomerPage, AdminPage } from "./pages/PrivatePages";
 import DemoPage from "./pages/DemoPage";
 import "./styles.css";
+import {registrarPwa} from "./lib/pwa";
 
 function App() {
   return <BrowserRouter><AuthProvider><Routes>
@@ -31,4 +32,5 @@ function App() {
     <Route path="*" element={<Navigate to="/" replace/>}/>
   </Routes></AuthProvider></BrowserRouter>;
 }
+registrarPwa();
 createRoot(document.getElementById("root")!).render(<React.StrictMode><App/></React.StrictMode>);
