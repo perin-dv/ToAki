@@ -2,17 +2,12 @@
 const {onCall,HttpsError}=require("firebase-functions/v2/https");
 const {getFirestore,FieldValue}=require("firebase-admin/firestore");
 const {validarOperacao}=require("./operacao-politica.cjs");
+const {autorizarDestinoOperacional}=require("./ambiente-operacao.cjs");
 
 const MAP={cliente:"clientes",veiculo:"veiculos",entregador:"entregadores_vinculados",pedido:"pedidos"};
-function garantirHomologacao(){
-  // Falha fechada: não aceita execução no projeto original, mesmo por engano.
-  const projeto=process.env.GCLOUD_PROJECT||process.env.GCP_PROJECT||"";
-  if(!projeto||projeto==="toaki-cf058")throw new HttpsError("failed-precondition","Operações reais só são permitidas no Firebase de homologação separado.");
-}
 exports.operarEmpresaHomologacao=onCall(
   {region:"southamerica-east1",maxInstances:3,timeoutSeconds:45,memory:"256MiB"},
   async(request)=>{
-    garantirHomologacao();
     if(!request.auth?.uid||request.auth.token.email_verified!==true)
       throw new HttpsError("unauthenticated","Faça login e confirme seu e-mail para administrar entregas.");
     let input;
@@ -25,6 +20,18 @@ exports.operarEmpresaHomologacao=onCall(
     const [empresa,membro]=await Promise.all([empresaRef.get(),membroRef.get()]);
     if(!empresa.exists||empresa.data()?.status!=="ativa")
       throw new HttpsError("failed-precondition","Empresa não está ativa.");
+    // No projeto original, só a empresa piloto explicitamente autorizada pode gravar.
+    let ambiente;
+    try {
+      ambiente=autorizarDestinoOperacional({
+        projeto:process.env.GCLOUD_PROJECT||process.env.GCP_PROJECT||process.env.GOOGLE_CLOUD_PROJECT||"",
+        empresaId,empresa:empresa.data(),
+        habilitacao:process.env.TOAKI_PILOTO_NO_ORIGINAL,
+        empresasPermitidas:process.env.TOAKI_PILOTO_EMPRESAS
+      });
+    } catch(error) {
+      throw new HttpsError("failed-precondition",error instanceof Error?error.message:"Ambiente não autorizado.");
+    }
     const f=membro.data();
     if(!membro.exists||f?.ativo!==true)
       throw new HttpsError("permission-denied","Você não possui acesso autorizado a esta empresa.");
@@ -58,13 +65,13 @@ exports.operarEmpresaHomologacao=onCall(
         }
       }
       tx.create(novo,{
-        ...dados,empresa_id:empresaId,tipo_registro:tipo,
+        ...dados,empresa_id:empresaId,tipo_registro:tipo,ambiente_operacao:ambiente,
         titulo_registro:titulo,status:tipo==="pedido"?"pendente":"ativo",
         ativo:true,criado_por_uid:uid,criado_em:agora,atualizado_em:agora
       });
       if(reserva)tx.create(reserva,{tipo_registro:"reserva_"+tipo,registro_id:novo.id,criado_em:agora});
       tx.create(audit,{
-        tipo_registro:"auditoria_operacao_empresa",acao:"cadastrar_"+tipo,
+        tipo_registro:"auditoria_operacao_empresa",acao:"cadastrar_"+tipo,ambiente_operacao:ambiente,
         titulo_registro:"Cadastro "+tipo+" — "+titulo,registro_id:novo.id,
         responsavel_uid:uid,criado_em:agora
       });
