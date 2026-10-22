@@ -1,7 +1,7 @@
 "use strict";
 const {test}=require("node:test");
 const assert=require("node:assert/strict");
-const {autorizarDestinoOperacional}=require("../functions/ambiente-operacao.cjs");
+const {autorizarDestinoOperacional,autorizarAprovacaoEmpresa}=require("../functions/ambiente-operacao.cjs");
 
 const empresaId="empresa_11222333000181";
 const empresa={status:"ativa",ambiente:"piloto"};
@@ -26,4 +26,17 @@ test("sem identificador de projeto ou empresa válida, bloqueia",()=>{
 });
 test("não quebra o backend isolado já preparado para outros projetos",()=>{
   assert.equal(testar({...args,projeto:"toaki-homologacao-exemplo",habilitacao:"",empresasPermitidas:""}),"homologacao");
+});
+
+test("aprovação empresarial no Firebase original só é permitida para CNPJ pré-autorizado",()=>{
+  const aprovar=(a)=>autorizarAprovacaoEmpresa(a);
+  assert.throws(()=>aprovar({...args,habilitacao:undefined}),/não foi habilitado/);
+  assert.throws(()=>aprovar({...args,empresasPermitidas:"empresa_99999999000199"}),/lista explícita/);
+  assert.equal(aprovar(args),"piloto");
+  assert.equal(aprovar({...args,projeto:"toaki-homologacao-exemplo",habilitacao:undefined}),"homologacao");
+});
+test("liberar a solicitação no frontend não concede permissão de backend",()=>{
+  assert.throws(()=>autorizarDestinoOperacional({...args,empresa:{status:"ativa"}}),/piloto ativo/);
+  assert.throws(()=>autorizarDestinoOperacional({...args,empresa:null}),/piloto ativo/);
+  assert.throws(()=>autorizarDestinoOperacional({...args,empresasPermitidas:undefined}),/lista explícita/);
 });
