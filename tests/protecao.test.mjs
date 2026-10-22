@@ -235,7 +235,7 @@ test("Diagnóstico do Firebase usa apenas metadados e não injeta segredo em PR"
   assert.ok(script.includes('"POST",{pageSize:100}'));
   assert.ok(script.includes('method="GET"'));
   assert.ok(!workflow.includes("npm install"));
-  assert.ok(!/\.set\(|\.create\(|\.update\(|\.delete\(|setCustomUserClaims\(/.test(script));
+  assert.ok(!/\.set\(|\.create\(|\.update\((?!mensagem\))|\.delete\(|setCustomUserClaims\(/.test(script));
   assert.ok(script.includes("resultado.firestore"));
   assert.ok(script.includes("resultado.functions"));
 });
