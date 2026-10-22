@@ -11,7 +11,8 @@ const {EMPRESA_TESTE_SOMA}=require("../functions/empresa-identidade.cjs");
 const requireFunctions=createRequire(path.resolve(__dirname,"../functions/package.json"));
 
 const PROJETO="toaki-cf058";
-const EMAIL_PROPRIETARIO="perin_gui_@hotmail.com";
+const EMAIL_PROPRIETARIO=process.env.TOAKI_EMAIL_PROPRIETARIO;
+// Endereço da conta nunca fica no código versionado ou nos logs do GitHub.
 const AUTORIZACAO="PROVISIONAR_SOMA_TESTE";
 const MODOS=["verificar","provisionar"];
 
@@ -32,6 +33,7 @@ async function main(){
   const app=initializeApp({credential:applicationDefault(),projectId:PROJETO},"provisionar-soma-testes");
   const auth=getAuth(app);
   const db=getFirestore(app);
+  garantir(typeof EMAIL_PROPRIETARIO==="string"&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(EMAIL_PROPRIETARIO),"Conta precisa ser definida por secret privado.");
   const usuario=await auth.getUserByEmail(EMAIL_PROPRIETARIO);
   garantir(!usuario.disabled,"Conta existente está desabilitada.");
   garantir(usuario.emailVerified===true,"A conta existente precisa confirmar o e-mail.");
