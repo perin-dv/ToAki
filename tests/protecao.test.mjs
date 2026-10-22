@@ -202,3 +202,14 @@ test("Relatórios operacionais usam dados de pedidos do Firestore, não exemplos
   assert.ok(!relatorio.includes("sessionStorage"));
   assert.ok(!relatorio.includes("dadosIniciais"));
 });
+
+test("Planos e assinaturas consultam apenas documentos permitidos pelo Firestore",()=>{
+  const modulo=file("src/pages/AssinaturaEmpresaPage.tsx");
+  const painel=file("src/pages/SiteOperacionalPage.tsx");
+  assert.ok(modulo.includes('where("publicado","==",true)'));
+  assert.ok(modulo.includes('where("empresa_id","==",empresaId)'));
+  assert.ok(modulo.includes("nenhum pagamento é simulado"));
+  assert.ok(modulo.includes("checkout será conectado"));
+  assert.ok(painel.includes("<AssinaturaEmpresaPage empresaId={empresaId!}/>"));
+  assert.ok(!modulo.includes("sessionStorage"));
+});
