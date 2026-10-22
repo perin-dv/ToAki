@@ -40,3 +40,12 @@ test("liberar a solicitação no frontend não concede permissão de backend",()
   assert.throws(()=>autorizarDestinoOperacional({...args,empresa:null}),/piloto ativo/);
   assert.throws(()=>autorizarDestinoOperacional({...args,empresasPermitidas:undefined}),/lista explícita/);
 });
+
+test("config de implantação do piloto não oferece deploy de Hosting live",()=>{
+  const {readFileSync}=require("node:fs");
+  const {join}=require("node:path");
+  const conf=JSON.parse(readFileSync(join(__dirname,"../firebase.piloto.json"),"utf8"));
+  assert.equal(Object.hasOwn(conf,"hosting"),false);
+  assert.equal(conf.firestore.rules,"firestore.rules");
+  assert.equal(conf.functions[0].source,"functions");
+});
