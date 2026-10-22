@@ -16,8 +16,9 @@ const FUNCOES_ESPERADAS=[
   "analisarCadastroEmpresa","operarEmpresaHomologacao","alterarRegistroEmpresaPiloto"
 ];
 function statusErro(error){
-  const code=Number(error?.code??error?.status);
-  if(code===7||code===403||code==="PERMISSION_DENIED")return "sem_permissao";
+  const raw=error?.code??error?.status;
+  const code=Number(raw);
+  if(code===7||code===403||raw==="PERMISSION_DENIED")return "sem_permissao";
   if(code===5||code===404)return "nao_encontrado";
   if(code===16||code===401)return "sem_autenticacao";
   return "indisponivel";
