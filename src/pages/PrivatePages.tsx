@@ -69,14 +69,14 @@ export function CustomerPage() {
     </nav>
     {aba==="inicio"&&<div className="account-content">
       <div className="account-summary">
-        <article className="account-summary-card"><div className="account-summary-icon orange"><MenuIcon name="entregas" size={21}/></div><div><span>Minhas entregas</span><strong>0</strong><small>Nenhuma entrega vinculada</small></div></article>
-        <article className="account-summary-card"><div className="account-summary-icon blue"><MenuIcon name="empresa" size={21}/></div><div><span>Acesso empresarial</span><strong className="account-summary-word">Sob análise</strong><small>Necessita solicitação e aprovação</small></div></article>
+        <article className="account-summary-card"><div className="account-summary-icon orange"><MenuIcon name="entregas" size={21}/></div><div><span>Minhas entregas</span><strong className="account-summary-word">Aguardando</strong><small>Integração das entregas em preparação</small></div></article>
+        <article className="account-summary-card"><div className="account-summary-icon blue"><MenuIcon name="empresa" size={21}/></div><div><span>Acesso empresarial</span><strong className="account-summary-word">Não liberado</strong><small>Necessita solicitação e aprovação</small></div></article>
         <article className="account-summary-card"><div className="account-summary-icon green"><MenuIcon name="clientes" size={21}/></div><div><span>Meu perfil</span><strong className="account-summary-word">{user?.displayName?"Preenchido":"Incompleto"}</strong><small>Dados do Firebase Authentication</small></div></article>
       </div>
       <div className="account-overview-grid">
         <section className="panel account-overview-panel">
-          <div className="account-section-heading"><div><h2>Suas entregas</h2><p>Pedidos vinculados à sua identidade aparecem aqui.</p></div><span className="pill muted">Nenhuma entrega</span></div>
-          <div className="account-empty"><span className="account-empty-icon"><MenuIcon name="entregas" size={31}/></span><strong>Você ainda não tem entregas vinculadas.</strong><p>Quando uma empresa associar uma nota à sua conta com segurança, ela aparecerá aqui. Informar um número de NF não libera dados de terceiros.</p><button type="button" className="secondary" onClick={()=>setAba("entregas")}>Ver minhas entregas</button></div>
+          <div className="account-section-heading"><div><h2>Suas entregas</h2><p>Pedidos vinculados à sua identidade aparecem aqui.</p></div><span className="pill muted">Integração pendente</span></div>
+          <div className="account-empty"><span className="account-empty-icon"><MenuIcon name="entregas" size={31}/></span><strong>O histórico das suas entregas estará disponível aqui.</strong><p>Quando uma empresa associar uma nota à sua conta com segurança, ela aparecerá aqui. Informar um número de NF não libera dados de terceiros.</p><button type="button" className="secondary" onClick={()=>setAba("entregas")}>Ver minhas entregas</button></div>
         </section>
         <section className="panel account-overview-panel">
           <div className="account-section-heading"><div><h2>Minha conta</h2><p>Acesso e informações pessoais.</p></div></div>
@@ -88,8 +88,8 @@ export function CustomerPage() {
       </div>
     </div>}
     {aba==="entregas"&&<section className="panel content-panel account-full-panel">
-      <div className="account-section-heading"><div><h2>Minhas entregas</h2><p>Consultas privadas, disponíveis após vínculo seguro com a empresa.</p></div><span className="pill muted">0 entregas</span></div>
-      <div className="account-empty"><span className="account-empty-icon"><MenuIcon name="entregas" size={32}/></span><strong>Não há entregas disponíveis para esta conta.</strong><p>Estamos preparando a conexão entre empresas e clientes. NFs de terceiros não são mostradas sem autorização.</p></div>
+      <div className="account-section-heading"><div><h2>Minhas entregas</h2><p>Consultas privadas, disponíveis após vínculo seguro com a empresa.</p></div><span className="pill muted">Integração pendente</span></div>
+      <div className="account-empty"><span className="account-empty-icon"><MenuIcon name="entregas" size={32}/></span><strong>A consulta das suas entregas ainda está sendo integrada.</strong><p>Estamos preparando a conexão entre empresas e clientes. NFs de terceiros não são mostradas sem autorização.</p></div>
     </section>}
     {aba==="perfil"&&<PerfilConta/>}
     {aba==="empresa"&&<div className="account-business">
