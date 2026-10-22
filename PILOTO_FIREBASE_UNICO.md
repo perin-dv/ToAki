@@ -36,3 +36,32 @@ O site Preview continua uma demonstração com `sessionStorage` até serem cumpr
 ## Conclusão
 
 Esta etapa prepara a compatibilidade com **um Firebase somente**, de forma reversível e desabilitada por padrão. Até o deploy controlado das Functions, nenhuma gravação empresarial real é permitida pelo novo fluxo.
+
+## Fase B — aprovação empresarial no mesmo Firebase (novo incremento)
+
+**Situação:** código preparado e pendente de implantação. O plano Blaze do projeto original foi confirmado pelo responsável. Isso não significa que as Functions estejam publicadas ou que o backend operacional já esteja liberado.
+
+### Mudanças do incremento
+
+- `analisarCadastroEmpresa` agora exige, antes de aprovar e atribuir permissões em `toaki-cf058`, habilitação explícita `TOAKI_PILOTO_NO_ORIGINAL=habilitado` e inclusão do identificador `empresa_<CNPJ>` em `TOAKI_PILOTO_EMPRESAS`.
+- A empresa aprovada recebe `ambiente:"piloto"` de um administrador autenticado pelo backend. O frontend não pode atribuir a si esse marcador.
+- O formulário de CNPJ passa a admitir o modo piloto do projeto original, mas somente num build explicitamente configurado; sem isso, a solicitação segue bloqueada.
+- `firebase.piloto.json` contém **somente Firestore e Functions**, sem configuração de Hosting, para reduzir risco de publicar no canal live.
+- Testes de segurança verificam aprovação não autorizada, lista de empresas permitidas e ausência de Hosting nessa configuração.
+
+### Verificações obrigatórias antes de ativar (NÃO executadas)
+
+1. Confirmar no Console do Firebase as regras **efetivamente implantadas**, as empresas existentes, quem tem acesso administrativo e os custos/limites. Backup antes de mudar qualquer regra.
+2. Validar no Firestore Emulator os testes de isolamento e negação de escrita direta.
+3. Provisionar um administrador `admin_toaki` por meio confiável, com e-mail verificado, evitando a autoatribuição de privilégios.
+4. Verificar identidade e autorização documental da primeira empresa, calcular o identificador interno `empresa_<CNPJ>`, configurar no backend a habilitação `TOAKI_PILOTO_NO_ORIGINAL=habilitado` e a lista `TOAKI_PILOTO_EMPRESAS` somente para o CNPJ aprovado. Não divulgar essas configurações como se fossem uma autorização concedida ao navegador.
+5. Revisar diffs das regras atuais x regras existentes, funções e migração; com autorização específica, implantar **apenas** Functions e Firestore. A configuração `firebase.piloto.json` não inclui Hosting. O comando de implantação deve usar `--project toaki-cf058`, o escopo `--only firestore:rules,functions:analisarCadastroEmpresa,functions:operarEmpresaHomologacao` e aprovação operacional antes de executar.
+6. Publicar somente um build de **Preview** com `VITE_TOAKI_ENV=piloto`, `VITE_TOAKI_PILOTO_NO_ORIGINAL=habilitado` e, se o endpoint de aprovação estiver validado, `VITE_ENABLE_ADMIN_APPROVAL=true`. Nenhum desses valores substitui validação no servidor.
+7. Solicitar cadastro com e-mail verificado, conferir análise no admin, testar que outro usuário não aprova, e finalmente gravar/consultar os quatro tipos de registro. Testar persistência após novo login e negar leitura entre empresas.
+
+### Proteções adicionais
+
+- O PR desta etapa continua em **rascunho** e parte do PR #5. Não fazer merge nos branches principais.
+- Não ativar o backend no Firebase existente antes de conferir Auth, rules implantadas, backups, papéis e permissões IAM.
+- O piloto deve começar com dados autorizados e de preferência fictícios; evitar documentos fiscais verdadeiros até homologação concluída.
+- Sem confirmação explícita da publicação, não afirmar que há cadastros persistentes na versão online.
