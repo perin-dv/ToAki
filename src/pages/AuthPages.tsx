@@ -5,6 +5,7 @@ import { auth } from "../lib/firebase";
 import { useAuth } from "../auth/AuthProvider";
 import Brand from "../components/Brand";
 import { avaliarSenha } from "../lib/passwordStrength";
+import { ambienteHomologacao } from "../lib/ambiente";
 
 function message(error:unknown):string {
   const code=(error && typeof error==="object" && "code" in error)?String(error.code):"";
@@ -60,6 +61,7 @@ export function RegisterPage() {
 
   const submit=async(e:FormEvent)=>{
     e.preventDefault();setError("");
+    if(!ambienteHomologacao){setError("Novos cadastros estão temporariamente bloqueados neste preview. Estamos configurando um Firebase separado para testes com pessoas reais.");return}
     if(name.trim().length<2){setError("Informe seu nome de contato.");return}
     if(!avaliacao.aceita){setError("Escolha uma senha média ou forte antes de continuar.");return}
     if(password!==confirmar){setError("A confirmação de senha não corresponde.");return}
@@ -75,6 +77,7 @@ export function RegisterPage() {
   };
 
   return <Layout title="Criar sua conta" description="Cadastre-se como cliente. Empresas precisam solicitar aprovação.">
+    {!ambienteHomologacao&&<p className="demo-warning" role="status">Cadastro de novos testadores temporariamente pausado: este preview ainda utiliza o Authentication do projeto original. O formulário será liberado na homologação isolada.</p>}
     <form className="stack" onSubmit={submit}>
       <label>Nome de contato<input required minLength={2} maxLength={100} autoComplete="name" value={name} onChange={e=>setName(e.target.value)} placeholder="Seu nome"/></label>
       <label>E-mail<input required type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="voce@exemplo.com"/></label>
