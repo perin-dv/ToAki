@@ -45,9 +45,9 @@ test("Fase B: comprovante fictício, filtro e CSV sem dados reais",async({page})
   await page.getByRole("button",{name:"Exportar CSV fictício"}).click();
   const arquivo=await download;
   expect(arquivo.suggestedFilename()).toBe("toaki-simulacao.csv");
-  await page.getByRole("textbox",{name:"Filtrar histórico fictício"}).fill("Recibo fictício");
+  await page.getByRole("searchbox",{name:"Filtrar histórico fictício"}).fill("Recibo fictício");
   await expect(page.getByText("Recibo fictício da NF 0045821 registrado")).toBeVisible();
-  await page.getByRole("textbox",{name:"Filtrar histórico fictício"}).fill("nenhum evento com essa frase");
+  await page.getByRole("searchbox",{name:"Filtrar histórico fictício"}).fill("nenhum evento com essa frase");
   await expect(page.getByText("Nenhum evento encontrado.",{exact:false})).toBeVisible();
 });
 
