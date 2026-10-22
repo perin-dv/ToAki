@@ -84,14 +84,14 @@ export default function DemoPage() {
       <nav aria-label="Menu completo do protótipo">
         {menu.map(m=><button type="button" key={m.key} onClick={()=>mudarAba(m.key)} className={"nav "+(tab===m.key?"active":"")} aria-current={tab===m.key?"page":undefined}><span className="nav-icon" aria-hidden="true"><MenuIcon name={m.key}/></span>{m.name}</button>)}
       </nav>
-      <div className="sidebar-foot"><strong>Soma Distribuidora</strong><span>Filial Maringá · Simulação</span><Link to={accountPath}>Minha conta →</Link></div>
+      <div className="sidebar-foot"><strong>Soma Distribuidora</strong><span>Filial Maringá · Simulação</span><Link to={accountPath} state={{from:"/demonstracao"}}>Minha conta →</Link></div>
     </aside>
     <div className="demo-body"><header className="mobile-top">
       <button className="mobile-menu-button" type="button" aria-label="Abrir menu completo" aria-controls="demo-sidebar-menu" aria-expanded={menuAberto} onClick={()=>setMenuAberto(true)}><MenuIcon name="menu" size={22}/> <span>Menu</span></button>
-      <Brand compact/><Link to={accountPath} className="top-signin">Minha conta →</Link>
+      <Brand compact/><Link to={accountPath} state={{from:"/demonstracao"}} className="top-signin">Minha conta →</Link>
     </header>
       <main className="demo-main">
-        <div className="demo-head"><div><h1>{tab==="inicio"?"Central de rastreamento":panelTitle}</h1><p>toAki Business • Ambiente de demonstração</p></div><div className="head-right"><span className="fake-status">● Dados simulados</span><Link to={accountPath} className="secondary">Minha conta</Link></div></div>
+        <div className="demo-head"><div><h1>{tab==="inicio"?"Central de rastreamento":panelTitle}</h1><p>toAki Business • Ambiente de demonstração</p></div><div className="head-right"><span className="fake-status">● Dados simulados</span><Link to={accountPath} state={{from:"/demonstracao"}} className="secondary">Minha conta</Link></div></div>
         <div className="demo-warning">SIMULAÇÃO: cadastros de teste salvos somente nesta aba do navegador; sem Firestore, GPS real, cobranças ou dados fiscais verdadeiros.</div>
         {tab==="inicio"?<><div className="stats">{[["📦",String(entregas.length),"Entregas hoje"],["🛵",String(emRota),"Em rota"],["✅",String(entregues),"Entregues"],["⏱",String(pendentes),"Pendentes"]].map(([icon,value,label])=><div key={label} className="stat"><span className="stat-icon">{icon}</span><div><strong>{value}</strong><small>{label}</small></div></div>)}</div>
           <div className="content-grid"><section className="panel map-shell"><div className="panel-head maphead"><h2>Mapa dos entregadores</h2><label className="search">⌕ <input type="search" placeholder="Buscar NF, pedido ou entregador..." value={search} onChange={e=>setSearch(e.target.value)} aria-label="Buscar entregas fictícias"/></label></div><MapIllustration items={entregas} selected={selected} onSelect={setSelected}/></section>
