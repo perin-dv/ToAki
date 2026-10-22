@@ -34,7 +34,7 @@ test("Login: conta, logo, criar e recuperar têm destino correto",async({page})=
   await expect(page.getByRole("link",{name:"toAki, voltar ao início"})).toHaveAttribute("href","/");
   await page.getByRole("link",{name:"Criar conta"}).click();
   await expect(page).toHaveURL(/\/cadastro$/);
-  await page.getByRole("link",{name:/Já tem conta/}).click();
+  await page.getByRole("link",{name:"Entrar",exact:true}).click();
   await expect(page).toHaveURL(/\/login$/);
   await page.getByRole("link",{name:/Esqueceu sua senha/}).click();
   await expect(page).toHaveURL(/\/recuperar-senha$/);
