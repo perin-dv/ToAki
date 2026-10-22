@@ -12,7 +12,7 @@
   "background_color": "#0d1015",
   "theme_color": "#0d1015",
   "lang": "pt-BR",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "icons": [
     {
       "src": "/icons/icon-192.png",
