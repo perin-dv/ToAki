@@ -151,7 +151,7 @@ export default function SiteOperacionalPage(){
                 <button className="primary" type="button" onClick={()=>mudarSecao("entregas")}>Gerenciar NFs →</button></section>
             </div>
           </div>
-          <p className="helper">Os indicadores refletem apenas as NFs consultadas (máximo de 50), não um relatório geral nem entregas do dia.</p>
+          <p className="helper">As NFs são sincronizadas com o Firestore. Os indicadores refletem até 50 documentos consultados, não todos os pedidos da empresa.</p>
         </>}
         {destinosAutorizados&&secao!=="inicio"&&<div className="demo-modulos">
           {(secao==="entregas"||secao==="entregadores"||secao==="clientes")?
