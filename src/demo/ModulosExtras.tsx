@@ -1,5 +1,7 @@
 import {useState, type Dispatch, type FormEvent, type SetStateAction} from "react";
 import {novoId, registrar, type DemoDados, type DemoFuncionario, type DemoPlano} from "./dadosDemo";
+import EnderecoPorCep from "../components/EnderecoPorCep";
+import {enderecoVazio,enderecoCompleto,validarEndereco} from "../lib/cep";
 
 type Alterar=Dispatch<SetStateAction<DemoDados>>;
 type Props={dados:DemoDados;atualizar:Alterar};
@@ -8,6 +10,7 @@ const MAX=70;
 
 export function ClientesDemo({dados,atualizar}:Props) {
   const [nome,setNome]=useState("");
+  const [endereco,setEndereco]=useState(enderecoVazio);
   const [erro,setErro]=useState("");
   const [sucesso,setSucesso]=useState("");
   const [busca,setBusca]=useState("");
@@ -15,10 +18,12 @@ export function ClientesDemo({dados,atualizar}:Props) {
     evento.preventDefault();setErro("");setSucesso("");
     const n=limparNome(nome);
     if(n.length<3||n.length>MAX){setErro("Use um nome fictício entre 3 e 70 caracteres.");return}
+    const erroEndereco=validarEndereco(endereco);
+    if(erroEndereco){setErro(erroEndereco);return;}
     if(dados.clientes.length>=100){setErro("Limite da simulação: 100 destinatários.");return}
     if(dados.clientes.some(c=>c.nome.toLocaleLowerCase("pt-BR")===n.toLocaleLowerCase("pt-BR"))){setErro("Destinatário já cadastrado.");return}
-    atualizar(d=>registrar({...d,clientes:[...d.clientes,{id:novoId(),nome:n}]},"Destinatário fictício cadastrado: "+n));
-    setNome("");setSucesso("Destinatário salvo somente na simulação.");
+    atualizar(d=>registrar({...d,clientes:[...d.clientes,{id:novoId(),nome:n,endereco:{...endereco}}]},"Destinatário fictício cadastrado: "+n));
+    setNome("");setEndereco(enderecoVazio());setSucesso("Destinatário e endereço salvos somente na simulação.");
   };
   const remover=(id:string)=>{
     setErro("");setSucesso("");
@@ -35,6 +40,7 @@ export function ClientesDemo({dados,atualizar}:Props) {
       <p className="helper">Cadastre oficinas de exemplo para testar a lista de clientes. Nenhum link público é gerado.</p>
       <form className="stack demo-form" onSubmit={criar}>
         <label>Nome da oficina fictícia<input value={nome} onChange={e=>setNome(e.target.value)} minLength={3} maxLength={MAX} required placeholder="Ex.: Oficina Exemplo D"/></label>
+        <EnderecoPorCep value={endereco} onChange={setEndereco} prefix="demo-cliente"/>
         <button type="submit" className="primary">Cadastrar destinatário</button>
       </form>
       {erro&&<p role="alert" className="form-error">{erro}</p>}
@@ -49,7 +55,7 @@ export function ClientesDemo({dados,atualizar}:Props) {
         {filtrados.map(c=>{
           const notas=dados.entregas.filter(n=>n.destinatario===c.nome);
           return <article key={c.id} className="demo-record">
-            <div><strong>{c.nome}</strong><small>{notas.length} NFs associadas na simulação</small><small>{notas.map(n=>"NF "+n.nf+" ("+n.status+")").join(" · ")||"Sem notas"}</small></div>
+            <div><strong>{c.nome}</strong><small>{c.endereco?enderecoCompleto(c.endereco):"Endereço não informado no cadastro antigo"}</small><small>{notas.length} NFs associadas na simulação</small><small>{notas.map(n=>"NF "+n.nf+" ("+n.status+")").join(" · ")||"Sem notas"}</small></div>
             <div className="demo-actions"><button type="button" className="demo-danger" onClick={()=>remover(c.id)} aria-label={"Excluir cliente "+c.nome}>Excluir</button></div>
           </article>;
         })}
@@ -171,13 +177,13 @@ export function EmpresaDemo({dados,atualizar}:Props) {
       <div className="panel-head"><h2>Empresa e filial fictícias</h2><span className="pill muted">Sem acesso administrativo</span></div>
       <div className="demo-record"><div><strong>Soma Distribuidora — Exemplo</strong><small>Filial Maringá / PR</small><small>Este registro não representa uma empresa aprovada.</small></div></div>
       <div className="mini-stat demo-report-stats"><div><strong>1</strong><small>Filial</small></div><div><strong>{dados.equipe.length}</strong><small>Colaboradores</small></div><div><strong>{dados.veiculos.length}</strong><small>Veículos</small></div><div><strong>{dados.entregas.length}</strong><small>NFs</small></div></div>
-      <p className="helper">Convites, filiais, papéis reais e permissões entre empresas exigem backend e controle por tenant.</p>
+      <p className="helper">Motoboy, representante e transportadora são funções operacionais, não permissões administrativas. Convites e logins reais continuam exigindo validação no backend.</p>
     </section>
     <section className="panel content-panel">
       <div className="panel-head"><h2>Equipe da simulação</h2><span className="pill muted">{dados.equipe.length} membros</span></div>
       <form className="stack demo-form" onSubmit={criar}>
         <label>Nome fictício do funcionário<input value={nome} onChange={e=>setNome(e.target.value)} minLength={3} maxLength={MAX} required placeholder="Ex.: Marina Exemplo"/></label>
-        <label>Função fictícia<select value={funcao} onChange={e=>setFuncao(e.target.value as DemoFuncionario["funcao"])}><option>Vendedor</option><option>Gestor</option></select></label>
+        <label>Função fictícia<select value={funcao} onChange={e=>setFuncao(e.target.value as DemoFuncionario["funcao"])}><option>Vendedor</option><option>Gestor</option><option>Motoboy</option><option>Representante</option><option>Transportadora</option></select></label>
         <button type="submit" className="primary">Cadastrar funcionário fictício</button>
       </form>
       {erro&&<p role="alert" className="form-error">{erro}</p>}
