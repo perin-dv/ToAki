@@ -189,3 +189,16 @@ test('O painel operacional não usa dados simulados ou SVG fictício no /inicio'
   assert.ok(demo.includes('MAPA FICTÍCIO'));
   assert.ok(file('ROADMAP_SITE_OFICIAL.md').includes('Flutter'));
 });
+
+test("Relatórios operacionais usam dados de pedidos do Firestore, não exemplos fictícios",()=>{
+  const site=file("src/pages/SiteOperacionalPage.tsx");
+  const relatorio=file("src/pages/RelatoriosEmpresaPage.tsx");
+  assert.ok(site.includes('import RelatoriosEmpresaPage from "./RelatoriosEmpresaPage"'));
+  assert.ok(site.includes('<RelatoriosEmpresaPage empresaId={empresaId!}/>'));
+  assert.ok(relatorio.includes('collection(db,"empresas",empresaId,"pedidos")'));
+  assert.ok(relatorio.includes("onSnapshot(ref,snapshot=>"));
+  assert.ok(relatorio.includes("Até {limite} NFs consultadas"));
+  assert.ok(relatorio.includes('textoCSV(c)'));
+  assert.ok(!relatorio.includes("sessionStorage"));
+  assert.ok(!relatorio.includes("dadosIniciais"));
+});
