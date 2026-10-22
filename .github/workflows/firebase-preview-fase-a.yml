@@ -46,7 +46,7 @@ jobs:
       - name: Testar estrutura e permissões antes de publicar
         run: |
           npm test
-          node --test tests/company-policy.test.cjs
+          node --test tests/company-policy.test.cjs tests/operacao-politica.test.cjs
       - name: Compilar aplicativo de testes (rota de teste nao vai ao Hosting)
         run: npm run build -- --mode e2e
       - name: Preparar testes de navegador
