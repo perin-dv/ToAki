@@ -9,6 +9,7 @@ import MenuIcon from "../components/MenuIcon";
 import EmpresaOperacao from "./EmpresaOperacao";
 import ColecaoEmpresaPage from "./ColecaoEmpresaPage";
 import RelatoriosEmpresaPage from "./RelatoriosEmpresaPage";
+import AssinaturaEmpresaPage from "./AssinaturaEmpresaPage";
 import {ambienteOperacional} from "../lib/ambiente";
 import {empresaAutorizada,type RegistroOperacional,type TipoOperacional} from "../lib/operacaoEmpresa";
 
@@ -164,9 +165,8 @@ export default function SiteOperacionalPage(){
             secao==="empresa"?(["dono_empresa","gestor"].includes(role??"")?
               <><ColecaoEmpresaPage empresaId={empresaId!} grupo="funcionarios"/><section className="panel content-panel"><Link to="/empresa" className="primary button-link">Ver perfil e permissões empresariais →</Link></section></>:
               <section className="panel content-panel"><h2>Equipe</h2><p>Somente gestores autorizados podem visualizar a equipe.</p></section>):
-            <section className="panel content-panel"><h2>{secaoNome}</h2>
-              <p>Assinaturas e pagamentos reais ainda não estão habilitados. Nenhuma cobrança fictícia será apresentada como confirmada.</p>
-            </section>}
+            ["dono_empresa","gestor"].includes(role??"")?<AssinaturaEmpresaPage empresaId={empresaId!}/>:
+              <section className="panel content-panel"><h2>Assinatura</h2><p>Somente o gestor da empresa pode consultar os contratos e planos contratados.</p></section>}
         </div>}
       </main>
       <nav className="mobile-nav" aria-label="Atalhos móveis do painel">
