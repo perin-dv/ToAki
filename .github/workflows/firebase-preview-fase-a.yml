@@ -76,7 +76,7 @@ jobs:
         run: |
           set -euo pipefail
           # Apenas Hosting Preview; nao publica Firestore, Functions ou canal live.
-          npx firebase hosting:channel:deploy fase-a --project toaki-cf058 --expires 7d --non-interactive
+          npx --yes firebase-tools@latest hosting:channel:deploy fase-a --project toaki-cf058 --expires 7d --non-interactive
       - name: Exibir endereço da versão de testes
         if: steps.firebase_credentials.outputs.available == 'yes'
         shell: bash
