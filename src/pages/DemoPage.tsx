@@ -3,13 +3,10 @@ import { Link } from "react-router-dom";
 import Brand from "../components/Brand";
 import MenuIcon from "../components/MenuIcon";
 import { useAuth } from "../auth/AuthProvider";
+import { EntregadoresDemo, EntregasDemo, OutrosModulosDemo } from "../demo/ModulosDemo";
+import { carregarDados, dadosIniciais, limparDados, salvarDados, type DemoDados } from "../demo/dadosDemo";
 
-type Delivery = {nf:string;person:string;place:string;status:string;eta:string;pos:{left:string;top:string}};
-const entregas:Delivery[]=[
-  {nf:"0045821",person:"João Silva",place:"Zona 07, Maringá",status:"Em rota",eta:"12 min",pos:{left:"38%",top:"36%"}},
-  {nf:"0045822",person:"Carlos Lima",place:"Jardim Alvorada",status:"Em rota",eta:"22 min",pos:{left:"72%",top:"63%"}},
-  {nf:"0045823",person:"Marcos Reis",place:"Centro, Maringá",status:"Aguardando coleta",eta:"—",pos:{left:"49%",top:"80%"}}
-];
+type Delivery = {id:string;nf:string;person:string;place:string;status:string;eta:string;pos:{left:string;top:string}};
 const menu=[
   {key:"inicio",name:"Início"},
   {key:"entregas",name:"Entregas e NFs"},
@@ -22,7 +19,7 @@ const menu=[
 ] as const;
 type MenuKey=typeof menu[number]["key"];
 
-function MapIllustration({selected,onSelect}:{selected:number;onSelect:(i:number)=>void}) {
+function MapIllustration({items,selected,onSelect}:{items:Delivery[];selected:number;onSelect:(i:number)=>void}) {
   return <div className="fake-map">
     <svg viewBox="0 0 720 510" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Mapa demonstrativo ilustrativo, sem GPS real">
       <rect width="720" height="510" fill="#e7eeea"/>
@@ -37,12 +34,27 @@ function MapIllustration({selected,onSelect}:{selected:number;onSelect:(i:number
       <path d="M355 184L520 184L520 320" fill="none" stroke="#f6ac3a" strokeWidth="5" strokeDasharray="12 7"/>
     </svg>
     <div className="map-note">📍 Maringá, PR · MAPA FICTÍCIO</div>
-    {entregas.map((d,i)=><button key={d.nf} className={"marker "+(selected===i?"selected":"")} style={d.pos} onClick={()=>onSelect(i)} aria-label={`Selecionar entrega fictícia ${d.nf}`}><span className="marker-bubble">🛵</span><span className="marker-label"><b>{d.person.split(" ")[0]}</b><em>{d.status}</em></span></button>)}
+    {items.map((d,i)=><button key={d.id} className={"marker "+(selected===i?"selected":"")} style={d.pos} onClick={()=>onSelect(i)} aria-label={`Selecionar entrega fictícia ${d.nf}`}><span className="marker-bubble">🛵</span><span className="marker-label"><b>{d.person.split(" ")[0]}</b><em>{d.status}</em></span></button>)}
     <span className="map-watermark">SIMULAÇÃO • SEM GPS</span>
   </div>;
 }
 export default function DemoPage() {
-  const [tab,setTab]=useState<MenuKey>("inicio");const[selected,setSelected]=useState(0);const[search,setSearch]=useState("");
+  const {user,role}=useAuth();
+  const uid=user?.uid??"e2e";
+  const [dados,setDados]=useState<DemoDados>(()=>carregarDados(uid));
+  useEffect(()=>{salvarDados(uid,dados)},[uid,dados]);
+  const [tab,setTab]=useState<MenuKey>("inicio");
+  const [selected,setSelected]=useState(0);
+  const [search,setSearch]=useState("");
+  const entregas:Delivery[]=dados.entregas.map((n,i)=>({
+    id:n.id,nf:n.nf,
+    person:dados.entregadores.find(m=>m.id===n.entregadorId)?.nome??"Não atribuído",
+    place:n.destino,status:n.status,eta:"Sem ETA real",
+    pos:{left:(28+(i*17)%52)+"%",top:(28+(i*21)%49)+"%"}
+  }));
+  const emRota=entregas.filter(n=>n.status==="Em rota").length;
+  const entregues=entregas.filter(n=>n.status==="Entregue").length;
+  const pendentes=entregas.filter(n=>n.status==="Aguardando coleta").length;
   const [menuAberto,setMenuAberto]=useState(false);
   const mudarAba=(novaAba:MenuKey)=>{setTab(novaAba);setMenuAberto(false)};
   useEffect(()=>{
@@ -56,10 +68,10 @@ export default function DemoPage() {
       window.removeEventListener("keydown",fecharComEscape);
     };
   },[menuAberto]);
-  const filtered=useMemo(()=>entregas.filter(e=>[e.nf,e.person,e.place].join(" ").toLowerCase().includes(search.toLowerCase())),[search]);
-  const chosen=entregas[selected];
+  const filtered=useMemo(()=>entregas.filter(e=>[e.nf,e.person,e.place].join(" ").toLowerCase().includes(search.toLowerCase())),[search,dados]);
+  const chosen=entregas[selected]??entregas[0];
+  const verMapa=(id:string)=>{const i=entregas.findIndex(n=>n.id===id);setSelected(Math.max(i,0));mudarAba("inicio")};
   const panelTitle=menu.find(m=>m.key===tab)?.name??"Início";
-  const {role}=useAuth();
   const accountPath=role==="admin_toaki"?"/admin":["dono_empresa","gestor","vendedor"].includes(role??"")?"/empresa":"/cliente";
   return <div className="demo-layout">
     {menuAberto&&<button className="drawer-backdrop" type="button" aria-label="Fechar menu lateral" onClick={()=>setMenuAberto(false)}/>}
@@ -79,13 +91,22 @@ export default function DemoPage() {
     </header>
       <main className="demo-main">
         <div className="demo-head"><div><h1>{tab==="inicio"?"Central de rastreamento":panelTitle}</h1><p>toAki Business • Ambiente de demonstração</p></div><div className="head-right"><span className="fake-status">● Dados simulados</span><Link to={accountPath} className="secondary">Minha conta</Link></div></div>
-        <div className="demo-warning">Demonstração visual — informações, localização, notas e previsão de chegada fictícias.</div>
-        {tab==="inicio"?<><div className="stats">{[["📦","18","Entregas hoje"],["🛵","07","Em rota"],["✅","09","Entregues"],["⏱","02","Pendentes"]].map(([icon,value,label])=><div key={label} className="stat"><span className="stat-icon">{icon}</span><div><strong>{value}</strong><small>{label}</small></div></div>)}</div>
-          <div className="content-grid"><section className="panel map-shell"><div className="panel-head maphead"><h2>Mapa dos entregadores</h2><label className="search">⌕ <input type="search" placeholder="Buscar NF, pedido ou entregador..." value={search} onChange={e=>setSearch(e.target.value)} aria-label="Buscar entregas fictícias"/></label></div><MapIllustration selected={selected} onSelect={setSelected}/></section>
+        <div className="demo-warning">**SIMULAÇÃO:** cadastros de teste salvos somente nesta aba do navegador; sem Firebase, GPS real ou dados fiscais verdadeiros.</div>
+        {tab==="inicio"?<><div className="stats">{[["📦",String(entregas.length),"Entregas hoje"],["🛵",String(emRota),"Em rota"],["✅",String(entregues),"Entregues"],["⏱",String(pendentes),"Pendentes"]].map(([icon,value,label])=><div key={label} className="stat"><span className="stat-icon">{icon}</span><div><strong>{value}</strong><small>{label}</small></div></div>)}</div>
+          <div className="content-grid"><section className="panel map-shell"><div className="panel-head maphead"><h2>Mapa dos entregadores</h2><label className="search">⌕ <input type="search" placeholder="Buscar NF, pedido ou entregador..." value={search} onChange={e=>setSearch(e.target.value)} aria-label="Buscar entregas fictícias"/></label></div><MapIllustration items={entregas} selected={selected} onSelect={setSelected}/></section>
           <div className="right"><section className="panel"><div className="panel-head"><h2>Entregas em andamento</h2><span className="subtle">Fictícias</span></div>{filtered.length?filtered.map(e=>{const i=entregas.indexOf(e);return <button key={e.nf} className={"delivery "+(selected===i?"selected":"")} onClick={()=>setSelected(i)}><span className="bike">🛵</span><span className="copy"><strong>NF {e.nf}</strong><small>{e.person} · {e.place}</small></span><span className="delivery-side"><span className={"pill "+(e.status==="Em rota"?"":"muted")}>{e.status}</span><small>{e.eta}</small></span></button>;}):<p className="subtle">Nenhuma entrega encontrada.</p>}</section>
-          <section className="panel"><div className="panel-head"><h2>Resumo do dia</h2><span className="subtle">Exemplo</span></div><div className="mini-stat">{[["18","Entregas"],["07","Em rota"],["09","Entregues"],["02","Pendentes"]].map(([value,label])=><div key={label}><strong>{value}</strong><small>{label}</small></div>)}</div></section>
-          <section className="panel"><div className="panel-head"><h2>Detalhes da entrega</h2><span className={"pill "+(chosen.status==="Em rota"?"":"muted")}>{chosen.status}</span></div><p className="details"><strong>NF {chosen.nf}</strong><br/>Entregador: {chosen.person}<br/>Destino: {chosen.place}<br/>Previsão fictícia: {chosen.eta}<br/>Localização: simulada</p><button className="primary" onClick={()=>mudarAba("entregas")}>Ver detalhes →</button></section></div></div>
-        </>:<section className="panel content-panel"><div className="panel-head"><h2>{panelTitle}</h2><span className="pill muted">Protótipo</span></div>{tab==="entregas"?<div className="table-scroll"><table><thead><tr><th>Nota fiscal</th><th>Entregador</th><th>Destino</th><th>Status</th><th>Ação</th></tr></thead><tbody>{entregas.map((e,i)=><tr key={e.nf}><td>NF {e.nf}</td><td>{e.person}</td><td>{e.place}</td><td>{e.status}</td><td><button className="secondary" onClick={()=>{mudarAba("inicio");setSelected(i)}}>Ver mapa</button></td></tr>)}</tbody></table></div>:<p>A área <strong>{panelTitle}</strong> será conectada a informações reais nas próximas fases. Aqui mostramos apenas a organização visual.</p>}<p className="helper">Módulo ilustrativo. Para informações da sua conta, volte à área autenticada.</p><Link className="primary button-link" to={accountPath}>Voltar à minha conta</Link></section>}
+          <section className="panel"><div className="panel-head"><h2>Resumo do dia</h2><span className="subtle">Simulado</span></div><div className="mini-stat">{[[String(entregas.length),"Entregas"],[String(emRota),"Em rota"],[String(entregues),"Entregues"],[String(pendentes),"Pendentes"]].map(([value,label])=><div key={label}><strong>{value}</strong><small>{label}</small></div>)}</div></section>
+          <section className="panel"><div className="panel-head"><h2>Detalhes da entrega</h2>{chosen&&<span className={"pill "+(chosen.status==="Em rota"?"":"muted")}>{chosen.status}</span>}</div>{chosen?<p className="details"><strong>NF {chosen.nf}</strong><br/>Entregador: {chosen.person}<br/>Destino: {chosen.place}<br/>Previsão: indisponível (simulação)<br/>Localização: simulada</p>:<p className="helper">Cadastre uma NF fictícia para visualizar detalhes.</p>}<button className="primary" onClick={()=>mudarAba("entregas")}>Gerenciar NFs →</button></section></div></div>
+        </>:<div className="demo-modulos">
+          {tab==="entregas"?<EntregasDemo dados={dados} atualizar={setDados} verMapa={verMapa}/>:
+           tab==="entregadores"?<EntregadoresDemo dados={dados} atualizar={setDados}/>:
+           <OutrosModulosDemo secao={tab} dados={dados}/>}
+          <div className="demo-footer-actions">
+            <span>Ambiente fictício — nenhum dado é enviado ao Firebase.</span>
+            <button type="button" className="secondary" onClick={()=>{limparDados(uid);setDados(dadosIniciais());setSelected(0);}}>Reiniciar simulação</button>
+          </div>
+        </div>}
+
       </main>
       <nav className="mobile-nav" aria-label="Atalhos móveis do protótipo">
         {menu.filter(m=>["inicio","entregas","entregadores","empresa"].includes(m.key)).map(m=><button type="button" key={m.key} className={tab===m.key?"on":""} onClick={()=>mudarAba(m.key)} aria-current={tab===m.key?"page":undefined}><MenuIcon name={m.key} size={21}/>{m.name.split(" ")[0]}</button>)}
