@@ -35,3 +35,10 @@
 - Proteção preparada em branch própria; veja `PILOTO_FIREBASE_UNICO.md`.
 - O backend só permitirá gravações no original com ativação manual, empresa aprovada e marcada como piloto e inclusão explícita na lista de empresas autorizadas.
 - **Não foi executado deploy de Functions, alteração de regras ou migração.** A versão publicada continua com dados simulados.
+
+## Incremento seguinte — aprovação controlada no Firebase Blaze (22/10/2026)
+- Blaze confirmado pelo proprietário para o Firebase atual `toaki-cf058`.
+- Preparado o caminho para solicitar cadastro empresarial no próprio projeto original, **somente em Preview habilitado manualmente**.
+- O backend de aprovação administrativa recebeu proteção por ambiente, habilitação explícita e allowlist exata de empresa piloto, além das verificações já existentes.
+- Foi criada `firebase.piloto.json` sem Hosting e adicionados testes para prevenir aprovação indevida.
+- **Pendente:** validação CI e Firestore Emulator, conferir regras implantadas e dados atuais, administrador confiável e empresa piloto autorizada, revisão e implantação aprovada de Rules/Functions. **Sem deploy ou merge**.
