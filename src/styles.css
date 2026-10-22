@@ -470,3 +470,17 @@
   .cep-grid{gap:10px}
   .cep-status{font-size:10px}
 }
+
+/* Dashboard operacional: mantém a identidade aprovada sem imitar posições GPS. */
+.real-map-content{min-height:435px;padding:12px;display:flex;flex-direction:column;gap:12px}
+.real-map-content>p{font-size:12px;margin:0}
+.real-map-empty{min-height:335px;border:1px dashed #d9e2e8;background:#f8fafb;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:26px;gap:10px}
+.real-map-empty span,.real-map-empty strong{font-weight:800;color:#364659;font-size:15px}
+.real-map-empty p{font-size:12px;color:#758397;max-width:420px;line-height:1.6;margin:0}
+.real-map-empty .primary{max-width:260px}
+.real-map-frame{width:100%;height:330px;border:0;border-radius:11px;background:#e7eeea}
+@media(max-width:760px){
+ .real-map-content{min-height:300px;padding:6px}
+ .real-map-empty{min-height:250px}
+ .real-map-frame{height:280px}
+}
