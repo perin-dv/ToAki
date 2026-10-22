@@ -40,7 +40,7 @@ export function HomePage(){
   return <div className="private-app">
     <header className="private-header">
       <Brand compact/>
-      <nav className="home-top-actions" aria-label="Navegação do início"><Link to="/inicio" aria-current="page">Início</Link><Link to={painel}>Minha conta</Link><Link to="/cliente?aba=perfil" className="home-avatar-link" aria-label="Meus dados">{(user?.displayName||user?.email||"T")[0].toUpperCase()}</Link></nav>
+      <nav className="home-top-actions" aria-label="Navegação do início"><Link to="/inicio" aria-current="page">Início</Link><Link to={painel}>Minha conta</Link><Link to={role==="admin_toaki"||isEmpresa?painel:"/cliente?aba=perfil"} className="home-avatar-link" aria-label="Meus dados">{(user?.displayName||user?.email||"T")[0].toUpperCase()}</Link></nav>
     </header>
     <main className="private-main home-main">
       <div className="home-heading"><span>PAINEL INICIAL</span><h1>Olá, {nome(user?.displayName,user?.email)}!</h1><p>Escolha o que deseja fazer. Seu acesso está conectado ao Firebase Authentication.</p></div>
