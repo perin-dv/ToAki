@@ -23,7 +23,7 @@ test("Fase B demo: cadastrar entregador e NF, atribuir e concluir sem Firestore"
   await expect(entrega.getByText("Entregue",{exact:true})).toBeVisible();
 
   await menu.getByRole("button",{name:"Comprovantes"}).click();
-  await expect(page.getByText("NF 0045824")).toBeVisible();
+  await expect(page.getByRole("combobox",{name:"NF entregue"}).locator("option",{hasText:"NF 0045824"})).toHaveCount(1);
   await menu.getByRole("button",{name:"Histórico e relatórios"}).click();
   await expect(page.getByText("NF fictícia 0045824: Entregue")).toBeVisible();
 
