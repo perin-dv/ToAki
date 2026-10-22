@@ -16,7 +16,10 @@ test("Fase B: destinatário, equipe e plano de teste com sessões isoladas",asyn
   await page.getByRole("textbox",{name:"Número"}).fill("123");
   await page.getByRole("button",{name:"Cadastrar destinatário"}).click();
   await expect(page.getByText("Oficina Exemplo D",{exact:true})).toBeVisible();
-  await expect(page.getByText("Praça da Sé, 123, Sé, São Paulo, SP",{exact:true})).toBeVisible();
+  await expect(page.getByText("Praça da Sé, 123, Sé, São Paulo, SP · CEP 01001-000",{exact:true})).toBeVisible();
+  await menu.getByRole("button",{name:"Entregas e NFs"}).click();
+  await page.getByRole("combobox",{name:"Destinatário fictício"}).fill("Oficina Exemplo D");
+  await expect(page.getByRole("textbox",{name:"Destino fictício"})).toHaveValue("Praça da Sé, 123, Sé, São Paulo, SP");
 
   await menu.getByRole("button",{name:"Empresa e equipe"}).click();
   await page.getByRole("textbox",{name:"Nome fictício do funcionário"}).fill("Marina Exemplo");
