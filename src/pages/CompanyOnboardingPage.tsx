@@ -24,7 +24,7 @@ export default function CompanyOnboardingPage(){
           <div className="account-info-row"><span>E-mail</span><strong className={user?.emailVerified?"account-verified":"account-unverified"}>{user?.emailVerified?"Confirmado":"Não confirmado"}</strong></div>
           <div className="account-info-row"><span>Permissão para NFs</span><strong>Não liberada</strong></div>
           {!ambienteHomologacao&&<div className="demo-warning" role="status">Neste Preview, o cadastro do usuário já é real. O envio da solicitação empresarial está temporariamente desativado para não alterar empresas do projeto original.</div>}
-          {!user?.emailVerified&&<Link to="/verificar-email" className="primary button-link">Confirmar meu e-mail →</Link>}
+          {!user?.emailVerified&&<Link to="/verificar-email" state={{from:"/cadastro/empresa/dados"}} className="primary button-link">Confirmar meu e-mail →</Link>}
         </section>
       </div>
     </main>
