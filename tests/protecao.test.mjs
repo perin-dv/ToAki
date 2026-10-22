@@ -57,13 +57,13 @@ test('Arquivos privados permanecem excluídos do Git', () => {
   for (const value of ['node_modules/', 'dist/', '.env']) assert.ok(ignore.includes(value));
 });
 
-test('Entrada inicial é login e demonstração fica como opção separada', () => {
+test('Entrada pública tem escolha e demonstração é protegida', () => {
   const main = file('src/main.tsx');
   const login = file('src/pages/AuthPages.tsx');
   assert.ok(main.includes('<Route path="/" element={<PublicHomePage/>}/>'));
   assert.ok(main.includes('<Route path="/inicio" element={<PrivateRoute area="demo"><HomePage/></PrivateRoute>}/>'));
   assert.ok(main.includes('<Route path="/demonstracao" element={<PrivateRoute area="demo"><DemoPage/></PrivateRoute>}/>'));
-  assert.ok(login.includes('O painel de demonstração e seus menus são acessíveis somente após entrar na sua conta.'));
+  assert.ok(login.includes('O painel demonstrativo continua separado dos dados reais.'));
 });
 
 test('Fundo lateral preto uniforme e logo integrados no login e prototipo', () => {
@@ -81,7 +81,7 @@ test('Fundo lateral preto uniforme e logo integrados no login e prototipo', () =
 test('Cadastro de teste usa e-mail/senha sem link automático e protege dados empresariais', () => {
   const pages = file('src/pages/AuthPages.tsx');
   const cadastro = pages.split('export function RegisterPage({tipo}')[1].split('export function PasswordPage()')[0];
-  const login = pages.split('export function LoginPage()')[1].split('export function RegisterPage()')[0];
+  const login = pages.split('export function LoginPage()')[1].split('export function RegisterChoicePage()')[0];
   const confirmacao = pages.split('export function VerifyEmailPage()')[1];
   const guard = file('src/components/PrivateRoute.tsx');
   const empresa = file('src/pages/CompanyRegistration.tsx');
@@ -90,7 +90,7 @@ test('Cadastro de teste usa e-mail/senha sem link automático e protege dados em
   assert.ok(cadastro.includes('navigate(tipo==="empresa"?"/cadastro/empresa/dados":"/inicio"'));
   assert.ok(login.includes('navigate(returnTo,{replace:true})'));
   assert.ok(guard.includes('!user.emailVerified && area!=="cliente"'));
-  assert.ok(empresa.includes('if(!user?.emailVerified)return;getDoc('));
+  assert.ok(empresa.includes('if(!user?.emailVerified)return;getDoc(') || empresa.includes('if(!ambienteHomologacao)return;if(!user?.emailVerified)return;getDoc('));
   assert.ok(empresa.includes('Confirmar e-mail para cadastrar empresa'));
   assert.ok(confirmacao.includes('sendEmailVerification(user)'));
 });
