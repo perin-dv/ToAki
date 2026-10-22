@@ -87,7 +87,7 @@ test('Cadastro de teste usa e-mail/senha sem link automático e protege dados em
   const empresa = file('src/pages/CompanyRegistration.tsx');
   assert.ok(cadastro.includes('createUserWithEmailAndPassword'));
   assert.ok(!cadastro.includes('sendEmailVerification('));
-  assert.ok(cadastro.includes('navigate(tipo==="empresa"?"/cadastro/empresa/dados":"/inicio"'));
+  assert.ok(cadastro.includes('navigate(destinoCadastro,{replace:true}'));
   assert.ok(login.includes('navigate(returnTo,{replace:true})'));
   assert.ok(guard.includes('!user.emailVerified && area!=="cliente"'));
   assert.ok(empresa.includes('if(!user?.emailVerified)return;getDoc(') || empresa.includes('if(!ambienteOperacional)return;if(!user?.emailVerified)return;getDoc('));
@@ -131,6 +131,7 @@ test('Demonstracao exige sessao; icones SVG correspondem a cada modulo', () => {
     assert.ok(icons.includes(name + ':'), 'SVG ausente: ' + name);
   }
   assert.ok(login.includes('returnTo'));
+  assert.ok(login.includes('destinoAposLogin'));
   assert.ok(!login.includes('<Link to="/demonstracao">'));
 });
 
@@ -165,7 +166,7 @@ test('Fluxo correto: landing, cliente e empresa separados, home apos login, logo
  assert.ok(routes.includes('<Route path="/cadastro/empresa/dados" element={<PrivateRoute area="demo"><CompanyOnboardingPage/></PrivateRoute>}/>'));
  assert.ok(auth.includes('export function RegisterChoicePage()'));
  assert.ok(auth.includes('navigate(returnTo,{replace:true})'));
- assert.ok(auth.includes('navigate(tipo==="empresa"?"/cadastro/empresa/dados":"/inicio"'));
+ assert.ok(auth.includes('navigate(destinoCadastro,{replace:true}'));
  assert.ok(brand.includes('to={user?"/inicio":"/"}'));
  assert.ok(privatePages.includes('const voltar=()=>navigate("/inicio")'));
  assert.ok(!privatePages.includes('navigate(-1)'));
