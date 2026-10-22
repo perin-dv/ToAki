@@ -132,3 +132,18 @@ test('Demonstracao exige sessao; icones SVG correspondem a cada modulo', () => {
   assert.ok(login.includes('voltarAoDemo'));
   assert.ok(!login.includes('<Link to="/demonstracao">'));
 });
+
+test('Cadastro real de usuario para piloto não libera cadastros empresariais',()=>{
+  const auth=file('src/pages/AuthPages.tsx');
+  const register=auth.split('export function RegisterPage()')[1].split('export function PasswordPage()')[0];
+  const empresa=file('src/pages/CompanyRegistration.tsx');
+  const config=file('src/lib/ambiente.ts');
+  const privatePage=file('src/pages/PrivatePages.tsx');
+  assert.ok(register.includes('createUserWithEmailAndPassword(auth,'));
+  assert.ok(!register.includes('if(!ambienteHomologacao)'));
+  assert.ok(register.includes('link do preview não é privado'));
+  assert.ok(!register.includes('sendEmailVerification('));
+  assert.ok(empresa.includes('if(!ambienteHomologacao) return'));
+  assert.ok(config.includes('exigirHomologacao'));
+  assert.ok(privatePage.includes('solicitações empresariais e operações de entregas reais continuam bloqueadas'));
+});
