@@ -45,6 +45,7 @@ jobs:
           node --check functions/operacoes.cjs
           node --check functions/alteracoes.cjs
           node --check functions/ambiente-operacao.cjs
+          node --check scripts/diagnostico-firebase-readonly.cjs
       - name: Compilar front-end
         run: npm run build -- --mode e2e
       - name: Verificar saida para Firebase Hosting
