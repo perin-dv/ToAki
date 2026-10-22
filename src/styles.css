@@ -117,3 +117,52 @@
 .demo-sidebar .nav:hover:not(.active) svg{stroke-width:2.1}
 .mobile-nav button svg{margin:0 auto 3px}
 .mobile-menu-button{gap:7px}
+
+/* Fase B: módulos interativos de simulação, sem gravações no Firestore. */
+.demo-modulos{display:grid;gap:14px}
+.demo-two-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+.demo-two-columns>.form-error,.demo-two-columns>.form-info{grid-column:1/-1;margin:0}
+.demo-delivery-layout{grid-template-columns:minmax(290px,.8fr) minmax(0,1.2fr)}
+.demo-form{margin:15px 0 20px}
+.demo-form label,.demo-search-label{display:grid;gap:7px;color:#425467;font-weight:650;font-size:12px}
+.demo-form input,.demo-form select,.demo-search-label input{
+  width:100%;height:43px;padding:0 12px;
+  border:1px solid #dae1e7;border-radius:9px;
+  background:#fff;color:#223142;font:inherit;
+}
+.demo-form input:focus,.demo-form select:focus,.demo-search-label input:focus{
+  outline:3px solid #ffac6450;border-color:#f78a31;
+}
+.demo-search-label{margin:0 0 16px}
+.demo-record-list{display:grid;gap:10px}
+.demo-record{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  flex-wrap:wrap;border:1px solid #e7edf2;border-radius:10px;
+  padding:12px;background:#fafbfc;
+}
+.demo-record>div:first-child{min-width:0;flex:1}
+.demo-record strong{display:block;font-size:12px;color:#273647;overflow-wrap:anywhere}
+.demo-record small{display:block;color:#7b8b9a;font-size:11px;margin-top:4px;line-height:1.5;overflow-wrap:anywhere}
+.demo-record-info .pill{margin-top:8px}
+.demo-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+.demo-actions button{min-height:37px;padding:7px 11px;font-size:11px}
+.demo-danger{
+  background:#fff;color:#b3282b;border:1px solid #ffc7ca;
+  padding:8px 10px;border-radius:9px;font-weight:650;
+}
+.demo-danger:hover{background:#fff1f1}
+.demo-delivery-card{align-items:flex-start}
+.demo-delivery-card .demo-actions{justify-content:flex-start}
+.demo-footer-actions{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:11px;color:#8894a1}
+.demo-footer-actions button{white-space:nowrap}
+@media(max-width:1030px){
+  .demo-two-columns,.demo-delivery-layout{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+  .demo-two-columns,.demo-delivery-layout{gap:12px}
+  .demo-record{align-items:flex-start}
+  .demo-record>div:first-child{flex-basis:100%}
+  .demo-record .demo-actions{width:100%;justify-content:flex-start}
+  .demo-form .primary{width:100%}
+  .demo-modulos{margin-bottom:8px}
+}
