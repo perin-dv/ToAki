@@ -52,3 +52,22 @@
 O GitHub Actions atual `firebase-preview-fase-a.yml` só publica Hosting no Preview Channel do projeto original. Não publica regras de Firestore ou Functions. Portanto, a implantação de homologação é uma etapa independente, condicionada à criação de novo projeto, configuração Web correta e autorização de deploy.
 
 > Observação: a nova versão do painel **Minha conta** já usa o Firebase Authentication conectado para consultar e atualizar nome e enviar redefinição de senha quando solicitado; ainda não é um ambiente isolado para testes externos. Ao migrarmos o app para a homologação, essas operações passarão a atuar nas contas de teste independentes.
+
+## Publicação automatizada pelo GitHub (preparada, ainda não executada)
+
+O arquivo `.github/workflows/firebase-homologacao.yml` publica **somente no novo projeto**, com uma verificação que impede apontar para `toaki-cf058` e compara o ID do projeto com a conta de serviço exclusiva de homologação. Quando não há variáveis configuradas, a execução é ignorada.
+
+Após criar o novo Firebase, cadastrar em **GitHub → Settings → Secrets and variables → Actions** as seguintes *Repository Variables* públicas:
+
+- `TOAKI_HML_PROJECT_ID`
+- `TOAKI_HML_FIREBASE_API_KEY`
+- `TOAKI_HML_FIREBASE_AUTH_DOMAIN`
+- `TOAKI_HML_FIREBASE_APP_ID`
+- `TOAKI_HML_FIREBASE_MESSAGING_SENDER_ID`
+- `TOAKI_HML_FIREBASE_STORAGE_BUCKET`
+
+E um *Repository Secret* confidencial:
+
+- `FIREBASE_SERVICE_ACCOUNT_TOAKI_HML` — JSON da conta de serviço **do projeto novo**, jamais a chave do projeto original. Não compartilhá-lo pelo chat.
+
+O workflow da homologação é separado do Preview Channel atual. Ele só inicia quando essas configurações estão presentes, tem destino validado e necessita dos direitos de publicação adequados no novo projeto. Para o primeiro deploy, confirmar previamente os papéis mínimos da conta de serviço e o custo de ativação das Functions. **Nenhum dado ou backend de homologação foi publicado ainda.**
