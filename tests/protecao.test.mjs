@@ -90,7 +90,10 @@ test('Cadastro de teste usa e-mail/senha sem link automático e protege dados em
   assert.ok(cadastro.includes('navigate(tipo==="empresa"?"/cadastro/empresa/dados":"/inicio"'));
   assert.ok(login.includes('navigate(returnTo,{replace:true})'));
   assert.ok(guard.includes('!user.emailVerified && area!=="cliente"'));
-  assert.ok(empresa.includes('if(!user?.emailVerified)return;getDoc(') || empresa.includes('if(!ambienteOperacional)return;if(!user?.emailVerified)return;getDoc('));
+  assert.ok(empresa.includes('onSnapshot(doc(db,"solicitacoes_cadastro_empresas",user.uid)'));
+  assert.ok(empresa.includes('if(!ambienteOperacional||!user?.emailVerified'));
+  assert.ok(empresa.includes('ja vinculada') || empresa.includes('já vinculada'));
+  assert.ok(empresa.includes('await setDoc('));
   assert.ok(empresa.includes('Confirmar e-mail para cadastrar empresa'));
   assert.ok(confirmacao.includes('sendEmailVerification(user)'));
 });

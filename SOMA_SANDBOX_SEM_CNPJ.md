@@ -80,3 +80,15 @@ O responsável executou o workflow antigo `Preparar empresa ficticia Soma` repet
 Criado o workflow separado `.github/workflows/soma-criar-empresa-teste.yml` com título inequívoco **CRIAR SOMA TESTE - provisionamento manual** e sem seletor de operação. Apenas o proprietário do repositório, no branch `main`, pode executá-lo manualmente. Ele invoca o script previamente testado em modo `provisionar`, após validar project ID e dois secrets existentes. O script confere conta ativa, vínculos e dados de sandbox e é idempotente sem substituir registros conflitantes.
 
 Não executa deploy, não altera Rules, Functions nem Hosting. Rodar o workflow manual representa a solicitação explícita de criação fictícia; sem essa execução, nenhuma conta/empresa é modificada. Em caso de êxito, conferir o log `"modo":"provisionamento_confirmado"` e depois executar `verificar` uma vez; seguir para revisão de Rules e Functions.
+
+## Integração nativa do site com Firebase — correção de vínculo (23/10/2026)
+
+A identidade é criada no Firebase Authentication, a solicitação da empresa real é gravada diretamente pelo formulário autenticado em `solicitacoes_cadastro_empresas/{uid}`, a análise por `admin_toaki` já possui backend transacional que cria `empresas/{empresaId}` e `empresas/{empresaId}/funcionarios/{uid}`, e emite custom claims. **Não é necessária execução manual de GitHub Actions para cada nova empresa.** Fluxos reais continuam exigindo CNPJ e validação administrativa; o sandbox Soma já existente é exceção de testes e não recebe CNPJ.
+
+Na interface:
+- `AuthProvider` renova as claims diretamente do Firebase ao entrar no site ou retornar à aba, para captar um vínculo concedido depois do cadastro sem refazer login.
+- A página de solicitação acompanha seu próprio documento via `onSnapshot`, indica status e reconhece usuário empresarial já vinculado. A conta Soma não é conduzida à confirmação de e-mail nem a um formulário de CNPJ.
+- O painel `/inicio` consulta `empresas/{empresaId}` via `onSnapshot`, lê o nome salvo e só mostra os módulos após resposta autorizada de uma empresa ativa. NFs e cadastros continuam carregados do Firestore, não de sessionStorage.
+- A segurança não confia em e-mail ou IDs de URL: o token do Firebase carrega a autorização, e as Firestore Rules confirmam que a pessoa integra a empresa.
+
+**Atenção:** a alteração do repositório NÃO modifica a infraestrutura remota automaticamente. A execução [39896869428](https://github.com/perin-dv/ToAki/actions/runs/39896869428) confirmou a criação da Soma e vinculação da conta, mas o diagnóstico [39895572137](https://github.com/perin-dv/ToAki/actions/runs/39895572137) confirmou Rules remotas diferentes e sem exceção Soma, e Functions com consulta IAM 403. É necessário comparar regras publicadas, preservar configuração/backup e instalar o backend revisado somente com autorização controlada. Não publicar Hosting `live` e não afirmar que CRUD real funciona até o teste ponta a ponta. A segunda conta não foi identificada nem autorizada; não vincular usuário aleatório.
