@@ -2,6 +2,7 @@ import {useEffect,useState} from "react";
 import {collection,limit,onSnapshot,query,type DocumentData} from "firebase/firestore";
 import {db} from "../lib/firebase";
 import {exigirAmbienteOperacional} from "../lib/ambiente";
+import {identificadorEmpresaValido} from "../lib/empresaId";
 
 type Grupo="funcionarios"|"historico"|"comprovantes";
 type Linha={id:string;titulo:string;detalhe:string;data:string};
@@ -27,7 +28,7 @@ export default function ColecaoEmpresaPage({empresaId,grupo}:{empresaId:string;g
   useEffect(()=>{
     setCarregando(true);setErro("");setDados([]);
     try{exigirAmbienteOperacional();}catch(e){setErro(e instanceof Error?e.message:"Ambiente não autorizado.");setCarregando(false);return;}
-    if(!/^empresa_[0-9]{14}$/.test(empresaId)){setErro("Empresa inválida.");setCarregando(false);return;}
+    if(!identificadorEmpresaValido(empresaId)){setErro("Empresa inválida.");setCarregando(false);return;}
     const cancelar=onSnapshot(query(collection(db,"empresas",empresaId,grupo),limit(50)),snap=>{
       setDados(snap.docs.map(item=>converter(item.data(),item.id,grupo)));
       setCarregando(false);setErro("");
