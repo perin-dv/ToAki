@@ -62,3 +62,21 @@ test("não há substituição do arquivo remoto pelo arquivo local, nem deploy h
  assert.doesNotMatch(f,/readFileSync\(["']firestore.rules["']/);
  assert.doesNotMatch(f,/firebase deploy|hosting:live/);
 });
+
+test("workflow só roda manualmente na main e nunca altera Hosting live",()=>{
+ const yaml=fs.readFileSync(".github/workflows/firebase-ativar-fase-b-soma.yml","utf8");
+ assert.match(yaml,/workflow_dispatch:/);
+ assert.match(yaml,/github\.ref == 'refs\/heads\/main'/);
+ assert.match(yaml,/github\.actor == github\.repository_owner/);
+ assert.match(yaml,/secrets\.FIREBASE_SERVICE_ACCOUNT_TOAKI_CF058/);
+ assert.match(yaml,/persist-credentials: false/);
+ assert.doesNotMatch(yaml,/^  (push|pull_request|pull_request_target|schedule):/m);
+ assert.match(yaml,/functions:operarEmpresaHomologacao,functions:alterarRegistroEmpresaPiloto/);
+ assert.match(yaml,/TOAKI_PILOTO_EMPRESAS=empresa_teste_soma/);
+ assert.match(yaml,/npm run test:security/);
+ assert.match(yaml,/node scripts\/ativar-regras-soma\.cjs preparar/);
+ assert.match(yaml,/node scripts\/ativar-regras-soma\.cjs ativar/);
+ assert.match(yaml,/hosting:channel:deploy fase-b-web/);
+ assert.doesNotMatch(yaml,/firebase deploy --only hosting|firebase deploy --only firestore|firebase deploy --force/);
+ assert.doesNotMatch(yaml,/firebase use |hosting:channel:deploy live/);
+});
