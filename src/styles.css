@@ -509,3 +509,50 @@
 .report-table tr:last-child td{border-bottom:0}
 @media(max-width:940px){.report-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:530px){.report-toolbar{grid-template-columns:minmax(0,1fr)}.report-toolbar button{width:100%}}
+
+/* Painel GPS móvel do entregador, alinhado à marca toAki. */
+.gps-mobile-page{min-height:100vh;background:#f5f7f9;color:#223142}
+.gps-mobile-header{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:18px max(20px,calc((100vw - 920px)/2));background:#08090a}
+.gps-mobile-header .brand{padding:0;justify-content:flex-start}
+.gps-mobile-header-actions{display:flex;align-items:center;gap:13px}
+.gps-mobile-user{font-weight:700;font-size:12px;color:#fff;max-width:180px;text-overflow:ellipsis;white-space:nowrap;overflow:hidden}
+.gps-mobile-content{max-width:900px;margin:0 auto;padding:32px 20px 64px;display:grid;gap:20px}
+.gps-mobile-eyebrow{font-size:12px;font-weight:800;display:flex;gap:9px;align-items:center;color:#df6613}
+.gps-mobile-heading h1{font-size:clamp(25px,4vw,34px);margin:12px 0 8px}
+.gps-mobile-heading p{margin:0;color:#738291;font-size:14px;line-height:1.7}
+.gps-mobile-card{padding:24px}
+.gps-mobile-title{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.gps-mobile-title h2{font-size:17px}
+.gps-mobile-title .helper{margin:6px 0 0}
+.gps-mobile-indicador{display:inline-flex;flex-shrink:0;border-radius:100px;background:#ecf0f4;color:#6f7d88;padding:7px 12px;font-size:11px;font-weight:800}
+.gps-mobile-ativo{background:#e3f7ec;color:#0d8550}
+.gps-mobile-status{border:1px dashed #d7e0e7;border-radius:13px;background:#fafbfd;padding:27px 16px;text-align:center;margin:18px 0;display:grid;justify-items:center;gap:7px}
+.gps-mobile-target{color:#eb771e;background:#fff3e9;border-radius:50%;width:62px;height:62px;display:grid;place-items:center}
+.gps-mobile-status strong{font-size:16px}
+.gps-mobile-status p{font-size:12px;line-height:1.6;color:#7b8998;max-width:440px;margin:0}
+.gps-mobile-metricas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:19px}
+.gps-mobile-metricas>div{border:1px solid #e7edf1;border-radius:10px;padding:14px;display:grid;gap:7px}
+.gps-mobile-metricas small{font-size:11px;color:#8190a0}
+.gps-mobile-metricas strong{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.gps-mobile-actions{display:flex;flex-wrap:wrap;gap:10px}
+.gps-mobile-actions .primary,.gps-mobile-actions .secondary{min-height:45px}
+.gps-mobile-empty{display:grid;justify-items:center;text-align:center;gap:11px;border:1px dashed #d7e0e7;border-radius:13px;background:#fafbfd;padding:26px 15px;margin-top:19px}
+.gps-mobile-empty>svg{color:#e97823}
+.gps-mobile-empty strong{font-size:13px}
+.gps-mobile-empty p{color:#80909e;font-size:12px;line-height:1.7;max-width:480px;margin:0}
+.gps-mobile-privacy{background:#fff6ee;border:1px solid #fee2ca;border-radius:12px;padding:20px;color:#574532}
+.gps-mobile-privacy strong{font-size:13px}
+.gps-mobile-privacy p{font-size:12px;line-height:1.7;margin:8px 0 0}
+.gps-mobile-bottom-link{font-size:12px;font-weight:700;justify-self:start}
+@media(max-width:600px){
+ .gps-mobile-header{padding:14px 16px}
+ .gps-mobile-header .brand img{width:112px}
+ .gps-mobile-user{display:none}
+ .gps-mobile-content{padding:25px 14px 52px;gap:15px}
+ .gps-mobile-card{padding:16px}
+ .gps-mobile-status{padding:22px 12px}
+ .gps-mobile-metricas{gap:8px}
+ .gps-mobile-metricas>div{padding:12px}
+ .gps-mobile-metricas strong{font-size:13px}
+ .gps-mobile-actions .primary,.gps-mobile-actions .secondary{width:100%}
+}
