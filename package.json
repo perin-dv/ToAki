@@ -7,7 +7,7 @@
     "dev": "vite --host 0.0.0.0",
     "build": "node scripts/generate-pwa-icons.mjs && tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "node --test tests/protecao.test.mjs tests/ambiente-operacao.test.cjs tests/soma-sandbox.test.cjs tests/soma-criar-direto.test.cjs tests/firebase-vinculo-empresa.test.cjs",
+    "test": "node --test tests/protecao.test.mjs tests/ambiente-operacao.test.cjs tests/soma-sandbox.test.cjs tests/soma-criar-direto.test.cjs tests/firebase-vinculo-empresa.test.cjs tests/ativar-regras-soma.test.cjs",
     "test:security": "firebase emulators:exec --only firestore --project demo-toaki-ci \"node --test tests/firestore.rules.test.mjs\""
   },
   "dependencies": {
