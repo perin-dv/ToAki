@@ -25,3 +25,9 @@ O workflow usa a credencial `FIREBASE_SERVICE_ACCOUNT_TOAKI_CF058` já prevista 
 
 ## Estado
 Preparado e testável em PR independente, sem publicação e sem merge. Não modifica os PRs de desenvolvimento da web e preserva o Preview aprovado.
+
+## Atualização pós-provisionamento Soma
+
+O diagnóstico de leitura passa a conferir também o Ruleset atualmente publicado para `cloud.firestore` via **GET de release e ruleset**, sem publicar nada. Os campos de saída são `regrasFirestore.status`, `igualAoRepositorio`, `possuiExcecaoSoma` e `necessitaRevisaoAntesDeploy`. Se não houver permissão suficiente, retorna `sem_permissao` e bloqueia qualquer inferência de que a regra foi publicada.
+
+Nenhum conteúdo de regras, documento, UID ou credencial é exibido. O resultado não é autorização automática para modificar regras. A conta Soma somente terá acesso pela interface real quando o ruleset implantado tiver sido inspecionado e a leitura realmente validada.
