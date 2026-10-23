@@ -1,5 +1,5 @@
 import {useCallback,useEffect,useState,type MouseEvent} from "react";
-import {collection,limit,onSnapshot,query} from "firebase/firestore";
+import {collection,doc,limit,onSnapshot,query} from "firebase/firestore";
 import {signOut} from "firebase/auth";
 import {Link,useNavigate} from "react-router-dom";
 import {db,auth} from "../lib/firebase";
@@ -30,10 +30,13 @@ const empresaPapeis=["dono_empresa","gestor","vendedor"];
 
 export default function SiteOperacionalPage(){
   const {user,role,refreshClaims}=useAuth();
+  const {empresaId:empresaDaConta,sandboxTester}=useAuth();
   const navegar=useNavigate();
   const [secao,setSecao]=useState<Secao>("inicio");
   const [menuAberto,setMenuAberto]=useState(false);
   const [empresaId,setEmpresaId]=useState<string|null>(null);
+  const [nomeEmpresa,setNomeEmpresa]=useState("");
+  const [empresaDisponivel,setEmpresaDisponivel]=useState(false);
   const [carregando,setCarregando]=useState(true);
   const [registros,setRegistros]=useState<RegistroOperacional[]>([]);
   const [erro,setErro]=useState("");
@@ -51,7 +54,27 @@ export default function SiteOperacionalPage(){
     empresaAutorizada(user).then(id=>{if(ativo){setEmpresaId(id);setCarregando(false);}})
       .catch(()=>{if(ativo){setErro("Não foi possível validar seu vínculo empresarial.");setCarregando(false);}});
     return()=>{ativo=false;};
-  },[user,acessoEmpresa]);
+  },[user,acessoEmpresa,empresaDaConta,sandboxTester]);
+
+  useEffect(()=>{
+    if(!empresaId){setNomeEmpresa("");setEmpresaDisponivel(false);return;}
+    // Confere empresa existente, ativa e permitida pelas regras remotas; claims sozinhas não exibem dados.
+    setEmpresaDisponivel(false);
+    const parar=onSnapshot(doc(db,"empresas",empresaId),snap=>{
+      const d=snap.data();
+      if(!snap.exists()||d?.status!=="ativa"){
+        setEmpresaDisponivel(false);setNomeEmpresa("");
+        setErro("A empresa vinculada não está ativa ou não foi encontrada no Firebase.");
+        return;
+      }
+      setNomeEmpresa(typeof d.nome_exibicao==="string"&&d.nome_exibicao.trim()?d.nome_exibicao:"Empresa autorizada");
+      setEmpresaDisponivel(true);setErro("");
+    },()=>{
+      setEmpresaDisponivel(false);
+      setErro("Sua conta está vinculada, mas as regras publicadas do Firestore ainda não liberam a leitura desta empresa.");
+    });
+    return()=>parar();
+  },[empresaId]);
 
   useEffect(()=>{
     if(!empresaId){setRegistros([]);return;}
@@ -114,7 +137,7 @@ export default function SiteOperacionalPage(){
   const cadastroAba:Record<"entregas"|"entregadores"|"clientes",TipoOperacional>={
     entregas:"pedido",entregadores:"entregador",clientes:"cliente"
   };
-  const destinosAutorizados=!!empresaId&&acessoEmpresa&&ambienteOperacional;
+  const destinosAutorizados=!!empresaId&&empresaDisponivel&&acessoEmpresa&&ambienteOperacional;
 
   return <div className="demo-layout">
     {menuAberto&&<button type="button" className="drawer-backdrop" aria-label="Fechar menu lateral" onClick={()=>setMenuAberto(false)}/>}
@@ -131,7 +154,7 @@ export default function SiteOperacionalPage(){
       <header className="mobile-top"><button type="button" className="mobile-menu-button" aria-label="Abrir menu completo" aria-controls="demo-sidebar-menu" aria-expanded={menuAberto} onClick={()=>setMenuAberto(true)}><MenuIcon name="menu"/> Menu</button><Brand compact onHomeClick={voltar}/><Link className="top-signin" to={acessoEmpresa?"/empresa":"/cliente"}>Minha conta →</Link></header>
       <main className="demo-main">
         {empresaId===EMPRESA_TESTE_SOMA&&<div className="demo-warning" role="status"><strong>Soma — Ambiente de Testes.</strong> Este cadastro é fictício, não possui CNPJ e não deve receber notas fiscais, documentos ou dados pessoais verdadeiros. Use somente exemplos de teste.</div>}
-        <div className="demo-head"><div><h1>{secao==="inicio"?"Central de rastreamento":secaoNome}</h1><p>Painel operacional — informações do Firebase autorizado</p></div>
+        <div className="demo-head"><div><h1>{secao==="inicio"?"Central de rastreamento":secaoNome}</h1><p>{nomeEmpresa?`Empresa: ${nomeEmpresa} · Firebase`:"Painel operacional — informações do Firebase autorizado"}</p></div>
           <div className="head-right"><Link to={role==="admin_toaki"?"/admin":acessoEmpresa?"/empresa":"/cliente"} className="secondary">Minha conta</Link><button className="secondary" type="button" disabled={saindo} onClick={()=>void sair()}>{saindo?"Saindo...":"Sair"}</button></div>
         </div>
         {!ambienteOperacional&&<div className="demo-warning" role="status">A integração operacional com o Firebase ainda não foi habilitada. Nenhum dado fictício está sendo exibido como entrega real. <Link to="/demonstracao">Ver demonstração separada</Link>.</div>}
@@ -141,6 +164,7 @@ export default function SiteOperacionalPage(){
         {carregando&&<p role="status">Verificando autorização no Firebase...</p>}
         {ambienteOperacional&&acessoEmpresa&&!carregando&&!empresaId&&<section className="panel content-panel"><h2>Empresa ainda não liberada</h2><p>O vínculo precisa ser aprovado por um administrador e confirmado no Firebase. Os dados de exemplo foram removidos da tela operacional.</p><Link to="/cadastro/empresa/dados" className="secondary button-link">Consultar solicitação</Link>
           <button type="button" className="secondary" disabled={atualizandoAcesso} onClick={()=>void atualizarAcesso()}>{atualizandoAcesso?"Consultando Firebase...":"Verificar se minha empresa foi aprovada"}</button></section>}
+        {empresaId&&!empresaDisponivel&&!erro&&<p role="status">Carregando empresa diretamente do Firebase...</p>}
         {erro&&<p role="alert" className="form-error">{erro}</p>}
         {destinosAutorizados&&secao==="inicio"&&<>
           <div className="stats">
