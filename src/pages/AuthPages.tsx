@@ -22,15 +22,21 @@ function Layout({title,description,children}:{title:string;description:string;ch
   return <div className="auth-screen"><aside className="auth-intro"><Brand/><h1>Suas entregas, mais perto.</h1><p>Rastreamento de entregas para empresas, entregadores e clientes.</p><div className="auth-intro-footer">toAki · Sua entrega, no mapa</div></aside><main className="auth-panel"><div><div className="auth-mobile-logo"><Brand compact/></div><div className="auth-card"><h2>{title}</h2><p className="subheading">{description}</p>{children}</div></div></main></div>;
 }
 export function LoginPage() {
-  const {user,loading}=useAuth();const navigate=useNavigate();
+  const {user,role,loading}=useAuth();const navigate=useNavigate();
   const location=useLocation();
-  const returnTo=location.state?.from==="/cadastro/empresa/dados"?"/cadastro/empresa/dados":"/inicio";
+  const returnTo=location.state?.from==="/cadastro/empresa/dados"?"/cadastro/empresa/dados":
+    location.state?.from==="/motoboy"?"/motoboy":
+    role==="entregador"?"/motoboy":"/inicio";
   const [email,setEmail]=useState("");const[password,setPassword]=useState("");const[mostrarSenha,setMostrarSenha]=useState(false);const[busy,setBusy]=useState(false);const[error,setError]=useState("");
   if(!loading&&user)return <Navigate to={returnTo} replace/>;
   const submit=async(e:FormEvent)=>{e.preventDefault();setBusy(true);setError("");try{
     const {user}=await signInWithEmailAndPassword(auth,email.trim(),password);
     await user.reload();
-    navigate(returnTo,{replace:true});
+    const token=await user.getIdTokenResult(true);
+    const destino=location.state?.from==="/cadastro/empresa/dados"?"/cadastro/empresa/dados":
+      location.state?.from==="/motoboy"?"/motoboy":
+      token.claims.role==="entregador"?"/motoboy":"/inicio";
+    navigate(destino,{replace:true});
   }catch(e){setError(message(e))}finally{setBusy(false)}};
   return <Layout title="Entrar no toAki" description="Acesse usando seu e-mail e senha."><form className="stack" onSubmit={submit}>
     <label>E-mail<input required type="email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} placeholder="voce@exemplo.com"/></label>
