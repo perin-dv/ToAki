@@ -10,7 +10,7 @@ O ID técnico de teste é `empresa_teste_soma` (não é um CNPJ). A interface ap
 
 - `autorizarAprovacaoEmpresa` continua a aceitar **apenas `empresa_<CNPJ>`**, com habilitação da empresa real e sem autoaprovação.
 - Para `empresa_teste_soma`, a operação exige simultaneamente `TOAKI_PILOTO_NO_ORIGINAL=habilitado`, `TOAKI_PILOTO_EMPRESAS=empresa_teste_soma`, projeto `toaki-cf058` e os marcadores de sandbox verificados no documento `empresas/empresa_teste_soma`.
-- Cada operação continua a verificar usuário com e-mail confirmado, associação `empresas/empresa_teste_soma/funcionarios/{uid}` ativa e cargo permitido, com registro de histórico, transações e validações de referências. **O navegador não pode provisionar empresa, conceder claims ou se tornar gestor sozinho.**
+- Cada operação continua a verificar identidade Firebase com claim exclusiva de sandbox (ou e-mail verificado em empresas reais), associação `empresas/empresa_teste_soma/funcionarios/{uid}` ativa e cargo permitido, com registro de histórico, transações e validações de referências. **O navegador não pode provisionar empresa, conceder claims ou se tornar gestor sozinho.**
 - Firestore Rules atuais permanecem com escrita empresarial pelo navegador negada.
 - Testes exigem dados fictícios: não importar notas fiscais, CPFs, endereços residenciais ou dados de clientes reais.
 - O ID de teste não é aceito como CNPJ na BrasilAPI e não deve preencher `cnpjs_reservados`.
@@ -21,7 +21,7 @@ O workflow `.github/workflows/firebase-soma-sandbox.yml` deve ser revisado e inc
 
 Tem dois modos:
 1. **verificar**: lê unicamente conta do Firebase Authentication e existência do tenant e vínculo no Firestore, não escreve nada.
-2. **provisionar**: exige escolha explícita da operação e texto `PROVISIONAR_SOMA_TESTE`; após conferir projeto, conta existente, e-mail confirmado, cargos prévios, proprietário e dados sem CNPJ, cria apenas a empresa fictícia e a associação ao primeiro usuário em transação; em seguida emite `role: dono_empresa, empresa_id: empresa_teste_soma` no Firebase Authentication. Se uma permissão não estiver disponível, falha sem tentar alterar IAM.
+2. **provisionar**: exige escolha explícita da operação e texto `PROVISIONAR_SOMA_TESTE`; após conferir projeto, conta existente ativa, cargos prévios, proprietário e dados sem CNPJ, sem exigir e-mail verificado, cria apenas a empresa fictícia e a associação ao primeiro usuário em transação; em seguida emite `role: dono_empresa, empresa_id: empresa_teste_soma` no Firebase Authentication. Se uma permissão não estiver disponível, falha sem tentar alterar IAM.
 
 A conta indicada pelo responsável não aparece no código público. O workflow exige configurá-la uma única vez em **GitHub → Settings → Secrets and variables → Actions**, como secret `TOAKI_EMAIL_PROPRIETARIO_SOMA`. Não enviar senha, token nem UID em comentários ou logs.
 
@@ -46,8 +46,18 @@ Foi reportada uma execução manual que passou por setup, testes e autenticaçã
 A rotina agora informa de forma sanitizada:
 - `secret_email_soma_ausente_ou_invalido`: conferir em **Settings → Secrets and variables → Actions** a existência de `TOAKI_EMAIL_PROPRIETARIO_SOMA` com o e-mail exato da conta existente, sem colar dados no log.
 - `conta_nao_encontrada`: conferir se o usuário já existe **no projeto Firebase correto**; jamais criar outro usuário automaticamente.
-- `email_nao_verificado`: confirmar e-mail pelo fluxo de autenticação; não forçar `emailVerified` pelo backend de teste.
+- `email_nao_verificado`: erro histórico corrigido: a Soma de testes não exige e-mail verificado. Isso continua obrigatório em operações de empresas reais.
 - `sem_permissao_firebase` ou `falha_firebase_auth`: solicitar revisão **das permissões existentes**, sem conceder IAM automaticamente ou usar nova chave pessoal.
 - `conta_ja_vinculada_outra_empresa`, `papel_existente_incompativel` e `empresa_teste_conflito`: bloquear alteração de vínculos preexistentes.
 
 A execução de `verificar` é **somente leitura**. A de `provisionar` continua dependente da confirmação explícita e controles. Nenhum cadastro foi afirmado como criado após a falha, e nenhum deploy do backend foi executado.
+
+## Correção: e-mail livre na Soma fictícia
+
+O responsável já definiu que **não deve haver confirmação de e-mail para contas de testes**. A exigência anterior causou falha `email_nao_verificado` no workflow `verificar`; foi removida **somente do tenant `empresa_teste_soma`**.
+
+- `verificar` agora informa `emailConfirmado: false`, sem tratar isso como falha. A conta deve existir, estar habilitada e não ter vínculo conflitante.
+- `provisionar` após confirmação manual cria/vincula apenas o sandbox Soma e emite claim `toaki_sandbox_tester: true` para o usuário exato selecionado por secret privado, **sem editar o atributo `emailVerified`** do Firebase Authentication.
+- Firestore Rules foram adaptadas **somente no código** para aceitar conta não verificada quando `empresaId == empresa_teste_soma`, a claim `toaki_sandbox_tester == true` e `empresa_id` coincidem, e existe associação ativa em `empresas/empresa_teste_soma/funcionarios/{uid}`. Sem a claim, membros de teste não acessam dados, e as empresas reais continuam exigindo verificação.
+- Os dois callables operacionais aplicam a mesma condição para a identidade antes de consultar registros, e continuam validando tenant piloto, allowlist e papel.
+- **Atenção:** o merge de código não publica Rules, Functions nem Hosting. Até uma implantação separada, autorizada e confirmada, o Preview continuará usando a configuração remota anterior. Nenhuma conta foi alterada automaticamente.
