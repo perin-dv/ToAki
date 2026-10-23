@@ -135,3 +135,36 @@ test("cadastros de motos, motoristas, clientes e NFs são isolados por empresa e
   await assertFails(updateDoc(doc(dono(),"empresas",empresaA,"pedidos","nf1"),{status:"entregue"}));
   await assertFails(deleteDoc(doc(dono(),"empresas",empresaA,"clientes","cliente1")));
 });
+
+test("Soma: testador autorizado sem e-mail verificado só lê sua empresa",async()=>{
+ const tester=env.authenticatedContext("uid-testador",{
+  email:"sandbox@exemplo.test",email_verified:false,
+  empresa_id:"empresa_teste_soma",toaki_sandbox_tester:true,role:"dono_empresa"
+ }).firestore();
+ const semClaim=env.authenticatedContext("uid-testador",{
+  email:"sandbox@exemplo.test",email_verified:false
+ }).firestore();
+ const outroId=env.authenticatedContext("uid-outra-pessoa",{
+  email:"outro@exemplo.test",email_verified:false,
+  empresa_id:"empresa_teste_soma",toaki_sandbox_tester:true
+ }).firestore();
+ const empresa="empresa_teste_soma",outra="empresa_11222333000181";
+ await env.withSecurityRulesDisabled(async ctx=>{
+  const db=ctx.firestore();
+  await setDoc(doc(db,"empresas",empresa),{tipo_registro:"empresa_teste",modo_teste:true,cnpj:null,status:"ativa"});
+  await setDoc(doc(db,"empresas",empresa,"funcionarios","uid-testador"),{ativo:true,papel:"dono_empresa"});
+  await setDoc(doc(db,"empresas",empresa,"veiculos","motox"),{placa:"ABC1D23"});
+  await setDoc(doc(db,"empresas",empresa,"historico","registro1"),{acao:"teste"});
+  await setDoc(doc(db,"empresas",outra),{status:"ativa"});
+  await setDoc(doc(db,"empresas",outra,"veiculos","motoReal"),{placa:"DEF4G56"});
+ });
+ await assertSucceeds(getDoc(doc(tester,"empresas",empresa)));
+ await assertSucceeds(getDocs(collection(tester,"empresas",empresa,"veiculos")));
+ await assertSucceeds(getDoc(doc(tester,"empresas",empresa,"historico","registro1")));
+ await assertFails(setDoc(doc(tester,"empresas",empresa,"veiculos","motoNova"),{placa:"XYZ8K09"}));
+ await assertFails(getDoc(doc(tester,"empresas",outra)));
+ await assertFails(getDoc(doc(tester,"empresas",outra,"veiculos","motoReal")));
+ await assertFails(getDoc(doc(semClaim,"empresas",empresa)));
+ await assertFails(getDoc(doc(outroId,"empresas",empresa)));
+ await assertFails(getDoc(doc(tester,"solicitacoes_cadastro_empresas","uid-testador")));
+});
