@@ -1,0 +1,58 @@
+name: CRIAR SOMA TESTE - provisionamento manual
+
+# Workflow isolado: UM clique neste workflow aciona a criação fictícia e a
+# associação da conta previamente informada em GitHub Secrets.
+# Não executa em PR, push nem agenda. Não publica nada no Firebase Hosting.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: toaki-sandbox-soma
+  cancel-in-progress: false
+
+jobs:
+  criar-soma:
+    name: Criar Soma fictícia e vincular responsável (Firestore + Auth)
+    if: github.repository == 'perin-dv/ToAki' && github.ref == 'refs/heads/main' && github.actor == github.repository_owner
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Obter a versão revisada na main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Testar a política do sandbox sem credenciais
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check scripts/preparar-soma-testes.cjs
+          node --test tests/soma-sandbox.test.cjs tests/soma-criar-direto.test.cjs
+          npm --prefix functions install --no-audit --no-fund --ignore-scripts
+      - name: Criar exclusivamente a empresa de testes Soma
+        shell: bash
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TOAKI_CF058 }}
+          TOAKI_EMAIL_PROPRIETARIO: ${{ secrets.TOAKI_EMAIL_PROPRIETARIO_SOMA }}
+          TOAKI_CONFIRMACAO: PROVISIONAR_SOMA_TESTE
+        run: |
+          set -euo pipefail
+          if [[ -z "$FIREBASE_SERVICE_ACCOUNT_JSON" || -z "$TOAKI_EMAIL_PROPRIETARIO" ]]; then
+            echo "::error::Secrets da conta de teste ou Firebase ausentes."
+            exit 1
+          fi
+          umask 077
+          CRED="$RUNNER_TEMP/toaki-soma-provisionar.json"
+          trap 'rm -f "$CRED"' EXIT
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$CRED"
+          unset FIREBASE_SERVICE_ACCOUNT_JSON
+          node -e 'const fs=require("fs");const x=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));if(x.project_id!=="toaki-cf058"||x.type!=="service_account")process.exit(1)' "$CRED"
+          GOOGLE_APPLICATION_CREDENTIALS="$CRED" node scripts/preparar-soma-testes.cjs provisionar
+          echo "### Soma criada ou conferida" >> "$GITHUB_STEP_SUMMARY"
+          echo "Workflow explícito de provisionamento do sandbox empresa_teste_soma. Não houve deploy Hosting, Rules nem Functions." >> "$GITHUB_STEP_SUMMARY"

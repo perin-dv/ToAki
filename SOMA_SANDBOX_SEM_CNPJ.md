@@ -72,3 +72,11 @@ Após a confirmação de provisionamento, foram identificados bloqueios residuai
 Antes de ativar o acesso operacional no Preview, o diagnóstico manual `.github/workflows/firebase-diagnostico-readonly.yml` agora consulta **em modo leitura** o Release `cloud.firestore` e o respectivo Ruleset. Retorna somente `regrasFirestore.status`, `igualAoRepositorio` e `possuiExcecaoSoma`, **sem revelar o código remoto**.
 
 **Importante:** deploy no Firebase ainda NÃO executado. A conta pode ter recebido a claim e vínculo, mas o Preview antigo não contém essas correções de frontend e as regras publicadas podem continuar sem a exceção de sandbox. Mesmo que o diagnóstico diga que a exceção já está presente, ainda é preciso confirmar Functions implantadas e seus parâmetros de allowlist antes de testar gravações. Não usar dados de clientes reais no sandbox.
+
+## Operação manual simplificada — criação sem seletor (23/10/2026)
+
+O responsável executou o workflow antigo `Preparar empresa ficticia Soma` repetidas vezes, mas os logs da última execução [39896085957](https://github.com/perin-dv/ToAki/actions/runs/39896085957) mostram claramente `MODO: verificar`, `sandboxExiste: false`, `vinculoExiste: false`, `TOAKI_CONFIRMACAO` vazio. Portanto **nenhuma criação foi comprovada**, apesar de o job ter concluído com sucesso.
+
+Criado o workflow separado `.github/workflows/soma-criar-empresa-teste.yml` com título inequívoco **CRIAR SOMA TESTE - provisionamento manual** e sem seletor de operação. Apenas o proprietário do repositório, no branch `main`, pode executá-lo manualmente. Ele invoca o script previamente testado em modo `provisionar`, após validar project ID e dois secrets existentes. O script confere conta ativa, vínculos e dados de sandbox e é idempotente sem substituir registros conflitantes.
+
+Não executa deploy, não altera Rules, Functions nem Hosting. Rodar o workflow manual representa a solicitação explícita de criação fictícia; sem essa execução, nenhuma conta/empresa é modificada. Em caso de êxito, conferir o log `"modo":"provisionamento_confirmado"` e depois executar `verificar` uma vez; seguir para revisão de Rules e Functions.
