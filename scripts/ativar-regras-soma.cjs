@@ -32,18 +32,22 @@ function inserirExcecaoSoma(original){
   }
   if(profundidade!==0)throw Error("ruleset_malformado");
   const corpo=original.slice(inicio,fim);
+  const excecao="return (verificado() || (request.auth != null"+
+    " && empresaId == 'empresa_teste_soma'"+
+    " && request.auth.token.toaki_sandbox_tester == true"+
+    " && request.auth.token.empresa_id == empresaId))";
   if(corpo.includes("toaki_sandbox_tester")){
-    if(!corpo.includes("empresa_teste_soma"))throw Error("excecao_inesperada");
+    const restaurado=corpo.replace(excecao,"return verificado()");
+    if(restaurado===corpo || corpo.split(excecao).length!==2 ||
+       !restaurado.includes("exists(")||!restaurado.includes("get(")||
+       !restaurado.includes("ativo == true"))
+      throw Error("excecao_existente_inesperada");
     return {alterou:false,texto:original};
   }
   const verificacao=/return\s+verificado\(\)/g;
   if([...corpo.matchAll(verificacao)].length!==1 ||
     !corpo.includes("exists(")||!corpo.includes("get(")||
     !corpo.includes("ativo == true"))throw Error("funcionario_regra_incompativel");
-  const excecao="return (verificado() || (request.auth != null"+
-    " && empresaId == 'empresa_teste_soma'"+
-    " && request.auth.token.toaki_sandbox_tester == true"+
-    " && request.auth.token.empresa_id == empresaId))";
   const atualizado=corpo.replace(verificacao,excecao);
   const novo=original.slice(0,inicio)+atualizado+original.slice(fim);
   if(novo===original || novo.slice(0,inicio)!==original.slice(0,inicio)||
