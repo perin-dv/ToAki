@@ -32,3 +32,13 @@ test("sem credencial o diagnóstico falha fechado e não revela stack",()=>{
   assert.match(run.stderr,/Diagnóstico indisponível/);
   assert.doesNotMatch(run.stderr,/at Object|at async|private_key/);
 });
+
+test("consulta de regras implantadas é leitura e informa diferença sem expor conteúdo",()=>{
+ assert.match(source,/firebaserules\.googleapis\.com\/v1\/projects/);
+ assert.match(source,/releases\/cloud\.firestore/);
+ assert.match(source,/rulesets/);
+ assert.match(source,/igualAoRepositorio/);
+ assert.match(source,/possuiExcecaoSoma/);
+ assert.match(source,/necessitaRevisaoAntesDeploy:true/);
+ assert.doesNotMatch(source,/\.patch\(|\.update\(|\.delete\(|rulesets:create|releases:patch/);
+});
