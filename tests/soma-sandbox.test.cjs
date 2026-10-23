@@ -69,3 +69,21 @@ test("interface mostra estado de testes claramente e não aceita empresa arbitr�
  assert.match(site,/Soma — Ambiente de Testes/);
  assert.match(site,/não possui CNPJ/);
 });
+
+test("falhas de verificação indicam motivo sanitizado sem imprimir a conta ou stack",()=>{
+ const workflow=fs.readFileSync(".github/workflows/firebase-soma-sandbox.yml","utf8");
+ const script=fs.readFileSync("scripts/preparar-soma-testes.cjs","utf8");
+ assert.match(workflow,/Secret TOAKI_EMAIL_PROPRIETARIO_SOMA ausente/);
+ for(const motivo of [
+  "secret_email_soma_ausente_ou_invalido","conta_nao_encontrada","email_nao_verificado",
+  "sem_permissao_firebase","conta_ja_vinculada_outra_empresa","credencial_projeto_incorreto"
+ ])assert.ok(script.includes(motivo),"diagnóstico ausente: "+motivo);
+ assert.match(script,/codigoSeguroDoErro\(error\)/);
+ assert.doesNotMatch(script,/console\.error\(error\)|JSON\.stringify\(error\)|error\.stack/);
+ const env={...process.env,GOOGLE_APPLICATION_CREDENTIALS:""};
+ delete env.TOAKI_EMAIL_PROPRIETARIO;
+ const r=spawnSync(process.execPath,["scripts/preparar-soma-testes.cjs","verificar"],{env,encoding:"utf8",timeout:5000});
+ assert.equal(r.status,1);
+ assert.match(r.stderr,/"motivo":"credencial_ausente"/);
+ assert.doesNotMatch(r.stderr,/@|hotmail|gmail|private_key|at Object/);
+});

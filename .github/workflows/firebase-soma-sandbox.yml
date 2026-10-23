@@ -71,6 +71,10 @@ jobs:
             echo "::error::Modo inválido."
             exit 1
           fi
+          if [[ -z "$TOAKI_EMAIL_PROPRIETARIO" ]]; then
+            echo "::error::Secret TOAKI_EMAIL_PROPRIETARIO_SOMA ausente no repositório. Adicione somente o e-mail da conta existente em Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
           # O script revalida a string literal de autorização e a identidade do projeto.
           node scripts/preparar-soma-testes.cjs "$MODO"
           echo '### Soma — Ambiente de Testes' >> "$GITHUB_STEP_SUMMARY"

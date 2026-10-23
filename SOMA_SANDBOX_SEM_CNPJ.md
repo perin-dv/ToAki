@@ -38,3 +38,16 @@ A conta indicada pelo responsável não aparece no código público. O workflow 
 ## Próximo teste de aceite
 
 Autenticar com a conta existente, atualizar claims no painel, conferir aviso **Soma — Ambiente de Testes**, cadastrar placa fictícia, motorista fictício, cliente fictício e NF fictícia, recarregar e relogar, confirmar persistência, negar escrita direta no navegador e verificar isolamento de outros usuários.
+
+## Correção do diagnóstico após erro do GitHub Actions
+
+Foi reportada uma execução manual que passou por setup, testes e autenticação da credencial mas **falhou na etapa de consulta da conta**. A imagem mostra a etapa, porém não inclui o código de erro do log; portanto não é possível afirmar com segurança se faltou o secret do e-mail, se o e-mail não está verificado, se a conta não existe ou se a service account não tem permissão Firebase Auth.
+
+A rotina agora informa de forma sanitizada:
+- `secret_email_soma_ausente_ou_invalido`: conferir em **Settings → Secrets and variables → Actions** a existência de `TOAKI_EMAIL_PROPRIETARIO_SOMA` com o e-mail exato da conta existente, sem colar dados no log.
+- `conta_nao_encontrada`: conferir se o usuário já existe **no projeto Firebase correto**; jamais criar outro usuário automaticamente.
+- `email_nao_verificado`: confirmar e-mail pelo fluxo de autenticação; não forçar `emailVerified` pelo backend de teste.
+- `sem_permissao_firebase` ou `falha_firebase_auth`: solicitar revisão **das permissões existentes**, sem conceder IAM automaticamente ou usar nova chave pessoal.
+- `conta_ja_vinculada_outra_empresa`, `papel_existente_incompativel` e `empresa_teste_conflito`: bloquear alteração de vínculos preexistentes.
+
+A execução de `verificar` é **somente leitura**. A de `provisionar` continua dependente da confirmação explícita e controles. Nenhum cadastro foi afirmado como criado após a falha, e nenhum deploy do backend foi executado.
