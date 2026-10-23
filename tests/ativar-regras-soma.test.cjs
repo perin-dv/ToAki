@@ -80,3 +80,9 @@ test("workflow só roda manualmente na main e nunca altera Hosting live",()=>{
  assert.doesNotMatch(yaml,/firebase deploy --only hosting|firebase deploy --only firestore|firebase deploy --force/);
  assert.doesNotMatch(yaml,/firebase use |hosting:channel:deploy live/);
 });
+
+test("Rules com exceção Soma diferente da aprovada nunca são aceitas automaticamente",()=>{
+ const alterada=remota.replace("return verificado() && exists",
+   "return verificado() || request.auth.token.toaki_sandbox_tester == true && exists");
+ assert.throws(()=>inserirExcecaoSoma(alterada),/excecao_existente_inesperada/);
+});
