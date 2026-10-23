@@ -109,3 +109,19 @@ test("sandbox sem verificação não concede qualquer acesso a empresas reais",(
  assert.match(firestore,/empresaId == 'empresa_teste_soma'/);
  assert.match(firestore,/request\.auth\.token\.empresa_id == empresaId/);
 });
+
+test("CRUD e listas da Soma aceitam ID fictício em todos os caminhos reais",()=>{
+ const operacao=fs.readFileSync("src/lib/operacaoEmpresa.ts","utf8");
+ const historico=fs.readFileSync("src/pages/ColecaoEmpresaPage.tsx","utf8");
+ const relatorios=fs.readFileSync("src/pages/RelatoriosEmpresaPage.tsx","utf8");
+ const contratos=fs.readFileSync("src/pages/AssinaturaEmpresaPage.tsx","utf8");
+ for(const arquivo of [operacao,historico,relatorios,contratos]){
+  assert.match(arquivo,/identificadorEmpresaValido/);
+  assert.doesNotMatch(arquivo,/\/\^empresa_\[0-9\]\{14\}\$\//);
+ }
+ const criar=operacao.split("export async function criarRegistro(")[1].split("export type AcaoOperacional")[0];
+ const editar=operacao.split("export async function alterarRegistro(")[1];
+ assert.match(criar,/if\(!identificadorEmpresaValido\(empresaId\)\)/);
+ assert.match(editar,/if\(!identificadorEmpresaValido\(empresaId\)/);
+ assert.match(historico,/if\(!identificadorEmpresaValido\(empresaId\)\)/);
+});

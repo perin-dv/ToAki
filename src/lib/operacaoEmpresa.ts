@@ -64,7 +64,7 @@ export async function listarRegistros(empresaId:string,tipo:TipoOperacional):Pro
 }
 export async function criarRegistro(empresaId:string,tipo:TipoOperacional,dados:Record<string,string>):Promise<string>{
   exigirAmbienteOperacional();
-  if(!/^empresa_[0-9]{14}$/.test(empresaId))throw Error("Empresa inválida.");
+  if(!identificadorEmpresaValido(empresaId))throw Error("Empresa inválida.");
   const operar=httpsCallable<
     {empresaId:string;tipo:TipoOperacional;dados:Record<string,string>},
     {ok:boolean;registroId:string}
@@ -77,7 +77,7 @@ export async function criarRegistro(empresaId:string,tipo:TipoOperacional,dados:
 export type AcaoOperacional="atualizar"|"desativar"|"mudar_status";
 export async function alterarRegistro(empresaId:string,tipo:TipoOperacional,registroId:string,acao:AcaoOperacional,dados?:Record<string,string>,novoStatus?:string):Promise<void>{
   exigirAmbienteOperacional();
-  if(!/^empresa_[0-9]{14}$/.test(empresaId)||!/^[A-Za-z0-9_-]{1,128}$/.test(registroId))
+  if(!identificadorEmpresaValido(empresaId)||!/^[A-Za-z0-9_-]{1,128}$/.test(registroId))
     throw Error("Registro ou empresa inválida.");
   const input=acao==="atualizar"?{empresaId,tipo,registroId,acao,dados}:
     acao==="mudar_status"?{empresaId,tipo,registroId,acao,novoStatus}:{empresaId,tipo,registroId,acao};

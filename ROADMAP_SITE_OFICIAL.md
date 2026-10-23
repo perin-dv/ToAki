@@ -57,3 +57,11 @@ O usuário autorizou usar suas contas existentes apenas para testes, sem exigir 
 - Testes do novo ID sem CNPJ e bloqueios de acesso precisam passar no CI.
 - **Pendente:** verificar permissão Firebase Auth/IAM, provisionar o tenant, identificar com segurança a segunda conta, implantar Functions permitidas sem atingir produção live e confirmar cadastros após relogin.
 - PR #7 de motoboy continua fora do escopo até a web ser concluída. Ver `SOMA_SANDBOX_SEM_CNPJ.md`.
+
+## Continuidade após conta Soma preparada: correção de CRUD e auditoria de Rules
+
+O usuário informou que a execução manual de provisionamento da empresa fictícia Soma foi concluída; confirmação independente do status da execução específica ainda não foi consultada, portanto a conclusão remota é relatada conforme o responsável. A árvore de código da `main` foi conferida.
+
+- Corrigidos bloqueios residuais no CRUD (criação/edição) e nas coleções de funcionários, histórico e comprovantes para aceitar `empresa_teste_soma`, sem alterar validações de empresa real.
+- Incrementada verificação somente leitura das Security Rules **efetivamente publicadas** para comparar com o arquivo do repositório, antes de qualquer substituição.
+- Pendente: confirmar Rules remotas, IAM/Functions, habilitar allowlist do backend, publicar Preview atualizado, validar moto→entregador→cliente→NF fictícia após relogin. Nenhum deploy de backend ou live foi feito nesta etapa.
