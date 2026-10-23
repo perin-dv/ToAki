@@ -13,8 +13,18 @@ service cloud.firestore {
     function funcionarioPath(empresaId) {
       return /databases/$(database)/documents/empresas/$(empresaId)/funcionarios/$(request.auth.uid);
     }
+    // A exceção só admite uma conta que o Admin SDK marcou explicitamente
+    // como testadora e somente no tenant Soma fictício; não afeta empresas reais.
+    function identidadeEmpresa(empresaId) {
+      return verificado() || (
+        request.auth != null
+        && empresaId == 'empresa_teste_soma'
+        && request.auth.token.toaki_sandbox_tester == true
+        && request.auth.token.empresa_id == empresaId
+      );
+    }
     function funcionario(empresaId) {
-      return verificado()
+      return identidadeEmpresa(empresaId)
         && exists(funcionarioPath(empresaId))
         && get(funcionarioPath(empresaId)).data.ativo == true;
     }

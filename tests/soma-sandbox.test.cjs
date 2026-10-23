@@ -50,7 +50,8 @@ test("workflow de provisionamento manual não expõe email nem roda em PR",()=>{
  assert.match(script,/process\.env\.TOAKI_CONFIRMACAO===AUTORIZACAO/);
  assert.match(script,/getUserByEmail\(EMAIL_PROPRIETARIO\)/);
  assert.match(script,/!usuario\.disabled/);
- assert.match(script,/usuario\.emailVerified===true/);
+ assert.doesNotMatch(script,/garantir\(usuario\.emailVerified===true/);
+ assert.match(script,/toaki_sandbox_tester:true/);
  assert.match(script,/empresa\.cnpj|cnpj:null/);
  assert.match(script,/modo==="verificar"/);
 });
@@ -75,7 +76,7 @@ test("falhas de verificação indicam motivo sanitizado sem imprimir a conta ou 
  const script=fs.readFileSync("scripts/preparar-soma-testes.cjs","utf8");
  assert.match(workflow,/Secret TOAKI_EMAIL_PROPRIETARIO_SOMA ausente/);
  for(const motivo of [
-  "secret_email_soma_ausente_ou_invalido","conta_nao_encontrada","email_nao_verificado",
+  "secret_email_soma_ausente_ou_invalido","conta_nao_encontrada",
   "sem_permissao_firebase","conta_ja_vinculada_outra_empresa","credencial_projeto_incorreto"
  ])assert.ok(script.includes(motivo),"diagnóstico ausente: "+motivo);
  assert.match(script,/codigoSeguroDoErro\(error\)/);
@@ -86,4 +87,25 @@ test("falhas de verificação indicam motivo sanitizado sem imprimir a conta ou 
  assert.equal(r.status,1);
  assert.match(r.stderr,/"motivo":"credencial_ausente"/);
  assert.doesNotMatch(r.stderr,/@|hotmail|gmail|private_key|at Object/);
+});
+
+test("sandbox sem verificação não concede qualquer acesso a empresas reais",()=>{
+ const {podeOperarEmpresa}=require("../functions/acesso-identidade.cjs");
+ const claims={email_verified:false,empresa_id:EMPRESA_TESTE_SOMA,toaki_sandbox_tester:true};
+ assert.equal(podeOperarEmpresa({empresaId:EMPRESA_TESTE_SOMA,claims}),true);
+ assert.equal(podeOperarEmpresa({empresaId:"empresa_11222333000181",claims}),false);
+ assert.equal(podeOperarEmpresa({empresaId:EMPRESA_TESTE_SOMA,claims:{email_verified:false}}),false);
+ assert.equal(podeOperarEmpresa({empresaId:EMPRESA_TESTE_SOMA,claims:{...claims,empresa_id:"empresa_11222333000181"}}),false);
+ assert.equal(podeOperarEmpresa({empresaId:"empresa_11222333000181",claims:{email_verified:true}}),true);
+ const code=fs.readFileSync("scripts/preparar-soma-testes.cjs","utf8");
+ const frontend=fs.readFileSync("src/lib/operacaoEmpresa.ts","utf8");
+ const guards=fs.readFileSync("src/components/PrivateRoute.tsx","utf8");
+ const firestore=fs.readFileSync("firestore.rules","utf8");
+ assert.match(code,/toaki_sandbox_tester:true/);
+ assert.match(code,/emailConfirmado:usuario\.emailVerified===true/);
+ assert.match(frontend,/token\.claims\.toaki_sandbox_tester===true/);
+ assert.match(guards,/area==="empresa" && sandboxTester/);
+ assert.match(firestore,/request\.auth\.token\.toaki_sandbox_tester == true/);
+ assert.match(firestore,/empresaId == 'empresa_teste_soma'/);
+ assert.match(firestore,/request\.auth\.token\.empresa_id == empresaId/);
 });

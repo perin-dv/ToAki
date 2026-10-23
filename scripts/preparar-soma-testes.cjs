@@ -49,7 +49,8 @@ async function main(){
   garantir(typeof EMAIL_PROPRIETARIO==="string"&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(EMAIL_PROPRIETARIO),"secret_email_soma_ausente_ou_invalido");
   const usuario=await auth.getUserByEmail(EMAIL_PROPRIETARIO);
   garantir(!usuario.disabled,"conta_desabilitada");
-  garantir(usuario.emailVerified===true,"email_nao_verificado");
+  // Somente sandbox fictício: e-mail não precisa ser confirmado.
+  // A identidade é selecionada pelo secret privado e custom claim exclusivo.
   const antigas=usuario.customClaims||{};
   garantir(!antigas.role||["cliente","dono_empresa"].includes(antigas.role),"papel_existente_incompativel");
   garantir(!antigas.empresa_id||antigas.empresa_id===EMPRESA_TESTE_SOMA,"conta_ja_vinculada_outra_empresa");
@@ -67,8 +68,8 @@ async function main(){
     membro.data().papel==="dono_empresa"&&membro.data().ativo===true,
     "vinculo_incompativel");
   if(modo==="verificar"){
-    process.stdout.write(JSON.stringify({projeto:PROJETO,contaEncontra:true,emailConfirmado:true,
-      sandboxExiste:empresa.exists,vinculoExiste:membro.exists,modo:"somente_leitura"})+"\n");
+    process.stdout.write(JSON.stringify({projeto:PROJETO,contaEncontra:true,
+      emailConfirmado:usuario.emailVerified===true,sandboxExiste:empresa.exists,vinculoExiste:membro.exists,modo:"somente_leitura"})+"\n");
     return;
   }
   await db.runTransaction(async tx=>{
@@ -97,9 +98,10 @@ async function main(){
       });
     }
   });
-  // Claims emitidas apenas para conta existente verificada, após criar vínculo verificável.
+  // Claim exclusiva para sandbox e conta existente não desabilitada, após vínculo controlado.
   await auth.setCustomUserClaims(usuario.uid,{
-    ...antigas,role:"dono_empresa",empresa_id:EMPRESA_TESTE_SOMA
+    ...antigas,role:"dono_empresa",empresa_id:EMPRESA_TESTE_SOMA,
+    toaki_sandbox_tester:true
   });
   process.stdout.write(JSON.stringify({projeto:PROJETO,sandbox:"Soma — Testes",
     modo:"provisionamento_confirmado",semCnpj:true,contaAssociada:true})+"\n");
