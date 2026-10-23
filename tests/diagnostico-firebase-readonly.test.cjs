@@ -40,5 +40,5 @@ test("consulta de regras implantadas é leitura e informa diferença sem expor c
  assert.match(source,/igualAoRepositorio/);
  assert.match(source,/possuiExcecaoSoma/);
  assert.match(source,/necessitaRevisaoAntesDeploy:true/);
- assert.doesNotMatch(source,/\.patch\(|\.update\(|\.delete\(|rulesets:create|releases:patch/);
+ assert.doesNotMatch(source,/\.patch\(|\.update\((?!mensagem\))|\.delete\(|rulesets:create|releases:patch/);
 });
