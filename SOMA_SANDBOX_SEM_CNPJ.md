@@ -61,3 +61,14 @@ O responsável já definiu que **não deve haver confirmação de e-mail para co
 - Firestore Rules foram adaptadas **somente no código** para aceitar conta não verificada quando `empresaId == empresa_teste_soma`, a claim `toaki_sandbox_tester == true` e `empresa_id` coincidem, e existe associação ativa em `empresas/empresa_teste_soma/funcionarios/{uid}`. Sem a claim, membros de teste não acessam dados, e as empresas reais continuam exigindo verificação.
 - Os dois callables operacionais aplicam a mesma condição para a identidade antes de consultar registros, e continuam validando tenant piloto, allowlist e papel.
 - **Atenção:** o merge de código não publica Rules, Functions nem Hosting. Até uma implantação separada, autorizada e confirmada, o Preview continuará usando a configuração remota anterior. Nenhuma conta foi alterada automaticamente.
+
+## Correção complementar de cadastros e pré-checagem da implantação
+
+Após a confirmação de provisionamento, foram identificados bloqueios residuais no frontend:
+- `src/lib/operacaoEmpresa.ts`: criar e alterar validavam apenas `empresa_<CNPJ>`, embora a consulta já aceitasse o identificador `empresa_teste_soma`. Agora usam a mesma `identificadorEmpresaValido` do fluxo de leitura.
+- `src/pages/ColecaoEmpresaPage.tsx`: histórico, funcionários e comprovantes usam `identificadorEmpresaValido`, evitando rejeitar o sandbox.
+- Teste de regressão adicionado para garantir que o ID de sandbox é aceito nos caminhos de CRUD sem aceitar empresas arbitrárias.
+
+Antes de ativar o acesso operacional no Preview, o diagnóstico manual `.github/workflows/firebase-diagnostico-readonly.yml` agora consulta **em modo leitura** o Release `cloud.firestore` e o respectivo Ruleset. Retorna somente `regrasFirestore.status`, `igualAoRepositorio` e `possuiExcecaoSoma`, **sem revelar o código remoto**.
+
+**Importante:** deploy no Firebase ainda NÃO executado. A conta pode ter recebido a claim e vínculo, mas o Preview antigo não contém essas correções de frontend e as regras publicadas podem continuar sem a exceção de sandbox. Mesmo que o diagnóstico diga que a exceção já está presente, ainda é preciso confirmar Functions implantadas e seus parâmetros de allowlist antes de testar gravações. Não usar dados de clientes reais no sandbox.
