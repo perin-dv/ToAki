@@ -3,17 +3,20 @@ const {onCall,HttpsError}=require("firebase-functions/v2/https");
 const {getFirestore,FieldValue}=require("firebase-admin/firestore");
 const {validarAlteracao,validarTransicaoStatus}=require("./operacao-politica.cjs");
 const {autorizarDestinoOperacional}=require("./ambiente-operacao.cjs");
+const {podeOperarEmpresa}=require("./acesso-identidade.cjs");
 
 const colecoes={cliente:"clientes",entregador:"entregadores_vinculados",veiculo:"veiculos",pedido:"pedidos"};
 const options={region:"southamerica-east1",maxInstances:3,timeoutSeconds:45,memory:"256MiB"};
 
 exports.alterarRegistroEmpresaPiloto=onCall(options,async request=>{
-  if(!request.auth?.uid||request.auth.token.email_verified!==true)
-    throw new HttpsError("unauthenticated","Faça login e confirme seu e-mail.");
+  if(!request.auth?.uid)
+    throw new HttpsError("unauthenticated","Faça login para administrar entregas.");
   let entrada;
   try{entrada=validarAlteracao(request.data);}
   catch(e){throw new HttpsError("invalid-argument",e.message);}
   const {empresaId,tipo,registroId,acao}=entrada;
+  if(!podeOperarEmpresa({empresaId,claims:request.auth.token}))
+    throw new HttpsError("permission-denied","Sua identidade não está autorizada para esta empresa.");
   const uid=request.auth.uid;
   const db=getFirestore();
   const empresaRef=db.doc("empresas/"+empresaId);
