@@ -104,7 +104,16 @@ async function main(){
     hashOriginal:sha(arquivo.content),hashPreparado:sha(patch.texto),
     patchMinimo:patch.alterou,escopo:"funcionario(empresa_teste_soma)"
   })+"\n");
-  if(modo==="preparar")return;
+  if(modo==="preparar"){
+    const destino=process.env.TOAKI_RULES_DESTINO;
+    if(destino){
+      if(!path.isAbsolute(destino)||!destino.startsWith("/tmp/")&&!destino.startsWith("/home/runner/work/_temp/"))
+        throw Error("destino_rules_invalido");
+      fs.writeFileSync(destino,patch.texto,{encoding:"utf8",mode:0o600});
+      process.stdout.write('{"resultado":"rules_remotas_preparadas_para_emulador"}\\n');
+    }
+    return;
+  }
   if(!patch.alterou){process.stdout.write('{"resultado":"excecao_existente_sem_escrita"}\n');return;}
   // Checagem tardia contra mudanças simultâneas de release. Sem isso, abortar.
   const atual=await req(REL);
