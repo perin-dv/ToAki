@@ -14,7 +14,7 @@ export default function CompanyOnboardingPage(){
       <section className="company-onboarding-steps" aria-label="Etapas do cadastro de empresa">
         <div className="company-stage company-stage-complete"><strong>1</strong><div><b>Acesso pessoal</b><span>Conta criada no Authentication</span></div></div>
         <div className="company-stage"><strong>2</strong><div><b>Validação empresarial</b><span>{jaVinculada?"Empresa vinculada ao Firebase":"CNPJ e responsável"}</span></div></div>
-        <div className="company-stage"><strong>3</strong><div><b>Liberação</b><span>Somente após análise</span></div></div>
+        <div className="company-stage"><strong>3</strong><div><b>Liberação</b><span>{jaVinculada?"Acesso vinculado":"Somente após análise"}</span></div></div>
       </section>
       <div className="company-onboarding-grid">
         <div><CompanyRegistration/></div>
@@ -22,7 +22,7 @@ export default function CompanyOnboardingPage(){
           <h2>Por que o cadastro é diferente?</h2>
           <p>O Firebase Authentication identifica sua conta. O cadastro empresarial é salvo no Firestore, e o servidor vincula o responsável à empresa após aprovação. Quando o vínculo estiver ativo, o painel reconhece a empresa automaticamente.</p>
           <div className="account-info-row"><span>Conta pessoal</span><strong>{user?.email}</strong></div>
-          <div className="account-info-row"><span>E-mail</span><strong className={user?.emailVerified?"account-verified":"account-unverified"}>{user?.emailVerified?"Confirmado":"Não confirmado"}</strong></div>
+          <div className="account-info-row"><span>E-mail</span><strong className={user?.emailVerified?"account-verified":"account-unverified"}>{user?.emailVerified?"Confirmado":jaVinculada&&empresaId==="empresa_teste_soma"?"Dispensado para testes":"Não confirmado"}</strong></div>
           <div className="account-info-row"><span>Empresa no Firebase</span><strong>{jaVinculada?"Empresa vinculada":"Aguardando aprovação"}</strong></div>
           {!ambienteOperacional&&<div className="demo-warning" role="status">Neste Preview, a conta de usuário usa Firebase Authentication. Solicitações de empresas permanecem bloqueadas até a ativação segura do piloto.</div>}{ambientePilotoOriginal&&!jaVinculada&&<div className="demo-warning" role="status">Piloto controlado: a solicitação é gravada no Firebase e analisada antes de conceder acesso a dados comerciais.</div>}
           {!user?.emailVerified&&!jaVinculada&&<Link to="/verificar-email" state={{from:"/cadastro/empresa/dados"}} className="primary button-link">Confirmar meu e-mail →</Link>}
