@@ -19,8 +19,10 @@ const colecao:Record<TipoOperacional,string>={
 export async function empresaAutorizada(user:User):Promise<string|null>{
   exigirAmbienteOperacional();
   const token=await getIdTokenResult(user,true);
-  if(!user.emailVerified)return null;
   const id=token.claims.empresa_id;
+  // Exceção apenas para conta previamente habilitada por administrador no sandbox.
+  const sandbox=(id==="empresa_teste_soma"&&token.claims.toaki_sandbox_tester===true);
+  if(!user.emailVerified&&!sandbox)return null;
   return typeof id==="string" && identificadorEmpresaValido(id)?id:null;
 }
 function converterRegistro(doc:{id:string;data:()=>DocumentData}):RegistroOperacional{
