@@ -1,0 +1,116 @@
+name: ATIVAR FASE B SOMA - Functions, Rules e Preview (manual)
+
+# Uma única execução MANUAL. NÃO publica Hosting live. As Rules vêm do Firebase
+# remoto; o código apenas insere exceção estrita do tenant fictício Soma.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: toaki-ativacao-fase-b
+  cancel-in-progress: false
+
+jobs:
+  ativar:
+    name: Ativar Soma piloto (sem Hosting live)
+    if: github.repository == 'perin-dv/ToAki' && github.ref == 'refs/heads/main' && github.actor == github.repository_owner
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      VITE_TOAKI_ENV: piloto
+      VITE_TOAKI_PILOTO_NO_ORIGINAL: habilitado
+      VITE_FIREBASE_PROJECT_ID: toaki-cf058
+      VITE_ENABLE_ADMIN_APPROVAL: 'false'
+      TOAKI_CONFIRMAR_ATIVACAO: ATIVAR_SOMA_FASE_B
+    steps:
+      - name: Usar somente código revisado da main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Conferir stack e testar código sem credenciais
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs=require('node:fs');
+          const cfg=JSON.parse(fs.readFileSync('firebase.json','utf8'));
+          const id=JSON.parse(fs.readFileSync('.firebaserc','utf8')).projects.default;
+          if(id!=='toaki-cf058'||cfg.hosting.public!=='dist'||
+             !cfg.functions||!cfg.firestore)process.exit(1);
+          NODE
+          npm install --no-audit --no-fund
+          npm --prefix functions install --no-audit --no-fund --ignore-scripts
+          npm test
+          npm run build
+      - name: Carregar credencial Firebase com escopo de projeto conferido
+        shell: bash
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TOAKI_CF058 }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$FIREBASE_SERVICE_ACCOUNT_JSON" ]]; then
+            echo "::error::Secret da conta de serviço Firebase não disponível."
+            exit 1
+          fi
+          umask 077
+          CRED="$RUNNER_TEMP/toaki-fase-b-firebase.json"
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$CRED"
+          unset FIREBASE_SERVICE_ACCOUNT_JSON
+          node -e 'const fs=require("fs");const x=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));if(x.project_id!=="toaki-cf058"||x.type!=="service_account")process.exit(1)' "$CRED"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$CRED" >> "$GITHUB_ENV"
+      - name: Consultar regras remotas, preservar conteúdo e preparar patch mínimo
+        shell: bash
+        run: |
+          set -euo pipefail
+          export TOAKI_RULES_DESTINO="$RUNNER_TEMP/toaki-soma-rules-emulador.rules"
+          node scripts/ativar-regras-soma.cjs preparar
+          test -s "$TOAKI_RULES_DESTINO"
+          # APENAS no runner: arquivos originais do repositório não são alterados.
+          cp firestore.rules "$RUNNER_TEMP/toaki-rules-repositorio.rules"
+          cp "$TOAKI_RULES_DESTINO" firestore.rules
+      - name: Testar REGRAS REMOTAS + exceção Soma no Firestore Emulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run test:security
+          # Nenhuma falha das regras atuais pode ser ignorada.
+          cp "$RUNNER_TEMP/toaki-rules-repositorio.rules" firestore.rules
+      - name: Implantar SOMENTE as duas funções operacionais do piloto
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          ENV_FILE="functions/.env.toaki-cf058"
+          trap 'rm -f "$ENV_FILE"' EXIT
+          printf '%s\n' 'TOAKI_PILOTO_NO_ORIGINAL=habilitado' 'TOAKI_PILOTO_EMPRESAS=empresa_teste_soma' > "$ENV_FILE"
+          # Sem --force: jamais deletar outras Cloud Functions do projeto.
+          npx firebase deploy --only functions:operarEmpresaHomologacao,functions:alterarRegistroEmpresaPiloto --project toaki-cf058 --non-interactive
+      - name: Aplicar somente a exceção da Soma nas regras REMOTAS
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/ativar-regras-soma.cjs ativar
+          echo '### Firestore Rules' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Exceção restrita da Soma, preservando o Ruleset remoto original para referência/rollback.' >> "$GITHUB_STEP_SUMMARY"
+      - name: Publicar Hosting APENAS no Preview Fase B
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx firebase hosting:channel:deploy fase-b-web --project toaki-cf058 --expires 7d --non-interactive
+          echo '### Preview da Fase B' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Deploy exclusivamente no canal fase-b-web. Hosting LIVE NÃO foi alterado.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Empresa habilitada: empresa_teste_soma. Nenhum CNPJ real foi ativado.' >> "$GITHUB_STEP_SUMMARY"
+      - name: Apagar credencial temporária
+        if: always()
+        shell: bash
+        run: |
+          if [[ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ]]; then
+            rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
+          fi
+          rm -f "$RUNNER_TEMP/toaki-soma-rules-emulador.rules" "$RUNNER_TEMP/toaki-rules-repositorio.rules"
