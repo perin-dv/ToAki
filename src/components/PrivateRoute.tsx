@@ -1,7 +1,7 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth, type UserRole } from "../auth/AuthProvider";
 import type { ReactNode } from "react";
-type Area="empresa"|"admin"|"cliente"|"demo";
+type Area="empresa"|"admin"|"cliente"|"demo"|"motoboy";
 const companyRoles: UserRole[]=["dono_empresa","gestor","vendedor"];
 export default function PrivateRoute({area,children}:{area:Area; children:ReactNode}) {
   const {user,role,sandboxTester,loading}=useAuth();
@@ -14,6 +14,7 @@ export default function PrivateRoute({area,children}:{area:Area; children:ReactN
   const allowed=area==="demo"?true
     :area==="empresa"?!!role && companyRoles.includes(role)
     :area==="admin"?role==="admin_toaki"
+    :area==="motoboy"?role==="entregador"
     :role===null || role==="cliente";
   if(!allowed) return <Navigate to="/acesso-pendente" replace/>;
   return <>{children}</>;
