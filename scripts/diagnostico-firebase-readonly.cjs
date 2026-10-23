@@ -76,12 +76,14 @@ async function main(){
     throw Error("Credencial de projeto diferente ou formato inválido.");
   const resultado={
     projeto:PROJECT,somenteMetadados:true,
-    firestore:{status:"nao_verificado"},functions:{status:"nao_verificado"}
+    firestore:{status:"nao_verificado"},functions:{status:"nao_verificado"},
+    regrasFirestore:{status:"nao_verificado"}
   };
   const token=await tokenSomenteLeitura(cred);
   if(token.status!=="ok"){
     resultado.firestore={status:token.status};
     resultado.functions={status:token.status};
+    resultado.regrasFirestore={status:token.status};
     report(resultado);return;
   }
   try{
@@ -112,6 +114,38 @@ async function main(){
         paginacaoIncompleta:!!response.body.nextPageToken};
     }else resultado.functions={status:response.status};
   }catch{resultado.functions={status:"indisponivel"};}
+  // As regras remotas são consultadas APENAS em memória; nunca são exibidas em logs.
+  // Nenhum Release ou Ruleset é criado/atualizado neste diagnóstico.
+  try{
+    const rel=await metadados(
+      "https://firebaserules.googleapis.com/v1/projects/"+PROJECT+
+      "/releases/cloud.firestore",token.value);
+    if(rel.status!=="ok"){
+      resultado.regrasFirestore={status:rel.status};
+    }else{
+      const nome=rel.body?.rulesetName;
+      if(typeof nome!=="string"||!/^projects\/toaki-cf058\/rulesets\/[A-Za-z0-9_-]+$/.test(nome)){
+        resultado.regrasFirestore={status:"indisponivel"};
+      }else{
+        const ruleset=await metadados("https://firebaserules.googleapis.com/v1/"+nome,token.value);
+        if(ruleset.status!=="ok"){
+          resultado.regrasFirestore={status:ruleset.status};
+        }else{
+          const arquivos=ruleset.body?.source?.files;
+          const conteudos=Array.isArray(arquivos)?arquivos
+            .filter(x=>typeof x?.content==="string").map(x=>x.content):[];
+          const regrasLocais=fs.readFileSync(path.resolve(__dirname,"../firestore.rules"),"utf8");
+          resultado.regrasFirestore={
+            status:"ok",
+            igualAoRepositorio:conteudos.some(c=>c.trim().replace(/\r\n/g,"\n")===regrasLocais.trim().replace(/\r\n/g,"\n")),
+            possuiExcecaoSoma:conteudos.some(c=>c.includes("toaki_sandbox_tester")&&c.includes("empresa_teste_soma")),
+            // O acesso ao backend não fica liberado por este booleano.
+            necessitaRevisaoAntesDeploy:true
+          };
+        }
+      }
+    }
+  }catch{resultado.regrasFirestore={status:"indisponivel"};}
   report(resultado);
 }
 main().catch(()=>{
