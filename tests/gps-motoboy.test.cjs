@@ -42,7 +42,9 @@ test("GPS rejeita coordenadas inválidas, imprecisas ou antigas",()=>{
 });
 test("login direciona entregador para área segura sem mudar cadastro empresarial",()=>{
  const auth=load("src/pages/AuthPages.tsx");
- assert.match(auth,/token.claims.role==="entregador"\?"\/motoboy"/);
+ assert.match(auth,/token.claims.role==="entregador"/);
+ assert.match(auth,/navigate\("\/motoboy",\{replace:true\}\)/);
+ assert.match(auth,/navigate\(returnTo,\{replace:true\}\)/);
  assert.match(auth,/location.state\?\.from==="\/cadastro\/empresa\/dados"/);
 });
 
