@@ -77,6 +77,23 @@ export function useAuth() {
   return ctx;
 }
 
+/** Somente modo e2e LOCAL: simula papel de entregador para ensaiar a UI GPS
+ *  sem autenticar no Firebase ou gravar no banco. A rota não existe em builds normais. */
+export function ContaTesteMotoboyProvider({children}:{children:ReactNode}) {
+  const falso={
+    uid:"e2e-motoboy-local",
+    email:"motoboy-local@example.test",
+    displayName:"Motoboy de teste",
+    emailVerified:true,
+    metadata:{creationTime:"2026-10-25T10:00:00.000Z"}
+  } as User;
+  const value:AuthState={
+    user:falso,role:"entregador",empresaId:null,sandboxTester:false,
+    loading:false,refreshClaims:async()=>{}
+  };
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
 /** E2E: somente importado em builds --mode e2e. Não autentica usuários nem acessa Firestore. */
 export function ContaTesteProvider({children}:{children:ReactNode}) {
   const falso={
