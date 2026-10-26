@@ -23,6 +23,7 @@ npm.cmd run dev -- --mode e2e
 Abra no **mesmo computador**: `http://localhost:5173/__e2e_motoboy`.
 
 - Clique em **Ativar GPS neste aparelho** e permita a localização. Navegador e Windows devem estar com a permissão de localização habilitada.
+- No computador, a localização pode ser aproximada (Wi-Fi/IP). Para testar o GPS físico do celular, será necessário posteriormente um Preview HTTPS ou um túnel HTTPS seguro.
 - O endereço `/__e2e_motoboy` existe **exclusivamente no modo e2e local**; usa uma identidade de interface simulada para inspecionar o GPS **sem autenticar usuário real e sem criar permissões no Firebase**.
 - Pare a leitura com **Desligar GPS**. Ao sair da tela, a localização é interrompida.
 - Para conferir a interface demonstrativa: `http://localhost:5173/__e2e_demonstracao`. A tela `/inicio` real exige login Firebase e só habilita operações após as regras/Functions serem implantadas.
