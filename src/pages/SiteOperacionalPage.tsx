@@ -5,6 +5,7 @@ import {Link,useNavigate} from "react-router-dom";
 import {db,auth} from "../lib/firebase";
 import {useAuth} from "../auth/AuthProvider";
 import Brand from "../components/Brand";
+import MapaGpsAparelho from "../components/MapaGpsAparelho";
 import MenuIcon from "../components/MenuIcon";
 import EmpresaOperacao from "./EmpresaOperacao";
 import ColecaoEmpresaPage from "./ColecaoEmpresaPage";
@@ -167,6 +168,7 @@ export default function SiteOperacionalPage(){
           <button type="button" className="secondary" disabled={atualizandoAcesso} onClick={()=>void atualizarAcesso()}>{atualizandoAcesso?"Consultando Firebase...":"Verificar se minha empresa foi aprovada"}</button></section>}
         {empresaId&&!empresaDisponivel&&!erro&&<p role="status">Carregando empresa diretamente do Firebase...</p>}
         {erro&&<p role="alert" className="form-error">{erro}</p>}
+        {secao==="inicio"&&<MapaGpsAparelho/>}
         {destinosAutorizados&&secao==="inicio"&&<>
           <div className="stats">
             {([["📋",registros.length,"NFs carregadas"],["🛵",emRota,"Em rota"],["✅",entregues,"Entregues"],["⏱",pendentes,"Pendentes"]] as const).map(([icone,quantidade,rotulo])=>
