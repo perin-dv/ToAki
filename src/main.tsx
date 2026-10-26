@@ -17,7 +17,6 @@ function App() {
   return <BrowserRouter><AuthProvider><Routes>
     <Route path="/" element={<PublicHomePage/>}/>
     <Route path="/inicio" element={<PrivateRoute area="demo"><SiteOperacionalPage/></PrivateRoute>}/>
-    <Route path="/demonstracao" element={<PrivateRoute area="demo"><DemoPage/></PrivateRoute>}/>
     {import.meta.env.MODE === "e2e" && <Route path="/__e2e_demonstracao" element={<DemoPage/>}/>}
     {import.meta.env.MODE === "e2e" && <Route path="/__e2e_conta" element={<ContaTesteProvider><CustomerPage/></ContaTesteProvider>}/> }
     {import.meta.env.MODE === "e2e" && <Route path="/__e2e_inicio" element={<ContaTesteProvider><DemoPage/></ContaTesteProvider>}/>}

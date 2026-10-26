@@ -15,7 +15,7 @@ import {EMPRESA_TESTE_SOMA} from "../lib/empresaId";
 import {ambienteOperacional} from "../lib/ambiente";
 import {empresaAutorizada,type RegistroOperacional,type TipoOperacional} from "../lib/operacaoEmpresa";
 
-// Esta página é a operação REAL. Dados demonstrativos pertencem exclusivamente a /demonstracao.
+// Esta página apresenta somente dados operacionais autorizados; a simulação técnica é restrita ao modo e2e local.
 const menu=[
   {key:"inicio",name:"Início",icon:"inicio"},
   {key:"entregas",name:"Entregas e NFs",icon:"entregas"},
@@ -158,7 +158,7 @@ export default function SiteOperacionalPage(){
         <div className="demo-head"><div><h1>{secao==="inicio"?"Central de rastreamento":secaoNome}</h1><p>{nomeEmpresa?`Empresa: ${nomeEmpresa} · Firebase`:"Painel operacional — informações do Firebase autorizado"}</p></div>
           <div className="head-right"><Link to={role==="admin_toaki"?"/admin":acessoEmpresa?"/empresa":"/cliente"} className="secondary">Minha conta</Link><button className="secondary" type="button" disabled={saindo} onClick={()=>void sair()}>{saindo?"Saindo...":"Sair"}</button></div>
         </div>
-        {!ambienteOperacional&&<div className="demo-warning" role="status">A integração operacional com o Firebase ainda não foi habilitada. Nenhum dado fictício está sendo exibido como entrega real. <Link to="/demonstracao">Ver demonstração separada</Link>.</div>}
+        {!ambienteOperacional&&<div className="demo-warning" role="status">A integração operacional com o Firebase ainda não foi habilitada. Nenhum dado fictício está sendo exibido como entrega real. O mapa do GPS deste aparelho continua disponível acima.</div>}
         {role==="entregador"&&<section className="panel content-panel"><h2>Área do motoboy</h2><p>Confira o GPS do seu celular, com autorização e sem envio automático de localização.</p><Link className="primary button-link" to="/motoboy">Abrir GPS do motoboy →</Link></section>}
         {ambienteOperacional&&!acessoEmpresa&&<section className="panel content-panel"><h2>Você ainda não tem um painel empresarial autorizado</h2><p>As entregas só aparecem após aprovação da empresa e vínculo da sua conta. Não mostramos dados de outras empresas.</p>
           {role==="admin_toaki"?<Link className="primary button-link" to="/admin">Abrir administração</Link>:<Link className="primary button-link" to="/cadastro/empresa/dados">Solicitar cadastro de empresa</Link>}

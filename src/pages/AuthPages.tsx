@@ -47,7 +47,7 @@ export function LoginPage() {
     <button className="primary" disabled={busy}>{busy?"Entrando...":"Entrar"}</button></form>
     <p className="auth-footer">Ainda não tem conta? <Link to="/cadastro">Criar conta</Link></p>
     <p className="helper">Já tem cadastro no Firebase Authentication? Use Entrar com o mesmo e-mail e senha. Criar conta é somente para novos usuários. O acesso empresarial exige autorização específica.</p>
-    <p className="helper">Após entrar, você será direcionado à página inicial do toAki. O painel demonstrativo continua separado dos dados reais.</p>
+    <p className="helper">Após entrar, você será direcionado à página inicial do toAki. Após entrar, você verá apenas informações que sua conta está autorizada a acessar.</p>
   </Layout>;
 }
 export function RegisterChoicePage(){
