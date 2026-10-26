@@ -33,3 +33,22 @@ Esta branch não altera `firestore.rules`, Cloud Functions, Hosting, dados, clai
 
 ## Pendência anterior da Fase B
 O último deploy tentado, GitHub Actions [#40001069587](https://github.com/perin-dv/ToAki/actions/runs/40001069587), foi bloqueado por falta de `iam.serviceAccounts.ActAs` na conta `toaki-cf058@appspot.gserviceaccount.com` para a credencial de implantação. A resolução de IAM é independente da criação desta interface. Não repetir esse workflow enquanto houver bloqueio.
+
+## Testar sem publicar e sem exigir perfil Firebase (25/10/2026)
+
+No PowerShell do Windows, com Node.js 22 instalado:
+
+```powershell
+git clone --branch feature/fase-c-gps-motoboy-inicial https://github.com/perin-dv/ToAki.git
+cd ToAki
+npm.cmd install
+npm.cmd run dev -- --mode e2e
+```
+
+Abra `http://localhost:5173/__e2e_motoboy`. Essa rota só existe no modo `e2e`, usa um perfil ilustrativo de entregador em memória e não cria usuário, permissões, entregas, documentos nem GPS no Firebase. A permissão de geolocalização é pedida pelo navegador do próprio computador. É um ensaio local, não o aplicativo de motorista conectado.
+
+Para conferir outras telas demonstrativas, abra `http://localhost:5173/__e2e_demonstracao`; para abrir a página inicial normal, use `http://localhost:5173/`. O modo de teste não deve ser publicado em Hosting.
+
+## Limpeza de documentação
+
+O `README.md` foi atualizado para refletir a stack React/Vite/Firebase. Sete documentos históricos foram retirados da árvore em desenvolvimento por conterem estados superados ou procedimentos incompatíveis com o projeto atual. Conteúdo e decisões continuam recuperáveis nos commits antigos; `PLANO_MVP.md`, `ROADMAP_SITE_OFICIAL.md`, guias de segurança, nomes e histórico essencial da Soma foram mantidos.
