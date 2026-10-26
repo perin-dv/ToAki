@@ -33,10 +33,11 @@ export function LoginPage() {
     const {user}=await signInWithEmailAndPassword(auth,email.trim(),password);
     await user.reload();
     const token=await user.getIdTokenResult(true);
-    const destino=location.state?.from==="/cadastro/empresa/dados"?"/cadastro/empresa/dados":
-      location.state?.from==="/motoboy"?"/motoboy":
-      token.claims.role==="entregador"?"/motoboy":"/inicio";
-    navigate(destino,{replace:true});
+    if(token.claims.role==="entregador" && location.state?.from!=="/cadastro/empresa/dados"){
+      navigate("/motoboy",{replace:true});
+    }else{
+      navigate(returnTo,{replace:true});
+    }
   }catch(e){setError(message(e))}finally{setBusy(false)}};
   return <Layout title="Entrar no toAki" description="Acesse usando seu e-mail e senha."><form className="stack" onSubmit={submit}>
     <label>E-mail<input required type="email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} placeholder="voce@exemplo.com"/></label>
