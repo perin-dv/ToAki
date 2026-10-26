@@ -1,7 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { AuthProvider, ContaTesteProvider } from "./auth/AuthProvider";
+import { AuthProvider, ContaTesteProvider, ContaTesteMotoboyProvider } from "./auth/AuthProvider";
 import PrivateRoute from "./components/PrivateRoute";
 import { LoginPage, RegisterPage, RegisterChoicePage, PasswordPage, VerifyEmailPage, PendingPage } from "./pages/AuthPages";
 import { PublicHomePage } from "./pages/HomePages";
@@ -22,6 +22,7 @@ function App() {
     {import.meta.env.MODE === "e2e" && <Route path="/__e2e_conta" element={<ContaTesteProvider><CustomerPage/></ContaTesteProvider>}/> }
     {import.meta.env.MODE === "e2e" && <Route path="/__e2e_inicio" element={<ContaTesteProvider><DemoPage/></ContaTesteProvider>}/>}
     {import.meta.env.MODE === "e2e" && <Route path="/__e2e_site_real" element={<ContaTesteProvider><SiteOperacionalPage/></ContaTesteProvider>}/>}
+    {import.meta.env.MODE === "e2e" && <Route path="/__e2e_motoboy" element={<ContaTesteMotoboyProvider><GpsMotoboyPage/></ContaTesteMotoboyProvider>}/>}
     <Route path="/login" element={<LoginPage/>}/>
     <Route path="/cadastro" element={<RegisterChoicePage/>}/>
     <Route path="/cadastro/cliente" element={<RegisterPage tipo="cliente"/>}/>
