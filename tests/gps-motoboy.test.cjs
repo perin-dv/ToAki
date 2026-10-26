@@ -45,3 +45,13 @@ test("login direciona entregador para área segura sem mudar cadastro empresaria
  assert.match(auth,/token.claims.role==="entregador"\?"\/motoboy"/);
  assert.match(auth,/location.state\?\.from==="\/cadastro\/empresa\/dados"/);
 });
+
+test("teste local do GPS existe somente no modo e2e e não cria permissão no Firebase",()=>{
+ const main=load("src/main.tsx"),auth=load("src/auth/AuthProvider.tsx");
+ assert.match(main,/import.meta.env.MODE === "e2e" && <Route path="\/__e2e_motoboy"/);
+ assert.match(main,/<ContaTesteMotoboyProvider><GpsMotoboyPage\/><\/ContaTesteMotoboyProvider>/);
+ assert.match(auth,/export function ContaTesteMotoboyProvider/);
+ assert.match(auth,/role:"entregador",empresaId:null,sandboxTester:false/);
+ assert.match(auth,/uid:"e2e-motoboy-local"/);
+ assert.doesNotMatch(auth.split("export function ContaTesteMotoboyProvider")[1].split("export function ContaTesteProvider")[0],/setCustomUserClaims|setDoc\(|updateDoc\(/);
+});
