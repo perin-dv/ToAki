@@ -7,6 +7,7 @@
 const fs=require("node:fs");
 const path=require("node:path");
 const {createSign}=require("node:crypto");
+const {identificarContaServico}=require("./identificar-conta-github.cjs");
 
 const PROJECT="toaki-cf058";
 const COLECOES=[
@@ -76,6 +77,8 @@ async function main(){
     throw Error("Credencial de projeto diferente ou formato inválido.");
   const resultado={
     projeto:PROJECT,somenteMetadados:true,
+    // Apenas categoria conhecida da identidade usada pelo GitHub Actions; nunca email ou chave.
+    contaGitHubActions:identificarContaServico(cred.client_email),
     firestore:{status:"nao_verificado"},functions:{status:"nao_verificado"},
     regrasFirestore:{status:"nao_verificado"}
   };
