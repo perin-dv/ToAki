@@ -5,7 +5,9 @@ test("Painel operacional mostra dados reais ou estado de autorização, nunca en
   await expect(page.getByRole("heading",{name:"Central de rastreamento"})).toBeVisible();
   await expect(page.getByText(/nenhum dado fictício está sendo exibido/i)).toBeVisible();
   await expect(page.getByRole("button",{name:"Sair"})).toBeVisible();
-  await expect(page.getByRole("link",{name:/ver demonstração separada/i})).toHaveAttribute("href","/demonstracao");
+  await expect(page.getByRole("link",{name:/ver demonstração separada/i})).toHaveCount(0);
+  await expect(page.getByRole("heading",{name:"GPS do meu aparelho"})).toBeVisible();
+  await expect(page.getByRole("button",{name:"Ativar GPS e abrir mapa"})).toBeVisible();
   await expect(page.getByText("NF 0045821")).toHaveCount(0);
   await expect(page.getByLabel("Mapa demonstrativo ilustrativo, sem GPS real")).toHaveCount(0);
 });

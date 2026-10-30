@@ -57,3 +57,21 @@ test("teste local do GPS existe somente no modo e2e e não cria permissão no Fi
  assert.match(auth,/uid:"e2e-motoboy-local"/);
  assert.doesNotMatch(auth.split("export function ContaTesteMotoboyProvider")[1].split("export function ContaTesteProvider")[0],/setCustomUserClaims|setDoc\(|updateDoc\(/);
 });
+
+test("mapa no inicio usa GPS verdadeiro do proprio dispositivo sem exigir moto, NF ou piloto ativo",()=>{
+ const site=load("src/pages/SiteOperacionalPage.tsx");
+ const mapa=load("src/components/MapaGpsAparelho.tsx");
+ const css=load("src/styles.css");
+ assert.ok(site.includes('secao==="inicio"&&<MapaGpsAparelho/>'));
+ assert.ok(mapa.includes("navigator.geolocation.watchPosition"));
+ assert.ok(mapa.includes("window.isSecureContext"));
+ assert.ok(mapa.includes("onClick={iniciar}"));
+ assert.ok(mapa.includes("validarPontoGps(posicao.coords,posicao.timestamp)"));
+ assert.ok(mapa.includes("navigator.geolocation.clearWatch"));
+ assert.ok(mapa.includes('document.visibilityState==="hidden"'));
+ assert.ok(mapa.includes("https://www.google.com/maps?q="));
+ assert.ok(mapa.includes("Google Maps a recebê-la"));
+ assert.ok(mapa.includes("não a transmite à empresa"));
+ assert.doesNotMatch(mapa,/httpsCallable|setDoc|addDoc|updateDoc|sendBeacon/);
+ assert.ok(css.includes("gps-local-frame"));
+});

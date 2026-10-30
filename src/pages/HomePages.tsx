@@ -64,7 +64,6 @@ export function HomePage(){
         <Link to={isEmpresa?"/empresa":"/cadastro/empresa/dados"} className="home-feature-card"><span className="home-feature-icon"><MenuIcon name="empresa" size={24}/></span><strong>{isEmpresa?"Minha empresa":"Cadastrar empresa"}</strong><p>{isEmpresa?"Consulte seu vínculo empresarial e as permissões.":"Seu CNPJ segue um processo separado do cadastro de cliente."}</p><span className="home-card-more">Acessar →</span></Link>
       </div>
       <PwaPilotCard/>
-      <section className="home-demo-strip"><div><strong>Experimentar o painel demonstrativo</strong><p>Use o mapa e os cadastros fictícios, sem criar notas fiscais reais.</p></div><Link className="secondary button-link" to="/demonstracao">Abrir simulação →</Link></section>
       <p className="helper">A Home é seu ponto de partida depois do login. Você pode sair pelo cabeçalho a qualquer momento.</p>
     </main>
   </div>;

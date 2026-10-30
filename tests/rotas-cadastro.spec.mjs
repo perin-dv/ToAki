@@ -22,11 +22,14 @@ test("Acesso público: landing mostra escolha explícita entre cliente e empresa
 });
 
 test("Sem login nenhuma área privada é acessível por URL",async({page})=>{
-  for(const p of ["/inicio","/cliente","/empresa","/demonstracao","/cadastro/empresa/dados"]){
+  for(const p of ["/inicio","/cliente","/empresa","/cadastro/empresa/dados"]){
     await page.goto(p);
     await expect(page).toHaveURL(/\/login$/);
     await expect(page.getByRole("heading",{name:"Entrar no toAki"})).toBeVisible();
   }
+  await page.goto("/demonstracao");
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByText("MAPA FICTÍCIO")).toHaveCount(0);
 });
 
 test("Login: conta, logo, criar e recuperar têm destino correto",async({page})=>{

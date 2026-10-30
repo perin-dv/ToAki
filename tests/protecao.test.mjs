@@ -16,7 +16,7 @@ test('Fase A migrou para React com portal de empresa, cliente e administração'
   const index = file('index.html');
   const main = file('src/main.tsx');
   assert.ok(index.includes('/src/main.tsx'));
-  for (const route of ['/login','/cadastro','/empresa','/cliente','/admin','/demonstracao']) {
+  for (const route of ['/login','/cadastro','/empresa','/cliente','/admin']) {
     assert.ok(main.includes(route), 'rota faltante: ' + route);
   }
   assert.ok(existsSync(new URL('../src/pages/AuthPages.tsx', import.meta.url)));
@@ -57,13 +57,13 @@ test('Arquivos privados permanecem excluídos do Git', () => {
   for (const value of ['node_modules/', 'dist/', '.env']) assert.ok(ignore.includes(value));
 });
 
-test('Entrada pública tem escolha e demonstração é protegida', () => {
+test('Entrada pública oferece funcionalidades reais e não expõe a demonstração técnica', () => {
   const main = file('src/main.tsx');
   const login = file('src/pages/AuthPages.tsx');
   assert.ok(main.includes('<Route path="/" element={<PublicHomePage/>}/>'));
   assert.ok(main.includes('<Route path="/inicio" element={<PrivateRoute area="demo"><SiteOperacionalPage/></PrivateRoute>}/>'));
-  assert.ok(main.includes('<Route path="/demonstracao" element={<PrivateRoute area="demo"><DemoPage/></PrivateRoute>}/>'));
-  assert.ok(login.includes('O painel demonstrativo continua separado dos dados reais.'));
+  assert.ok(!main.includes('<Route path="/demonstracao"'));
+  assert.ok(login.includes('Após entrar, você verá apenas informações que sua conta está autorizada a acessar.'));
 });
 
 test('Fundo lateral preto uniforme e logo integrados no login e prototipo', () => {
@@ -75,7 +75,7 @@ test('Fundo lateral preto uniforme e logo integrados no login e prototipo', () =
   assert.ok(css.includes('.demo-sidebar,.auth-intro,.private-header,.mobile-top,.mobile-nav'));
   assert.ok(brand.includes('to={user?"/inicio":"/"}'));
   assert.ok(auth.includes('Já tem cadastro no Firebase Authentication?'));
-  assert.ok(auth.includes('O painel demonstrativo continua separado dos dados reais.'));
+  assert.ok(auth.includes('Após entrar, você verá apenas informações que sua conta está autorizada a acessar.'));
 });
 
 test('Cadastro de teste usa e-mail/senha sem link automático e protege dados empresariais', () => {
@@ -117,13 +117,13 @@ test('No celular, Menu e Mais abrem os oito modulos em lateral acessivel', () =>
   assert.ok(css.includes('touch-action:manipulation'));
 });
 
-test('Demonstracao exige sessao; icones SVG correspondem a cada modulo', () => {
+test('Demonstracao existe apenas no modo de teste técnico; icones SVG correspondem aos módulos', () => {
   const routes = file('src/main.tsx');
   const guard = file('src/components/PrivateRoute.tsx');
   const demo = file('src/pages/DemoPage.tsx');
   const icons = file('src/components/MenuIcon.tsx');
   const login = file('src/pages/AuthPages.tsx');
-  assert.ok(routes.includes('<PrivateRoute area="demo"><DemoPage/></PrivateRoute>'));
+  assert.ok(!routes.includes('<PrivateRoute area="demo"><DemoPage/></PrivateRoute>'));
   assert.ok(guard.includes('if (!user) return <Navigate to="/login"'));
   assert.ok(guard.includes('area==="demo"?true'));
   assert.ok(routes.includes('import.meta.env.MODE === "e2e"'));
@@ -183,7 +183,7 @@ test('O painel operacional não usa dados simulados ou SVG fictício no /inicio'
   const site=file('src/pages/SiteOperacionalPage.tsx');
   const demo=file('src/pages/DemoPage.tsx');
   assert.ok(main.includes('<Route path="/inicio" element={<PrivateRoute area="demo"><SiteOperacionalPage/></PrivateRoute>}/>'));
-  assert.ok(main.includes('<Route path="/demonstracao" element={<PrivateRoute area="demo"><DemoPage/></PrivateRoute>}/>'));
+  assert.ok(!main.includes('<Route path="/demonstracao"'));
   assert.ok(site.includes('onSnapshot(query(caminho,limit(50))'));
   assert.ok(site.includes('Nenhuma localização fictícia'));
   assert.ok(!site.includes('dadosIniciais('));
@@ -241,4 +241,14 @@ test("Diagnóstico do Firebase usa apenas metadados e não injeta segredo em PR"
   assert.ok(!/\.set\(|\.create\(|\.update\((?!mensagem\))|\.delete\(|setCustomUserClaims\(/.test(script));
   assert.ok(script.includes("resultado.firestore"));
   assert.ok(script.includes("resultado.functions"));
+});
+
+test('Em build normal a rota demonstrativa e os links para dados fictícios estão ausentes',()=>{
+ const main=file('src/main.tsx');
+ const site=file('src/pages/SiteOperacionalPage.tsx');
+ const home=file('src/pages/HomePages.tsx');
+ assert.ok(!main.includes('<Route path="/demonstracao"'));
+ assert.ok(main.includes('import.meta.env.MODE === "e2e" && <Route path="/__e2e_demonstracao"'));
+ assert.ok(!site.includes('to="/demonstracao"'));
+ assert.ok(!home.includes('to="/demonstracao"'));
 });

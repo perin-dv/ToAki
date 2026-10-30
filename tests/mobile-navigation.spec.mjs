@@ -51,9 +51,12 @@ test('desktop: menu lateral permanece visível', async ({page}) => {
 
 test('visitante sem login não vê o painel nem o menu', async ({browser}) => {
   const page=await browser.newPage({viewport:{width:375,height:812},isMobile:true,hasTouch:true});
-  await page.goto('/demonstracao');
+  await page.goto('/inicio');
   await expect(page).toHaveURL(/\/login$/);
   await expect(page.getByRole('heading',{name:'Entrar no toAki'})).toBeVisible();
+  // A simulação antiga não existe em builds normais.
+  await page.goto('/demonstracao');
+  await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole('navigation',{name:'Menu completo do protótipo'})).toHaveCount(0);
   await expect(page.locator('.fake-map')).toHaveCount(0);
   await page.close();
