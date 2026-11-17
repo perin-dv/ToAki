@@ -13,6 +13,7 @@ import AssinaturaEmpresaPage from "./AssinaturaEmpresaPage";
 import {EMPRESA_TESTE_SOMA} from "../lib/empresaId";
 import {ambienteOperacional} from "../lib/ambiente";
 import {empresaAutorizada,type RegistroOperacional,type TipoOperacional} from "../lib/operacaoEmpresa";
+import {mensagemErroGps} from "../lib/gpsMotoboy";
 
 // Esta página é a operação REAL. Dados demonstrativos pertencem exclusivamente a /demonstracao.
 const menu=[
@@ -42,7 +43,11 @@ export default function SiteOperacionalPage(){
   const [erro,setErro]=useState("");
   const [busca,setBusca]=useState("");
   const [nfSelecionada,setNfSelecionada]=useState<string|null>(null);
-  const [mostrarMapa,setMostrarMapa]=useState(false);
+  // Mapa SEMPRE começa por uma cidade real; GPS só é lido sob permissão.
+  const [modoMapa,setModoMapa]=useState<"cidade"|"aparelho"|"destino">("cidade");
+  const [pontoAparelho,setPontoAparelho]=useState<{lat:number;lng:number;precisao:number}|null>(null);
+  const [erroMapa,setErroMapa]=useState("");
+  const [buscandoGps,setBuscandoGps]=useState(false);
   const [saindo,setSaindo]=useState(false);
   const [atualizandoAcesso,setAtualizandoAcesso]=useState(false);
 
@@ -107,7 +112,7 @@ export default function SiteOperacionalPage(){
   },[menuAberto]);
 
   const mudarSecao=useCallback((proxima:Secao)=>{
-    setSecao(proxima);setMenuAberto(false);setMostrarMapa(false);
+    setSecao(proxima);setMenuAberto(false);setModoMapa("cidade");setErroMapa("");
   },[]);
   const voltar=(evento:MouseEvent<HTMLAnchorElement>)=>{evento.preventDefault();mudarSecao("inicio");};
   const sair=async()=>{
@@ -128,11 +133,46 @@ export default function SiteOperacionalPage(){
       setErro("Não foi possível verificar a autorização empresarial no Firebase.");
     }finally{setAtualizandoAcesso(false);}
   };
+  const localizarAparelho=()=>{
+    setErroMapa("");
+    if(!window.isSecureContext){setErroMapa("Sua localização exige acesso HTTPS.");return;}
+    if(!navigator.geolocation){setErroMapa("Este navegador não disponibiliza localização.");return;}
+    setBuscandoGps(true);
+    // Apenas leitura pontual autorizada, SEM rastreamento de entregadores ou envio ao Firebase.
+    navigator.geolocation.getCurrentPosition(pos=>{
+      const {latitude,longitude,accuracy}=pos.coords;
+      if(![latitude,longitude,accuracy].every(Number.isFinite)||
+        latitude < -90||latitude > 90||longitude < -180||longitude > 180||
+        accuracy<0){
+        setErroMapa("O aparelho retornou uma posição inválida.");
+      }else{
+        setPontoAparelho({lat:latitude,lng:longitude,precisao:Math.round(accuracy)});
+        setModoMapa("aparelho");
+      }
+      setBuscandoGps(false);
+    },erro=>{
+      setErroMapa(mensagemErroGps(erro));
+      setBuscandoGps(false);
+    },{enableHighAccuracy:true,maximumAge:0,timeout:20000});
+  };
   const pendentes=registros.filter(r=>r.status==="pendente").length;
   const emRota=registros.filter(r=>r.status==="em_rota").length;
   const entregues=registros.filter(r=>r.status==="entregue").length;
   const filtrados=registros.filter(r=>[r.numero_nf,r.endereco_entrega,r.status].join(" ").toLocaleLowerCase("pt-BR").includes(busca.toLocaleLowerCase("pt-BR")));
   const selecionada=registros.find(r=>r.id===nfSelecionada)??filtrados[0]??null;
+  const enderecoSelecionado=modoMapa==="destino"&&selecionada?.id===nfSelecionada
+    ?selecionada.endereco_entrega:null;
+  // Maringá é somente o foco inicial do mapa, NÃO a localização de um entregador.
+  const focoMapa=modoMapa==="aparelho"&&pontoAparelho
+    ?pontoAparelho.lat.toFixed(5)+","+pontoAparelho.lng.toFixed(5)
+    :enderecoSelecionado||"Maringá, Paraná, Brasil";
+  const descricaoFoco=modoMapa==="aparelho"&&pontoAparelho
+    ?"Sua posição neste aparelho"+(pontoAparelho.precisao>200?" (aproximada)":"")
+    :enderecoSelecionado
+      ?"Destino cadastrado da NF "+(selecionada?.numero_nf||"selecionada")
+      :"Maringá, PR — localização inicial do mapa";
+  const urlMapa="https://www.google.com/maps?q="+encodeURIComponent(focoMapa)
+    +"&z="+(modoMapa==="cidade"?12:16)+"&output=embed";
   const secaoNome=menu.find(m=>m.key===secao)?.name??"Início";
   const cadastroAba:Record<"entregas"|"entregadores"|"clientes",TipoOperacional>={
     entregas:"pedido",entregadores:"entregador",clientes:"cliente"
@@ -176,17 +216,26 @@ export default function SiteOperacionalPage(){
             <section className="panel map-shell">
               <div className="panel-head maphead"><h2>Mapa das entregas</h2><label className="search">⌕ <input type="search" value={busca} onChange={e=>setBusca(e.target.value)} aria-label="Buscar NFs reais" placeholder="Buscar NF ou endereço..."/></label></div>
               <div className="real-map-content">
-                {selecionada?.endereco_entrega?
-                  <><p><strong>NF {selecionada.numero_nf??selecionada.id}</strong> — {selecionada.endereco_entrega}</p>
-                  {!mostrarMapa?<div className="real-map-empty"><span>Mapa por endereço</span><p>Para evitar compartilhar o endereço com um serviço externo sem sua ação, escolha abrir o mapa.</p><button className="primary" type="button" onClick={()=>setMostrarMapa(true)}>Abrir mapa do endereço</button></div>:
-                    <iframe key={selecionada.id} className="real-map-frame" title={"Mapa do endereço da NF "+(selecionada.numero_nf??selecionada.id)} loading="lazy" referrerPolicy="no-referrer" src={"https://www.google.com/maps?q="+encodeURIComponent(selecionada.endereco_entrega)+"&output=embed"}/>}
-                  <p className="helper">Mapa baseado no endereço cadastrado; não representa localização GPS do entregador.</p></>
-                :<div className="real-map-empty"><strong>Nenhum endereço de NF disponível</strong><p>Cadastre uma entrega autorizada para visualizar o endereço no mapa. Nenhuma localização fictícia é apresentada.</p></div>}
+                <div className="real-map-toolbar">
+                  <div className="real-map-focus" role="status"><span className="real-map-focus-dot" aria-hidden="true"/> {descricaoFoco}</div>
+                  <div className="real-map-actions">
+                    <button type="button" className="secondary" disabled={buscandoGps} onClick={localizarAparelho}>{buscandoGps?"Localizando...":"Minha localização"}</button>
+                    <button type="button" className="secondary" onClick={()=>{setModoMapa("cidade");setErroMapa("");}}>Ver Maringá</button>
+                  </div>
+                </div>
+                <iframe className="real-map-frame" title={"Mapa real — "+descricaoFoco} loading="lazy" referrerPolicy="no-referrer"
+                  src={urlMapa} allowFullScreen/>
+                {erroMapa&&<p className="form-error" role="alert">{erroMapa}</p>}
+                <p className="helper real-map-disclaimer">Mapa inicial: Maringá, PR. Ao usar Minha localização, o navegador solicita permissão e o Google Maps recebe sua posição para centralizar o mapa. Ao selecionar uma NF, o Google Maps recebe o destino cadastrado. O site não envia seu GPS ao Firebase. <strong>Não é rastreamento ao vivo de motoboys.</strong></p>
               </div>
             </section>
             <div className="right">
               <section className="panel"><div className="panel-head"><h2>NFs consultadas</h2><span className="subtle">Até 50 registros</span></div>
-                {!filtrados.length?<p className="subtle">Nenhuma NF cadastrada ou encontrada.</p>:filtrados.map(r=><button type="button" key={r.id} className={"delivery "+(selecionada?.id===r.id?"selected":"")} onClick={()=>{setNfSelecionada(r.id);setMostrarMapa(false);}}>
+                {!filtrados.length?<p className="subtle">Nenhuma NF cadastrada ou encontrada.</p>:filtrados.map(r=><button type="button" key={r.id} className={"delivery "+(selecionada?.id===r.id?"selected":"")} onClick={()=>{
+                  setNfSelecionada(r.id);
+                  setModoMapa(r.endereco_entrega?"destino":"cidade");
+                  setErroMapa("");
+                }}>
                   <span className="bike">📦</span><span className="copy"><strong>NF {r.numero_nf??r.id}</strong><small>{r.endereco_entrega??"Endereço não informado"}</small></span>
                   <span className="delivery-side"><span className={"pill "+(r.status==="em_rota"?"":"muted")}>{r.status==="em_rota"?"Em rota":r.status==="entregue"?"Entregue":r.status==="pendente"?"Pendente":r.status}</span></span>
                 </button>)}

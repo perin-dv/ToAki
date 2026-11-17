@@ -556,3 +556,14 @@
  .gps-mobile-metricas strong{font-size:13px}
  .gps-mobile-actions .primary,.gps-mobile-actions .secondary{width:100%}
 }
+
+/* Fase B: mapa real visível desde o início, mesmo sem NFs; sem marcador fictício. */
+.real-map-toolbar{display:flex;align-items:center;justify-content:space-between;gap:11px;flex-wrap:wrap}
+.real-map-focus{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:750;color:#3d5268;min-width:0;overflow-wrap:anywhere}
+.real-map-focus-dot{width:8px;height:8px;flex:0 0 auto;border-radius:50%;background:#ef7d20;box-shadow:0 0 0 3px #fff0e4}
+.real-map-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.real-map-actions button{min-height:36px;white-space:nowrap}
+.real-map-content>.real-map-frame{height:365px;min-height:280px}
+.real-map-disclaimer{margin:0!important;line-height:1.65}
+@media(max-width:760px){.real-map-toolbar{align-items:stretch;flex-direction:column}.real-map-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.real-map-actions button{min-width:0;white-space:normal}.real-map-content>.real-map-frame{height:300px}}
+@media(max-width:360px){.real-map-actions{grid-template-columns:1fr}}
