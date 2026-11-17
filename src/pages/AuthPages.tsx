@@ -24,16 +24,19 @@ function Layout({title,description,children}:{title:string;description:string;ch
 export function LoginPage() {
   const {user,role,loading}=useAuth();const navigate=useNavigate();
   const location=useLocation();
-  const returnTo=location.state?.from==="/cadastro/empresa/dados"?"/cadastro/empresa/dados":
+  // Convites usam fragmento (não enviado ao Hosting). Redirecionar SOMENTE ao caminho interno conhecido.
+  const destinoConvite=typeof location.state?.from==="string" &&
+    /^\/vincular-entrega#empresa=/.test(location.state.from) ? location.state.from : null;
+  const returnTo=destinoConvite??(location.state?.from==="/cadastro/empresa/dados"?"/cadastro/empresa/dados":
     location.state?.from==="/motoboy"?"/motoboy":
-    role==="entregador"?"/motoboy":"/inicio";
+    role==="entregador"?"/motoboy":"/inicio");
   const [email,setEmail]=useState("");const[password,setPassword]=useState("");const[mostrarSenha,setMostrarSenha]=useState(false);const[busy,setBusy]=useState(false);const[error,setError]=useState("");
   if(!loading&&user)return <Navigate to={returnTo} replace/>;
   const submit=async(e:FormEvent)=>{e.preventDefault();setBusy(true);setError("");try{
     const {user}=await signInWithEmailAndPassword(auth,email.trim(),password);
     await user.reload();
     const token=await user.getIdTokenResult(true);
-    if(token.claims.role==="entregador" && location.state?.from!=="/cadastro/empresa/dados"){
+    if(token.claims.role==="entregador" && location.state?.from!=="/cadastro/empresa/dados" && !destinoConvite){
       navigate("/motoboy",{replace:true});
     }else{
       navigate(returnTo,{replace:true});

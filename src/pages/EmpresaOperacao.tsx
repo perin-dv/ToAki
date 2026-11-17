@@ -4,6 +4,7 @@ import {empresaAutorizada,escutarRegistros,criarRegistro,alterarRegistro,type Ti
 import EnderecoPorCep from "../components/EnderecoPorCep";
 import {enderecoVazio,enderecoCompleto,validarEndereco} from "../lib/cep";
 import {ambientePilotoOriginal} from "../lib/ambiente";
+import {criarConviteEntrega,montarLinkConvite} from "../lib/vinculoEntrega";
 
 const abas:{id:TipoOperacional;nome:string}[]=[
   {id:"cliente",nome:"Clientes"},
@@ -41,6 +42,7 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
   const [editando,setEditando]=useState<string|null>(null);
   const [salvando,setSalvando]=useState(false);
   const [operacaoId,setOperacaoId]=useState("");
+  const [conviteGerado,setConviteGerado]=useState<{pedidoId:string;link:string;expiraEm:number}|null>(null);
   const podeGerenciar=role==="dono_empresa"||role==="gestor";
   const podeAlterar=podeGerenciar||(role==="vendedor"&&aba==="pedido");
 
@@ -68,7 +70,7 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
   const limpar=()=>{
     setCampos(vazio());setEditando(null);setBuscaCliente("");setBuscaMotorista("");setBuscaVeiculo("");
   };
-  const mudarAba=(tipo:TipoOperacional)=>{setAba(tipo);limpar();setErro("");setAviso("");setBuscaLista("");};
+  const mudarAba=(tipo:TipoOperacional)=>{setAba(tipo);limpar();setErro("");setAviso("");setBuscaLista("");setConviteGerado(null);};
   const escolherCliente=(id:string)=>{
     const cliente=listas.cliente.find(c=>c.id===id);
     setCampos(c=>{
@@ -133,6 +135,19 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
     try{await alterarRegistro(empresaId,"pedido",r.id,"mudar_status",undefined,novoStatus);
       setAviso("Status atualizado no Firebase e registrado no histórico.");}
     catch(e){setErro(e instanceof Error?e.message:"Não foi possível mudar o status.");}
+    finally{setOperacaoId("");}
+  };
+  const gerarConvite=async(r:RegistroOperacional)=>{
+    if(!empresaId||!podeGerenciar)return;
+    setOperacaoId(r.id);setConviteGerado(null);setErro("");setAviso("");
+    try{
+      const convite=await criarConviteEntrega(empresaId,r.id);
+      setConviteGerado({
+        pedidoId:r.id,link:montarLinkConvite(window.location.origin,convite),
+        expiraEm:convite.expiraEm
+      });
+      setAviso("Convite criado. Envie apenas ao destinatário da NF. O link anterior desta NF foi invalidado.");
+    }catch(e){setErro(e instanceof Error?e.message:"Não foi possível gerar convite.");}
     finally{setOperacaoId("");}
   };
   if(carregando)return <div role="status" className="loading">Validando vínculo da empresa...</div>;
@@ -233,6 +248,9 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
               {(aba!=="pedido"||r.status==="pendente")&&<button type="button" className="secondary" onClick={()=>editar(r)}>Editar</button>}
               {aba!=="pedido"&&podeGerenciar&&<button type="button" className="secondary" disabled={operacaoId===r.id}
                 onClick={()=>void desativar(r)}>Desativar</button>}
+              {aba==="pedido"&&podeGerenciar&&["pendente","em_rota"].includes(r.status)&&<button
+                type="button" className="secondary" disabled={operacaoId===r.id}
+                onClick={()=>void gerarConvite(r)}>Gerar link do cliente</button>}
               {aba==="pedido"&&r.status==="pendente"&&<>
                 {r.entregador_id&&<button type="button" className="primary" disabled={operacaoId===r.id}
                   onClick={()=>void mudarStatus(r,"em_rota")}>Iniciar rota</button>}
@@ -245,6 +263,15 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
             </div>}
           </article>)}
         </div>
+        {conviteGerado&&aba==="pedido"&&<section className="invite-output" role="status">
+          <strong>Link privado gerado para a NF selecionada</strong>
+          <p>Válido até {new Date(conviteGerado.expiraEm).toLocaleString("pt-BR")}. Um novo convite invalida o anterior.</p>
+          <input aria-label="Link privado da NF" type="text" readOnly value={conviteGerado.link} onFocus={e=>e.target.select()}/>
+          <button className="secondary" type="button" onClick={()=>void navigator.clipboard?.writeText(conviteGerado.link)}>
+            Copiar link
+          </button>
+          <p>Envie somente ao destinatário autorizado. A pessoa precisa fazer login e confirmar o e-mail. Não compartilhe em grupos.</p>
+        </section>}
         <p className="helper">Os vínculos usam IDs internos da sua empresa. Referências inválidas ou de outra empresa são recusadas pelo servidor. Desativar cadastros em uso é bloqueado para preservar o histórico.</p>
       </section>
     </div>

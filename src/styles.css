@@ -567,3 +567,16 @@
 .real-map-disclaimer{margin:0!important;line-height:1.65}
 @media(max-width:760px){.real-map-toolbar{align-items:stretch;flex-direction:column}.real-map-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.real-map-actions button{min-width:0;white-space:normal}.real-map-content>.real-map-frame{height:300px}}
 @media(max-width:360px){.real-map-actions{grid-template-columns:1fr}}
+
+/* Fase B: convites de acesso à NF com senha de posse em fragmento URL. */
+.invite-card{max-width:620px;margin:30px auto;padding:28px;display:grid;gap:16px}
+.invite-card h1{font-size:25px;margin:0;color:#233343}
+.invite-card p,.invite-output p{color:#5b6e7f;font-size:13px;line-height:1.6;margin:0}
+.invite-card .form-info{display:grid;gap:12px}
+.invite-actions{display:grid;justify-items:start;gap:15px}
+.invite-actions .primary,.invite-actions .button-link{min-height:42px}
+.invite-output{margin-top:18px;padding:14px;border:1px solid #f3d5ba;background:#fff9f2;border-radius:11px;display:grid;gap:10px}
+.invite-output strong{font-size:13px;color:#303f4c}
+.invite-output input{width:100%;min-width:0;border:1px solid #dfded8;border-radius:8px;padding:10px;font:inherit;font-size:12px}
+.invite-output button{justify-self:start}
+@media(max-width:760px){.invite-card{padding:18px;margin:12px auto}.invite-actions .button-link{width:100%}}
