@@ -35,8 +35,8 @@ export default function VincularEntregaPage(){
         <span className="account-eyebrow">TOAKI · ACESSO PRIVADO</span>
         <h1>Vincular entrega à minha conta</h1>
         <p>Este convite dá acesso a uma única entrega. Não mostra localização de motoboy nem libera outras NFs.</p>
-        {!ambienteOperacional?<p role="alert" className="form-error">O acesso às entregas não está habilitado neste ambiente.</p>:
-         !convite?<p role="alert" className="form-error">Este link está incompleto ou inválido. Solicite outro à empresa.</p>:
+        {!convite?<p role="alert" className="form-error">Este link está incompleto ou inválido. Solicite outro à empresa.</p>:
+         !ambienteOperacional?<p role="alert" className="form-error">O acesso às entregas não está habilitado neste ambiente.</p>:
          concluido?<div className="form-info" role="status"><strong>Entrega vinculada com sucesso!</strong><p>Consulte o status em Minha conta → Minhas entregas assim que a consulta privada estiver disponível.</p><Link className="primary button-link" to="/cliente?aba=entregas">Abrir minhas entregas</Link></div>:
          loading?<p role="status">Verificando sua conta...</p>:
          !user?<div className="invite-actions"><p>Entre com sua conta pessoal para aceitar a entrega. O convite só será consumido após sua confirmação.</p><Link className="primary button-link" state={{from:loginDestino}} to="/login">Entrar para vincular</Link><p>Não tem conta? Crie uma conta de cliente e depois abra novamente este convite.</p><Link to="/cadastro/cliente" className="secondary button-link">Criar conta de cliente</Link></div>:
