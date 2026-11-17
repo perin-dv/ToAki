@@ -54,6 +54,8 @@ exports.alterarRegistroEmpresaPiloto=onCall(options,async request=>{
         if(anterior.status!=="pendente")throw new HttpsError("failed-precondition","Somente NF pendente pode ser editada.");
         if(dados.numero_nf!==anterior.numero_nf)
           throw new HttpsError("failed-precondition","Não altere o número da NF; crie outra NF após cancelar a anterior.");
+        if(anterior.cliente_uid_vinculado&&dados.destinatario_id!==anterior.destinatario_id)
+          throw new HttpsError("failed-precondition","NF vinculada a um cliente: não troque o destinatário.");
       }
       dadosAtualizados={...dados};
       if(tipo==="entregador"){
@@ -115,14 +117,20 @@ exports.alterarRegistroEmpresaPiloto=onCall(options,async request=>{
     // Se a NF já foi vinculada ao cliente, manter status do espelho privado em sincronia.
     // Leitura antes de qualquer escrita, sob a mesma transação do pedido.
     let espelhoCliente=null;
-    if(acao==="mudar_status"&&tipo==="pedido"&&anterior.cliente_uid_vinculado){
+    if((acao==="mudar_status"||acao==="atualizar")&&tipo==="pedido"&&anterior.cliente_uid_vinculado){
       espelhoCliente=db.doc("clientes/"+anterior.cliente_uid_vinculado+
         "/entregas/"+empresaId+"__"+registroId);
       const espelho=await tx.get(espelhoCliente);
       if(!espelho.exists)throw new HttpsError("failed-precondition","Vínculo do cliente inconsistente. Corrija antes de atualizar a NF.");
     }
     const agora=FieldValue.serverTimestamp();
-    if(acao==="atualizar")tx.update(registroRef,{...dadosAtualizados,atualizado_em:agora,atualizado_por_uid:uid});
+    if(acao==="atualizar"){
+      tx.update(registroRef,{...dadosAtualizados,atualizado_em:agora,atualizado_por_uid:uid});
+      if(espelhoCliente)tx.update(espelhoCliente,{
+        endereco_entrega:dadosAtualizados.endereco_entrega,
+        atualizado_em:agora
+      });
+    }
     if(acao==="desativar")tx.update(registroRef,{ativo:false,status:"inativo",desativado_em:agora,atualizado_em:agora});
     if(acao==="mudar_status"){
       tx.update(registroRef,{status:entrada.novoStatus,atualizado_em:agora,atualizado_por_uid:uid});

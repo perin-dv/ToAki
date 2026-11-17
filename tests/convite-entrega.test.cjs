@@ -45,6 +45,8 @@ test("resgate é por usuário autenticado, e-mail verificado e uma transação a
   assert.doesNotMatch(code,/setCustomUserClaims\(|email_verified:\s*true/);
   const changes=fs.readFileSync("functions/alteracoes.cjs","utf8");
   assert.match(changes,/if\(espelhoCliente\)tx\.update\(espelhoCliente,\{status:entrada\.novoStatus/);
+  assert.match(changes,/if\(anterior\.cliente_uid_vinculado&&dados\.destinatario_id!==anterior\.destinatario_id\)/);
+  assert.match(changes,/endereco_entrega:dadosAtualizados\.endereco_entrega/);
 });
 test("frontend não usa NF pública e segredo não é enviado pela URL ao servidor",()=>{
   const link=fs.readFileSync("src/lib/vinculoEntrega.ts","utf8");
