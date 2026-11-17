@@ -1,0 +1,60 @@
+name: FASE B - implantar convites e espelho privado (manual)
+
+# SOMENTE execução manual na main protegida; NUNCA publica Hosting, Rules ou cadastro real.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: toaki-convites-soma-manual
+  cancel-in-progress: false
+
+jobs:
+  implantar-convites:
+    if: github.repository == 'perin-dv/ToAki' && github.ref == 'refs/heads/main' && github.actor == github.repository_owner
+    name: Implantar convites (somente Functions explicitamente selecionadas)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      VITE_TOAKI_ENV: piloto
+      VITE_TOAKI_PILOTO_NO_ORIGINAL: habilitado
+      VITE_FIREBASE_PROJECT_ID: toaki-cf058
+      VITE_ENABLE_ADMIN_APPROVAL: 'false'
+    steps:
+      - name: Usar codigo revisado da main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validar projeto e limitar alvos
+        run: |
+          set -euo pipefail
+          node -e 'const fs=require("fs");if(JSON.parse(fs.readFileSync(".firebaserc")).projects.default!=="toaki-cf058")process.exit(1)'
+          npm install --no-audit --no-fund
+          npm test
+          node --test tests/convite-entrega.test.cjs tests/operacao-politica.test.cjs
+          npm run build
+      - name: Instalar backend
+        run: npm --prefix functions install --no-audit --no-fund
+      - name: Autenticar para Functions limitadas
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TOAKI_CF058 }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$FIREBASE_SERVICE_ACCOUNT_JSON" ]]; then exit 1; fi
+          umask 077
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/toaki-convites.json"
+          node -e 'const f=require(process.argv[1]);if(f.type!=="service_account"||f.project_id!=="toaki-cf058")process.exit(1)' "$RUNNER_TEMP/toaki-convites.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/toaki-convites.json" >> "$GITHUB_ENV"
+      - name: Implantar SOMENTE Functions de convite e sincronização de status
+        run: |
+          set -euo pipefail
+          trap 'rm -f "$GOOGLE_APPLICATION_CREDENTIALS"' EXIT
+          npx firebase deploy --only functions:criarConviteEntregaPiloto,functions:resgatarConviteEntregaPiloto,functions:alterarRegistroEmpresaPiloto --project toaki-cf058 --non-interactive
+          echo '### Fase B - convites implantados' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Somente Functions de convites e sincronizacao de status.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Hosting live/Preview, Firestore Rules e IAM nao foram alterados.' >> "$GITHUB_STEP_SUMMARY"

@@ -185,7 +185,8 @@ test('O painel operacional não usa dados simulados ou SVG fictício no /inicio'
   assert.ok(main.includes('<Route path="/inicio" element={<PrivateRoute area="demo"><SiteOperacionalPage/></PrivateRoute>}/>'));
   assert.ok(main.includes('<Route path="/demonstracao" element={<PrivateRoute area="demo"><DemoPage/></PrivateRoute>}/>'));
   assert.ok(site.includes('onSnapshot(query(caminho,limit(50))'));
-  assert.ok(site.includes('Nenhuma localização fictícia'));
+  assert.ok(site.includes('Maringá, Paraná, Brasil'));
+   assert.ok(site.includes('Não é rastreamento ao vivo de motoboys'));;
   assert.ok(!site.includes('dadosIniciais('));
   assert.ok(!site.includes('sessionStorage'));
   assert.ok(!site.includes('MapIllustration'));
