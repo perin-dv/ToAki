@@ -155,3 +155,5 @@ exports.analisarCadastroEmpresa = onCall(
 // Operações reais: homologação isolada ou empresa piloto explicitamente autorizada no Firebase atual.
 exports.operarEmpresaHomologacao=require("./operacoes.cjs").operarEmpresaHomologacao;
 exports.alterarRegistroEmpresaPiloto=require("./alteracoes.cjs").alterarRegistroEmpresaPiloto;
+exports.criarConviteEntregaPiloto=require("./convites-entrega.cjs").criarConviteEntregaPiloto;
+exports.resgatarConviteEntregaPiloto=require("./convites-entrega.cjs").resgatarConviteEntregaPiloto;

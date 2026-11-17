@@ -112,10 +112,22 @@ exports.alterarRegistroEmpresaPiloto=onCall(options,async request=>{
       }
     }
 
+    // Se a NF já foi vinculada ao cliente, manter status do espelho privado em sincronia.
+    // Leitura antes de qualquer escrita, sob a mesma transação do pedido.
+    let espelhoCliente=null;
+    if(acao==="mudar_status"&&tipo==="pedido"&&anterior.cliente_uid_vinculado){
+      espelhoCliente=db.doc("clientes/"+anterior.cliente_uid_vinculado+
+        "/entregas/"+empresaId+"__"+registroId);
+      const espelho=await tx.get(espelhoCliente);
+      if(!espelho.exists)throw new HttpsError("failed-precondition","Vínculo do cliente inconsistente. Corrija antes de atualizar a NF.");
+    }
     const agora=FieldValue.serverTimestamp();
     if(acao==="atualizar")tx.update(registroRef,{...dadosAtualizados,atualizado_em:agora,atualizado_por_uid:uid});
     if(acao==="desativar")tx.update(registroRef,{ativo:false,status:"inativo",desativado_em:agora,atualizado_em:agora});
-    if(acao==="mudar_status")tx.update(registroRef,{status:entrada.novoStatus,atualizado_em:agora,atualizado_por_uid:uid});
+    if(acao==="mudar_status"){
+      tx.update(registroRef,{status:entrada.novoStatus,atualizado_em:agora,atualizado_por_uid:uid});
+      if(espelhoCliente)tx.update(espelhoCliente,{status:entrada.novoStatus,atualizado_em:agora});
+    }
     const titulo=anterior.titulo_registro||registroId;
     tx.create(empresaRef.collection("historico").doc(),{
       tipo_registro:"auditoria_operacao_empresa",acao:acao==="mudar_status"?"status_"+entrada.novoStatus:acao+"_"+tipo,

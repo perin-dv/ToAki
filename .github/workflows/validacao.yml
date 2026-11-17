@@ -46,6 +46,8 @@ jobs:
           node --check functions/index.cjs
           node --check functions/operacoes.cjs
           node --check functions/alteracoes.cjs
+          node --check functions/convites-entrega.cjs
+          node --check functions/convite-politica.cjs
           node --check functions/ambiente-operacao.cjs
           node --check scripts/diagnostico-firebase-readonly.cjs
       - name: Compilar front-end
