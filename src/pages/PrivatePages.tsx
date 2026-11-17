@@ -8,6 +8,7 @@ import MenuIcon from "../components/MenuIcon";
 import PerfilConta from "./PerfilConta";
 import AdminRequests from "./AdminRequests";
 import EmpresaOperacao from "./EmpresaOperacao";
+import {EntregasClienteConteudo,useEntregasCliente} from "./EntregasClientePage";
 import { ambienteOperacional, ambientePilotoOriginal } from "../lib/ambiente";
 
 type AbaCliente="inicio"|"entregas"|"empresa"|"perfil";
@@ -53,6 +54,8 @@ export function CustomerPage() {
   const setAba=(proxima:AbaCliente)=>setBusca(proxima==="inicio"?{}:{aba:proxima});
   const [,atualizarPerfil]=useState(0);
   const nome=nomeConta(user?.displayName,user?.email);
+  const estadoEntregas=useEntregasCliente(user);
+  const consultadas=estadoEntregas.etapa==="pronto"?String(estadoEntregas.entregas.length):"—";
   return <Shell title="Minha conta" description="Seus dados, entregas e solicitações em um só lugar.">
     <section className="account-hero" aria-label="Boas-vindas">
       <div className="account-hero-copy"><span className="account-eyebrow">ÁREA DO CLIENTE</span><h2>Olá, {nome}! <span aria-hidden="true">👋</span></h2>
@@ -70,14 +73,14 @@ export function CustomerPage() {
     </nav>
     {aba==="inicio"&&<div className="account-content">
       <div className="account-summary">
-        <article className="account-summary-card"><div className="account-summary-icon orange"><MenuIcon name="entregas" size={21}/></div><div><span>Minhas entregas</span><strong className="account-summary-word">Aguardando</strong><small>Integração das entregas em preparação</small></div></article>
+        <article className="account-summary-card"><div className="account-summary-icon orange"><MenuIcon name="entregas" size={21}/></div><div><span>Minhas entregas</span><strong className="account-summary-word">{consultadas}</strong><small>{estadoEntregas.etapa==="pronto"?"Até 30 entregas autorizadas consultadas no Firebase":"Consulta privada de entregas"}</small></div></article>
         <article className="account-summary-card"><div className="account-summary-icon blue"><MenuIcon name="empresa" size={21}/></div><div><span>Acesso empresarial</span><strong className="account-summary-word">Não liberado</strong><small>Necessita solicitação e aprovação</small></div></article>
         <article className="account-summary-card"><div className="account-summary-icon green"><MenuIcon name="clientes" size={21}/></div><div><span>Meu perfil</span><strong className="account-summary-word">{user?.displayName?"Preenchido":"Incompleto"}</strong><small>Dados do Firebase Authentication</small></div></article>
       </div>
       <div className="account-overview-grid">
         <section className="panel account-overview-panel">
-          <div className="account-section-heading"><div><h2>Suas entregas</h2><p>Pedidos vinculados à sua identidade aparecem aqui.</p></div><span className="pill muted">Integração pendente</span></div>
-          <div className="account-empty"><span className="account-empty-icon"><MenuIcon name="entregas" size={31}/></span><strong>O histórico das suas entregas estará disponível aqui.</strong><p>Quando uma empresa associar uma nota à sua conta com segurança, ela aparecerá aqui. Informar um número de NF não libera dados de terceiros.</p><button type="button" className="secondary" onClick={()=>setAba("entregas")}>Ver minhas entregas</button></div>
+          <div className="account-section-heading"><div><h2>Suas entregas</h2><p>Pedidos vinculados à sua identidade aparecem aqui.</p></div><span className="pill muted">Consulta privada</span></div>
+          <div className="account-empty"><span className="account-empty-icon"><MenuIcon name="entregas" size={31}/></span><strong>{estadoEntregas.etapa==="pronto"?(estadoEntregas.entregas.length?"Entregas vinculadas disponíveis para consulta.":"Nenhuma entrega vinculada à sua conta."):"Consulte suas entregas com acesso privado."}</strong><p>A consulta usa seu próprio usuário do Firebase e só apresenta pedidos previamente associados à sua conta. Não libera NFs de terceiros.</p><button type="button" className="secondary" onClick={()=>setAba("entregas")}>Ver minhas entregas</button></div>
         </section>
         <section className="panel account-overview-panel">
           <div className="account-section-heading"><div><h2>Minha conta</h2><p>Acesso e informações pessoais.</p></div></div>
@@ -89,8 +92,8 @@ export function CustomerPage() {
       </div>
     </div>}
     {aba==="entregas"&&<section className="panel content-panel account-full-panel">
-      <div className="account-section-heading"><div><h2>Minhas entregas</h2><p>Consultas privadas, disponíveis após vínculo seguro com a empresa.</p></div><span className="pill muted">Integração pendente</span></div>
-      <div className="account-empty"><span className="account-empty-icon"><MenuIcon name="entregas" size={32}/></span><strong>A consulta das suas entregas ainda está sendo integrada.</strong><p>Estamos preparando a conexão entre empresas e clientes. NFs de terceiros não são mostradas sem autorização.</p></div>
+      <div className="account-section-heading"><div><h2>Minhas entregas</h2><p>Consultas privadas de entregas associadas à sua conta do Firebase.</p></div><span className="pill muted">Dados reais</span></div>
+      <EntregasClienteConteudo estado={estadoEntregas}/>
     </section>}
     {aba==="perfil"&&<PerfilConta onSaved={()=>atualizarPerfil(n=>n+1)}/>}
     {aba==="empresa"&&<section className="panel content-panel account-full-panel">
