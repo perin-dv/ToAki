@@ -20,3 +20,12 @@ test("Site real preserva menu aprovado e não estoura largura no celular",async(
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth+3);
   expect(overflow).toBe(false);
 });
+
+// O mapa operacional deve funcionar sem NF real; nesta rota e2e não é criado
+// vínculo de empresa no Firebase. O comportamento do mapa é validado no teste
+// estrutural abaixo; o Preview autenticado valida a exibição real em HTTPS.
+test("sem empresa autenticada, a rota local de teste não inventa mapa de entregador",async({page})=>{
+  await page.goto("/__e2e_site_real");
+  await expect(page.getByText("NF 0045821")).toHaveCount(0);
+  await expect(page.getByLabel("Mapa demonstrativo ilustrativo, sem GPS real")).toHaveCount(0);
+});
