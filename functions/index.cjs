@@ -157,3 +157,7 @@ exports.operarEmpresaHomologacao=require("./operacoes.cjs").operarEmpresaHomolog
 exports.alterarRegistroEmpresaPiloto=require("./alteracoes.cjs").alterarRegistroEmpresaPiloto;
 exports.criarConviteEntregaPiloto=require("./convites-entrega.cjs").criarConviteEntregaPiloto;
 exports.resgatarConviteEntregaPiloto=require("./convites-entrega.cjs").resgatarConviteEntregaPiloto;
+const equipe=require("./equipe-empresa.cjs");
+exports.criarConviteEquipePiloto=equipe.criarConviteEquipePiloto;
+exports.aceitarConviteEquipePiloto=equipe.aceitarConviteEquipePiloto;
+exports.desativarFuncionarioPiloto=equipe.desativarFuncionarioPiloto;

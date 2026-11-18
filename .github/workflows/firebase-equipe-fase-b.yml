@@ -1,0 +1,52 @@
+name: FASE B - implantar equipe (manual e restrito)
+
+# Autorização manual apenas em main protegida. Nenhuma alteração em Hosting, Rules ou IAM.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: toaki-equipe-fase-b
+  cancel-in-progress: false
+
+jobs:
+  implantar-equipe:
+    if: github.repository == 'perin-dv/ToAki' && github.ref == 'refs/heads/main' && github.actor == github.repository_owner
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Testar segurança e build
+        run: |
+          set -euo pipefail
+          node -e 'const f=require("./.firebaserc");if(f.projects.default!=="toaki-cf058")process.exit(1)'
+          npm install --no-audit --no-fund
+          npm test
+          npm run build
+          npm --prefix functions install --no-audit --no-fund
+          node --check functions/equipe-empresa.cjs
+          node --check functions/equipe-politica.cjs
+      - name: Validar credencial do Firebase
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TOAKI_CF058 }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$FIREBASE_SERVICE_ACCOUNT_JSON" ]]; then exit 1; fi
+          umask 077
+          CRED="$RUNNER_TEMP/toaki-equipe.json"
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$CRED"
+          node -e 'const f=require(process.argv[1]);if(f.type!=="service_account"||f.project_id!=="toaki-cf058")process.exit(1)' "$CRED"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$CRED" >> "$GITHUB_ENV"
+      - name: Implantar somente as tres Functions da equipe
+        run: |
+          set -euo pipefail
+          trap 'rm -f "$GOOGLE_APPLICATION_CREDENTIALS"' EXIT
+          npx firebase deploy --only functions:criarConviteEquipePiloto,functions:aceitarConviteEquipePiloto,functions:desativarFuncionarioPiloto --project toaki-cf058 --non-interactive
+          echo 'Functions da equipe implantadas; Hosting live/Preview e Rules não alterados.' >> "$GITHUB_STEP_SUMMARY"
