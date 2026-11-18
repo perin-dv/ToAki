@@ -26,7 +26,7 @@ export function LoginPage() {
   const location=useLocation();
   // Convites usam fragmento (não enviado ao Hosting). Redirecionar SOMENTE ao caminho interno conhecido.
   const destinoConvite=typeof location.state?.from==="string" &&
-    /^\/vincular-entrega#empresa=/.test(location.state.from) ? location.state.from : null;
+    /^\/vincular-(?:entrega|equipe)#empresa=/.test(location.state.from) ? location.state.from : null;
   const returnTo=destinoConvite??(location.state?.from==="/cadastro/empresa/dados"?"/cadastro/empresa/dados":
     location.state?.from==="/motoboy"?"/motoboy":
     role==="entregador"?"/motoboy":"/inicio");

@@ -590,3 +590,15 @@
 .delivery-flow-guide>.helper{margin-top:12px}
 @media(max-width:960px){.delivery-flow-steps{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:600px){.delivery-flow-steps{grid-template-columns:1fr}}
+
+/* Fase B — gestão de equipe: títulos legíveis e controles de acesso seguros. */
+.team-layout{display:grid;gap:15px;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);align-items:start}
+.team-layout>.panel{min-width:0}
+.team-layout label,.team-search{display:grid;gap:6px;font-size:12px;font-weight:650;color:#475a6d}
+.team-layout input,.team-layout select{width:100%;min-width:0;border:1px solid #d7dfe6;border-radius:9px;padding:10px;font:inherit}
+.team-layout .team-record{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.team-layout .team-record>div{min-width:0;overflow-wrap:anywhere}
+.team-layout .team-record button{min-width:max-content}
+.team-layout .team-search{margin-bottom:13px}
+.team-layout .form-info,.team-layout .form-error{margin-top:12px}
+@media(max-width:860px){.team-layout{grid-template-columns:1fr}}

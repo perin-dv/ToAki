@@ -49,6 +49,9 @@ jobs:
           node --check functions/registro-legivel.cjs
           node --test tests/registro-legivel.test.cjs
           node --check functions/convites-entrega.cjs
+          node --check functions/equipe-empresa.cjs
+          node --check functions/equipe-politica.cjs
+          node --test tests/equipe-empresa.test.cjs
           node --check functions/convite-politica.cjs
           node --test tests/convite-entrega.test.cjs
           node --check functions/ambiente-operacao.cjs

@@ -8,6 +8,7 @@ import Brand from "../components/Brand";
 import MenuIcon from "../components/MenuIcon";
 import EmpresaOperacao from "./EmpresaOperacao";
 import ColecaoEmpresaPage from "./ColecaoEmpresaPage";
+import EquipeEmpresaPage from "./EquipeEmpresaPage";
 import RelatoriosEmpresaPage from "./RelatoriosEmpresaPage";
 import AssinaturaEmpresaPage from "./AssinaturaEmpresaPage";
 import {EMPRESA_TESTE_SOMA} from "../lib/empresaId";
@@ -255,7 +256,7 @@ export default function SiteOperacionalPage(){
               <><RelatoriosEmpresaPage empresaId={empresaId!}/><ColecaoEmpresaPage empresaId={empresaId!} grupo="historico"/></>:
               <section className="panel content-panel"><h2>Histórico de operações</h2><p>Seu perfil não tem acesso aos eventos administrativos. Peça autorização ao gestor.</p></section>):
             secao==="empresa"?(["dono_empresa","gestor"].includes(role??"")?
-              <><ColecaoEmpresaPage empresaId={empresaId!} grupo="funcionarios"/><section className="panel content-panel"><Link to="/empresa" className="primary button-link">Ver perfil e permissões empresariais →</Link></section></>:
+              <><EquipeEmpresaPage empresaId={empresaId!}/><section className="panel content-panel"><Link to="/empresa" className="primary button-link">Ver perfil e permissões empresariais →</Link></section></>:
               <section className="panel content-panel"><h2>Equipe</h2><p>Somente gestores autorizados podem visualizar a equipe.</p></section>):
             ["dono_empresa","gestor"].includes(role??"")?<AssinaturaEmpresaPage empresaId={empresaId!}/>:
               <section className="panel content-panel"><h2>Assinatura</h2><p>Somente o gestor da empresa pode consultar os contratos e planos contratados.</p></section>}

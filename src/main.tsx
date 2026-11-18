@@ -11,6 +11,7 @@ import DemoPage from "./pages/DemoPage";
 import SiteOperacionalPage from "./pages/SiteOperacionalPage";
 import GpsMotoboyPage from "./pages/GpsMotoboyPage";
 import VincularEntregaPage from "./pages/VincularEntregaPage";
+import VincularEquipePage from "./pages/VincularEquipePage";
 import "./styles.css";
 import {registrarPwa} from "./lib/pwa";
 
@@ -25,6 +26,7 @@ function App() {
     {import.meta.env.MODE === "e2e" && <Route path="/__e2e_site_real" element={<ContaTesteProvider><SiteOperacionalPage/></ContaTesteProvider>}/>}
     {import.meta.env.MODE === "e2e" && <Route path="/__e2e_motoboy" element={<ContaTesteMotoboyProvider><GpsMotoboyPage/></ContaTesteMotoboyProvider>}/>}
     <Route path="/vincular-entrega" element={<VincularEntregaPage/>}/>
+    <Route path="/vincular-equipe" element={<VincularEquipePage/>}/>
     <Route path="/login" element={<LoginPage/>}/>
     <Route path="/cadastro" element={<RegisterChoicePage/>}/>
     <Route path="/cadastro/cliente" element={<RegisterPage tipo="cliente"/>}/>
