@@ -179,7 +179,7 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
       <div className="delivery-flow-steps">
         <span><b>1</b> Cadastre o cliente</span>
         <span><b>2</b> Cadastre veículo e entregador</span>
-        <span><b>3</b> Emita o registro da NF e atribua o entregador</span>
+        <span><b>3</b> Cadastre o número da NF e atribua o entregador</span>
         <span><b>4</b> Registre a saída e acompanhe o status</span>
         <span><b>5</b> Envie o link privado ao cliente</span>
       </div>
