@@ -580,3 +580,13 @@
 .invite-output input{width:100%;min-width:0;border:1px solid #dfded8;border-radius:8px;padding:10px;font:inherit;font-size:12px}
 .invite-output button{justify-self:start}
 @media(max-width:760px){.invite-card{padding:18px;margin:12px auto}.invite-actions .button-link{width:100%}}
+
+/* Fase B — sequência operacional e labels humanizados; design branco/laranja aprovado. */
+.delivery-flow-guide{margin-bottom:15px}
+.delivery-flow-guide h2{font-size:16px;margin:0 0 12px;color:#263747}
+.delivery-flow-steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
+.delivery-flow-steps span{display:flex;align-items:flex-start;gap:7px;padding:10px;background:#f9fafb;border:1px solid #e9eff3;border-radius:10px;font-size:11px;line-height:1.55;color:#46596b}
+.delivery-flow-steps b{display:grid;place-items:center;background:#fff0e6;color:#e7660c;border-radius:50%;width:23px;height:23px;flex:0 0 23px}
+.delivery-flow-guide>.helper{margin-top:12px}
+@media(max-width:960px){.delivery-flow-steps{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){.delivery-flow-steps{grid-template-columns:1fr}}

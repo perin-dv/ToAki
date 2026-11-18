@@ -11,6 +11,8 @@ export type RegistroOperacional={
   numero_nf?:string;placa?:string;categoria?:string;telefone?:string;
   cep?:string;logradouro?:string;numero?:string;complemento?:string;bairro?:string;cidade?:string;uf?:string;
   endereco_entrega?:string;destinatario_id?:string;entregador_id?:string;veiculo_id?:string;
+  destinatario_nome?:string;entregador_nome?:string;veiculo_placa?:string;
+  nome_exibicao?:string;situacao_legivel?:string;
   ativo?:boolean;criado_em?:unknown;
 };
 const colecao:Record<TipoOperacional,string>={
@@ -47,6 +49,11 @@ function converterRegistro(doc:{id:string;data:()=>DocumentData}):RegistroOperac
       entregador_id:typeof d.entregador_id==="string"?d.entregador_id:undefined,
       veiculo_id:typeof d.veiculo_id==="string"?d.veiculo_id:undefined,
       endereco_entrega:typeof d.endereco_entrega==="string"?d.endereco_entrega:undefined,
+      destinatario_nome:typeof d.destinatario_nome==="string"?d.destinatario_nome:undefined,
+      entregador_nome:typeof d.entregador_nome==="string"?d.entregador_nome:undefined,
+      veiculo_placa:typeof d.veiculo_placa==="string"?d.veiculo_placa:undefined,
+      nome_exibicao:typeof d.nome_exibicao==="string"?d.nome_exibicao:undefined,
+      situacao_legivel:typeof d.situacao_legivel==="string"?d.situacao_legivel:undefined,
       criado_em:d.criado_em
     };
 }

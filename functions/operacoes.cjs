@@ -4,6 +4,7 @@ const {getFirestore,FieldValue}=require("firebase-admin/firestore");
 const {validarOperacao}=require("./operacao-politica.cjs");
 const {autorizarDestinoOperacional}=require("./ambiente-operacao.cjs");
 const {podeOperarEmpresa}=require("./acesso-identidade.cjs");
+const {idRegistro,tituloRegistro,situacaoLegivel}=require("./registro-legivel.cjs");
 
 const MAP={cliente:"clientes",veiculo:"veiculos",entregador:"entregadores_vinculados",pedido:"pedidos"};
 exports.operarEmpresaHomologacao=onCall(
@@ -44,16 +45,18 @@ exports.operarEmpresaHomologacao=onCall(
       throw new HttpsError("permission-denied","Seu cargo não permite cadastrar esse registro.");
 
     const coleção=empresaRef.collection(MAP[tipo]);
-    const novo=coleção.doc();
+    const novo=coleção.doc(idRegistro(tipo,dados));
     const agora=FieldValue.serverTimestamp();
-    const titulo=tipo==="pedido"?"NF "+dados.numero_nf:
-      tipo==="veiculo"?"Veículo "+dados.placa:dados.nome;
+    let titulo=tituloRegistro(tipo,dados);
     const audit=empresaRef.collection("historico").doc();
     const reserva=tipo==="veiculo"?empresaRef.collection("placas_reservadas").doc(dados.placa):
       tipo==="pedido"?empresaRef.collection("nfs_reservadas").doc(dados.numero_nf):null;
 
     await db.runTransaction(async tx=>{
       const registro={...dados};
+      // Identidade legível é derivada de dados consultados no servidor, não de nomes enviados pelo navegador.
+      registro.nome_exibicao=tipo==="veiculo"?dados.categoria+" · "+dados.placa:
+        tipo==="pedido"?"NF "+dados.numero_nf:dados.nome;
       if(reserva){
         const existente=await tx.get(reserva);
         if(existente.exists)throw new HttpsError("already-exists","Esse número já está cadastrado nesta empresa.");
@@ -67,12 +70,14 @@ exports.operarEmpresaHomologacao=onCall(
         const cliente=await tx.get(empresaRef.collection("clientes").doc(dados.destinatario_id));
         if(!cliente.exists||cliente.data()?.ativo===false)
           throw new HttpsError("failed-precondition","Destinatário não encontrado nesta empresa.");
+        registro.destinatario_nome=cliente.data().nome||"Cliente cadastrado";
         if(dados.veiculo_id&&!dados.entregador_id)
           throw new HttpsError("invalid-argument","Selecione o entregador antes de vincular um veículo à NF.");
         if(dados.entregador_id){
           const courier=await tx.get(empresaRef.collection("entregadores_vinculados").doc(dados.entregador_id));
           if(!courier.exists||courier.data()?.ativo===false)
             throw new HttpsError("failed-precondition","Entregador não encontrado nesta empresa.");
+          registro.entregador_nome=courier.data()?.nome||"Entregador cadastrado";
           const associado=courier.data()?.veiculo_id||"";
           if(associado&&dados.veiculo_id&&associado!==dados.veiculo_id)
             throw new HttpsError("failed-precondition","A moto selecionada não corresponde ao veículo vinculado ao motorista.");
@@ -82,14 +87,22 @@ exports.operarEmpresaHomologacao=onCall(
           const veiculo=await tx.get(empresaRef.collection("veiculos").doc(registro.veiculo_id));
           if(!veiculo.exists||veiculo.data()?.ativo===false)
             throw new HttpsError("failed-precondition","Veículo da NF não está ativo nesta empresa.");
+          registro.veiculo_placa=veiculo.data()?.placa||"Placa não informada";
         }
+        titulo=tituloRegistro(tipo,dados,registro);
+        registro.nome_exibicao=titulo;
       }
       tx.create(novo,{
         ...registro,empresa_id:empresaId,tipo_registro:tipo,ambiente_operacao:ambiente,
         titulo_registro:titulo,status:tipo==="pedido"?"pendente":"ativo",
+        ...(tipo==="pedido"?{situacao_legivel:situacaoLegivel("pendente")}:{ }),
         ativo:true,criado_por_uid:uid,criado_em:agora,atualizado_em:agora
       });
-      if(reserva)tx.create(reserva,{tipo_registro:"reserva_"+tipo,registro_id:novo.id,criado_em:agora});
+      if(reserva)tx.create(reserva,{
+        tipo_registro:"reserva_"+tipo,
+        titulo_registro:"Reserva — "+titulo,
+        registro_id:novo.id,criado_em:agora
+      });
       tx.create(audit,{
         tipo_registro:"auditoria_operacao_empresa",acao:"cadastrar_"+tipo,ambiente_operacao:ambiente,
         titulo_registro:"Cadastro "+tipo+" — "+titulo,registro_id:novo.id,

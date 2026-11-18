@@ -4,6 +4,7 @@ const {getFirestore,FieldValue}=require("firebase-admin/firestore");
 const {validarAlteracao,validarTransicaoStatus}=require("./operacao-politica.cjs");
 const {autorizarDestinoOperacional}=require("./ambiente-operacao.cjs");
 const {podeOperarEmpresa}=require("./acesso-identidade.cjs");
+const {tituloRegistro,situacaoLegivel}=require("./registro-legivel.cjs");
 
 const colecoes={cliente:"clientes",entregador:"entregadores_vinculados",veiculo:"veiculos",pedido:"pedidos"};
 const options={region:"southamerica-east1",maxInstances:3,timeoutSeconds:45,memory:"256MiB"};
@@ -58,6 +59,10 @@ exports.alterarRegistroEmpresaPiloto=onCall(options,async request=>{
           throw new HttpsError("failed-precondition","NF vinculada a um cliente: não troque o destinatário.");
       }
       dadosAtualizados={...dados};
+      // Atualização legível no próprio documento; IDs existentes permanecem intactos.
+      dadosAtualizados.nome_exibicao=tipo==="veiculo"?dados.categoria+" · "+dados.placa:
+        tipo==="pedido"?"NF "+dados.numero_nf:dados.nome;
+      dadosAtualizados.titulo_registro=tituloRegistro(tipo,dados);
       if(tipo==="entregador"){
         const mudaMoto=(dados.veiculo_id||"")!==(anterior.veiculo_id||"");
         if(mudaMoto){
@@ -74,12 +79,16 @@ exports.alterarRegistroEmpresaPiloto=onCall(options,async request=>{
         const cliente=await tx.get(empresaRef.collection("clientes").doc(dados.destinatario_id));
         if(!cliente.exists||cliente.data().ativo===false)
           throw new HttpsError("failed-precondition","Cliente não está ativo nesta empresa.");
+        dadosAtualizados.destinatario_nome=cliente.data().nome||"Cliente cadastrado";
+        dadosAtualizados.entregador_nome="";
+        dadosAtualizados.veiculo_placa="";
         if(dados.veiculo_id&&!dados.entregador_id)
           throw new HttpsError("invalid-argument","Escolha um motorista antes da moto.");
         if(dados.entregador_id){
           const motorista=await tx.get(empresaRef.collection("entregadores_vinculados").doc(dados.entregador_id));
           if(!motorista.exists||motorista.data().ativo===false)
             throw new HttpsError("failed-precondition","Motorista não está ativo nesta empresa.");
+          dadosAtualizados.entregador_nome=motorista.data().nome||"Entregador cadastrado";
           const motoVinculada=motorista.data().veiculo_id||"";
           if(motoVinculada&&dados.veiculo_id&&dados.veiculo_id!==motoVinculada)
             throw new HttpsError("failed-precondition","Moto incompatível com o motorista.");
@@ -89,7 +98,10 @@ exports.alterarRegistroEmpresaPiloto=onCall(options,async request=>{
           const moto=await tx.get(empresaRef.collection("veiculos").doc(dadosAtualizados.veiculo_id));
           if(!moto.exists||moto.data().ativo===false)
             throw new HttpsError("failed-precondition","Moto não está ativa nesta empresa.");
+          dadosAtualizados.veiculo_placa=moto.data().placa||"Placa não informada";
         }
+        dadosAtualizados.titulo_registro=tituloRegistro(tipo,dados,dadosAtualizados);
+        dadosAtualizados.nome_exibicao=dadosAtualizados.titulo_registro;
       }
     }
     if(acao==="desativar"){
@@ -133,13 +145,18 @@ exports.alterarRegistroEmpresaPiloto=onCall(options,async request=>{
     }
     if(acao==="desativar")tx.update(registroRef,{ativo:false,status:"inativo",desativado_em:agora,atualizado_em:agora});
     if(acao==="mudar_status"){
-      tx.update(registroRef,{status:entrada.novoStatus,atualizado_em:agora,atualizado_por_uid:uid});
+      tx.update(registroRef,{status:entrada.novoStatus,
+        situacao_legivel:situacaoLegivel(entrada.novoStatus),
+        atualizado_em:agora,atualizado_por_uid:uid});
       if(espelhoCliente)tx.update(espelhoCliente,{status:entrada.novoStatus,atualizado_em:agora});
     }
     const titulo=anterior.titulo_registro||registroId;
     tx.create(empresaRef.collection("historico").doc(),{
       tipo_registro:"auditoria_operacao_empresa",acao:acao==="mudar_status"?"status_"+entrada.novoStatus:acao+"_"+tipo,
-      titulo_registro:acao+" — "+titulo,registro_id:registroId,
+      titulo_registro:acao==="mudar_status"?
+        "NF "+(anterior.numero_nf||registroId)+" — "+situacaoLegivel(entrada.novoStatus):
+        (acao==="atualizar"?"Atualização":"Desativação")+" — "+titulo,
+      registro_id:registroId,
       responsavel_uid:uid,criado_em:agora
     });
   });
