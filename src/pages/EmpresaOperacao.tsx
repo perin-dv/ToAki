@@ -15,6 +15,10 @@ const abas:{id:TipoOperacional;nome:string}[]=[
 const vazio=()=>({nome:"",telefone:"",...enderecoVazio(),placa:"",categoria:"Moto",numero_nf:"",
   destinatario_id:"",entregador_id:"",veiculo_id:"",endereco_entrega:""});
 type Campos=ReturnType<typeof vazio>;
+const statusEmPortugues:Record<string,string>={
+  pendente:"Aguardando saída",em_rota:"Em rota",entregue:"Entregue",cancelada:"Cancelada",
+  ativo:"Ativo",inativo:"Inativo"
+};
 const rotulo=(r:RegistroOperacional,tipo:TipoOperacional)=>{
   if(tipo==="veiculo")return (r.placa||"Sem placa")+" · "+(r.categoria||"Veículo");
   if(tipo==="pedido")return "NF "+(r.numero_nf||r.id);
@@ -36,6 +40,7 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
   });
   const [campos,setCampos]=useState<Campos>(vazio);
   const [buscaLista,setBuscaLista]=useState("");
+  const [filtroStatus,setFiltroStatus]=useState("todos");
   const [buscaCliente,setBuscaCliente]=useState("");
   const [buscaMotorista,setBuscaMotorista]=useState("");
   const [buscaVeiculo,setBuscaVeiculo]=useState("");
@@ -64,13 +69,17 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
   const clientes=filtrar(listas.cliente,buscaCliente,"cliente");
   const motoristas=filtrar(listas.entregador,buscaMotorista,"entregador");
   const veiculos=filtrar(listas.veiculo,buscaVeiculo,"veiculo");
-  const exibidos=useMemo(()=>registros.filter(r=>[rotulo(r,aba),r.placa,r.telefone,r.endereco_entrega,r.status]
-    .join(" ").toLocaleLowerCase("pt-BR").includes(buscaLista.toLocaleLowerCase("pt-BR"))),[registros,aba,buscaLista]);
+  const exibidos=useMemo(()=>registros.filter(r=>
+    (aba!=="pedido"||filtroStatus==="todos"||r.status===filtroStatus)&&
+    [rotulo(r,aba),r.placa,r.telefone,r.endereco_entrega,r.status,
+      r.destinatario_nome,r.entregador_nome,r.veiculo_placa]
+      .join(" ").toLocaleLowerCase("pt-BR").includes(buscaLista.toLocaleLowerCase("pt-BR"))
+  ),[registros,aba,buscaLista,filtroStatus]);
   const alterar=(chave:keyof Campos,valor:string)=>setCampos(v=>({...v,[chave]:valor}));
   const limpar=()=>{
     setCampos(vazio());setEditando(null);setBuscaCliente("");setBuscaMotorista("");setBuscaVeiculo("");
   };
-  const mudarAba=(tipo:TipoOperacional)=>{setAba(tipo);limpar();setErro("");setAviso("");setBuscaLista("");setConviteGerado(null);};
+  const mudarAba=(tipo:TipoOperacional)=>{setAba(tipo);limpar();setErro("");setAviso("");setBuscaLista("");setFiltroStatus("todos");setConviteGerado(null);};
   const escolherCliente=(id:string)=>{
     const cliente=listas.cliente.find(c=>c.id===id);
     setCampos(c=>{
@@ -165,6 +174,17 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
       {abas.map(item=><button type="button" key={item.id} className={"account-tab "+(aba===item.id?"account-tab-active":"")}
         aria-current={aba===item.id?"page":undefined} onClick={()=>mudarAba(item.id)}>{item.nome}</button>)}
     </nav>
+    {aba==="pedido"&&<section className="panel content-panel delivery-flow-guide" aria-label="Fluxo da nota fiscal">
+      <h2>Fluxo completo da NF no site</h2>
+      <div className="delivery-flow-steps">
+        <span><b>1</b> Cadastre o cliente</span>
+        <span><b>2</b> Cadastre veículo e entregador</span>
+        <span><b>3</b> Cadastre o número da NF e atribua o entregador</span>
+        <span><b>4</b> Registre a saída e acompanhe o status</span>
+        <span><b>5</b> Envie o link privado ao cliente</span>
+      </div>
+      <p className="helper">A operação da empresa já pode registrar status e mostrar os dados da NF. O GPS do motoboy e o comprovante verdadeiro serão conectados em uma etapa separada; não existe localização inventada.</p>
+    </section>}
     <div className="demo-two-columns demo-delivery-layout">
       <section className="panel content-panel">
         <div className="account-section-heading"><div><h2>{editando?"Editar":"Novo cadastro —"} {abas.find(item=>item.id===aba)?.nome}</h2>
@@ -230,8 +250,17 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
         <div className="account-section-heading"><div><h2>{abas.find(item=>item.id===aba)?.nome} cadastrados</h2>
           <p>Lista sincronizada com o Firestore. Os registros permanecem após sair e entrar.</p></div>
           <span className="pill muted">{registros.length} registros</span></div>
-        <label className="form-search-reference">Buscar {aba==="pedido"?"NF":aba==="veiculo"?"placa":"nome"}<input type="search"
+        <label className="form-search-reference">Buscar {aba==="pedido"?"NF, cliente ou entregador":aba==="veiculo"?"placa":"nome"}<input type="search"
           value={buscaLista} onChange={e=>setBuscaLista(e.target.value)} placeholder="Pesquisar registros salvos..."/></label>
+        {aba==="pedido"&&<label className="form-search-reference">Filtrar por situação
+          <select value={filtroStatus} onChange={e=>setFiltroStatus(e.target.value)}>
+            <option value="todos">Todas as NFs</option>
+            <option value="pendente">Aguardando saída</option>
+            <option value="em_rota">Em rota</option>
+            <option value="entregue">Entregues</option>
+            <option value="cancelada">Canceladas</option>
+          </select>
+        </label>}
         <div className="demo-record-list">
           {!exibidos.length&&<div className="account-empty"><strong>Nenhum registro encontrado</strong>
             <p>Cadastre um registro ou altere sua busca.</p></div>}
@@ -241,8 +270,12 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
               {r.cep&&<small>{[r.logradouro,r.numero,r.bairro,r.cidade,r.uf].filter(Boolean).join(", ")} · CEP {r.cep}</small>}
               {r.veiculo_id&&<small>Veículo: {rotulo(listas.veiculo.find(v=>v.id===r.veiculo_id)||{id:r.veiculo_id,titulo_registro:"Veículo",status:""},"veiculo")}</small>}
               {r.entregador_id&&<small>Motorista: {listas.entregador.find(e=>e.id===r.entregador_id)?.nome||"Motorista cadastrado"}</small>}
+              {aba==="pedido"&&<small>Cliente: {listas.cliente.find(c=>c.id===r.destinatario_id)?.nome||r.destinatario_nome||"Não identificado"}</small>}
+              {aba==="pedido"&&!r.entregador_id&&<small>Entregador: aguardando atribuição</small>}
+              {aba==="pedido"&&r.veiculo_id&&<small>Placa: {listas.veiculo.find(v=>v.id===r.veiculo_id)?.placa||r.veiculo_placa||"Não informada"}</small>}
               {r.endereco_entrega&&<small>Destino: {r.endereco_entrega}</small>}
-              <small>Status: {r.status==="em_rota"?"Em rota":r.status==="entregue"?"Entregue":r.status==="pendente"?"Pendente":r.status}</small>
+              <small>Status: {statusEmPortugues[r.status]||r.situacao_legivel||r.status}</small>
+              {aba==="pedido"&&r.status==="pendente"&&<small>Rastreamento: GPS ainda não conectado — registro de saída é manual</small>}
             </div>
             {podeAlterar&&r.ativo!==false&&<div className="operational-record-actions">
               {(aba!=="pedido"||r.status==="pendente")&&<button type="button" className="secondary" onClick={()=>editar(r)}>Editar</button>}
@@ -253,11 +286,11 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
                 onClick={()=>void gerarConvite(r)}>Gerar link do cliente</button>}
               {aba==="pedido"&&r.status==="pendente"&&<>
                 {r.entregador_id&&<button type="button" className="primary" disabled={operacaoId===r.id}
-                  onClick={()=>void mudarStatus(r,"em_rota")}>Iniciar rota</button>}
+                  onClick={()=>void mudarStatus(r,"em_rota")}>Registrar saída (sem GPS)</button>}
                 <button type="button" className="secondary" disabled={operacaoId===r.id} onClick={()=>void mudarStatus(r,"cancelada")}>Cancelar NF</button>
               </>}
               {aba==="pedido"&&r.status==="em_rota"&&<>
-                <button type="button" className="primary" disabled={operacaoId===r.id} onClick={()=>void mudarStatus(r,"entregue")}>Marcar entregue</button>
+                <button type="button" className="primary" disabled={operacaoId===r.id} onClick={()=>void mudarStatus(r,"entregue")}>Registrar entrega (sem comprovante)</button>
                 <button type="button" className="secondary" disabled={operacaoId===r.id} onClick={()=>void mudarStatus(r,"cancelada")}>Cancelar rota</button>
               </>}
             </div>}
