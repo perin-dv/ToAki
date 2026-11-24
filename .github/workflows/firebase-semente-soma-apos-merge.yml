@@ -7,6 +7,7 @@ on:
     branches: [main]
     paths:
       - "functions/scripts/seed-soma-thiago-sakamoto.cjs"
+      - ".github/workflows/firebase-semente-soma-apos-merge.yml"
   workflow_dispatch:
 
 permissions:
@@ -35,7 +36,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node -e 'if(require("./.firebaserc").projects.default!=="toaki-cf058")process.exit(1)'
+          node -e 'const fs=require("node:fs");const p=JSON.parse(fs.readFileSync(".firebaserc","utf8"));if(p.projects.default!=="toaki-cf058")process.exit(1)'
           node --check functions/scripts/seed-soma-thiago-sakamoto.cjs
           node --test tests/cenario-teste-soma.test.cjs tests/seed-soma-thiago-sakamoto.test.cjs
           npm --prefix functions install --no-audit --no-fund
