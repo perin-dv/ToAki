@@ -13,6 +13,7 @@ export type RegistroOperacional={
   endereco_entrega?:string;destinatario_id?:string;entregador_id?:string;veiculo_id?:string;
   destinatario_nome?:string;entregador_nome?:string;veiculo_placa?:string;
   nome_exibicao?:string;situacao_legivel?:string;
+  posicao_atual?:{latitude:number;longitude:number;precisao:number;atualizado_em?:{toMillis:()=>number}};
   ativo?:boolean;criado_em?:unknown;
 };
 const colecao:Record<TipoOperacional,string>={

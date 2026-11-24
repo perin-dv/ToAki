@@ -186,7 +186,9 @@ test('O painel operacional não usa dados simulados ou SVG fictício no /inicio'
   assert.ok(main.includes('<Route path="/demonstracao" element={<PrivateRoute area="demo"><DemoPage/></PrivateRoute>}/>'));
   assert.ok(site.includes('onSnapshot(query(caminho,limit(50))'));
   assert.ok(site.includes('Maringá, Paraná, Brasil'));
-   assert.ok(site.includes('Não é rastreamento ao vivo de motoboys'));;
+   assert.ok(site.includes('O site não envia seu próprio GPS ao Firebase'));
+  assert.ok(site.includes('GPS autorizado do entregador'));
+  assert.ok(site.includes('Date.now()-ultimaGps.atualizado_em.toMillis()<120000'));;
   assert.ok(!site.includes('dadosIniciais('));
   assert.ok(!site.includes('sessionStorage'));
   assert.ok(!site.includes('MapIllustration'));

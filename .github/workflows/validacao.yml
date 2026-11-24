@@ -53,6 +53,9 @@ jobs:
           node --check functions/cenario-teste-politica.cjs
           node --test tests/cenario-teste-soma.test.cjs
           node --check functions/alteracoes.cjs
+          node --check functions/motoboy.cjs
+          node --check functions/motoboy-policy.cjs
+          node --test tests/motoboy-policy.test.cjs tests/storage-rules-policy.test.cjs
           node --check functions/registro-legivel.cjs
           node --test tests/registro-legivel.test.cjs
           node --check functions/convites-entrega.cjs

@@ -1,0 +1,37 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function ok() {return request.auth != null && request.auth.token.email_verified == true;}
+    function registrado(empresaId,entregadorUid) {
+      return ok() && request.auth.uid == entregadorUid
+        && request.auth.token.role == 'entregador'
+        && request.auth.token.empresa_id == empresaId
+        && firestore.exists(/databases/(default)/documents/entregadores/$(entregadorUid))
+        && firestore.get(/databases/(default)/documents/entregadores/$(entregadorUid)).data.ativo == true
+        && firestore.get(/databases/(default)/documents/entregadores/$(entregadorUid)).data.empresa_id == empresaId;
+    }
+    function pedidoValido(empresaId,pedidoId,uid) {
+      return firestore.exists(/databases/(default)/documents/empresas/$(empresaId)/pedidos/$(pedidoId))
+        && firestore.get(/databases/(default)/documents/empresas/$(empresaId)/pedidos/$(pedidoId)).data.entregador_uid == uid
+        && firestore.get(/databases/(default)/documents/empresas/$(empresaId)/pedidos/$(pedidoId)).data.status == 'em_rota';
+    }
+    function podeLerGestor(empresaId) {
+      return ok() && request.auth.token.empresa_id == empresaId
+        && firestore.exists(/databases/(default)/documents/empresas/$(empresaId)/funcionarios/$(request.auth.uid))
+        && firestore.get(/databases/(default)/documents/empresas/$(empresaId)/funcionarios/$(request.auth.uid)).data.ativo == true
+        && firestore.get(/databases/(default)/documents/empresas/$(empresaId)/funcionarios/$(request.auth.uid)).data.papel in ['dono_empresa','gestor'];
+    }
+    match /comprovantes/{empresaId}/{pedidoId}/{uid}/{nome} {
+      allow create: if nome in ['foto.jpg','assinatura.png']
+        && registrado(empresaId,uid)
+        && pedidoValido(empresaId,pedidoId,uid)
+        && request.resource.contentType == (nome == 'foto.jpg' ? 'image/jpeg' : 'image/png')
+        && request.resource.size > 64
+        && request.resource.size < (nome == 'foto.jpg' ? 8388608 : 2097152);
+      allow get: if (registrado(empresaId,uid) && pedidoValido(empresaId,pedidoId,uid))
+        || podeLerGestor(empresaId);
+      allow list, update, delete: if false;
+    }
+    match /{allPaths=**} {allow read, write: if false;}
+  }
+}

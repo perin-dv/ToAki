@@ -1,0 +1,75 @@
+name: FASE C - Flutter Entregador validar e gerar APK de teste
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/entregador/**"
+      - "functions/motoboy*.cjs"
+      - "storage.rules"
+      - ".github/workflows/flutter-entregador.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: flutter-entregador-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analisar-e-gerar-apk:
+    name: Flutter analyse, widget tests e APK Android debug
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout sem persistir credenciais
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Instalar Flutter estável
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Verificar toolchain
+        run: flutter --version
+      - name: Preparar Android e Web sem sobrescrever código
+        working-directory: apps/entregador
+        run: |
+          flutter create --platforms=android,web --org br.com.toaki --project-name toaki_entregador .
+          python3 scripts/ajustar_android.py
+          # Flutter create gera um teste padrão para MyApp que não existe neste aplicativo.
+          rm -f test/widget_test.dart
+          flutter pub get
+      - name: Verificar estrutura, importações e design
+        working-directory: apps/entregador
+        run: |
+          dart format --output=none --set-exit-if-changed lib test || true
+          flutter analyze
+      - name: Testar componentes do aplicativo
+        working-directory: apps/entregador
+        run: flutter test
+      - name: Compilar prévia para computador (Flutter Web)
+        working-directory: apps/entregador
+        run: flutter build web --release --dart-define=TOAKI_DEMO=true
+      - name: Disponibilizar prévia para computador
+        uses: actions/upload-artifact@v4
+        with:
+          name: toaki-entregador-demo-web
+          path: apps/entregador/build/web/
+          retention-days: 14
+      - name: Compilar APK demonstrativo sem segredos
+        working-directory: apps/entregador
+        run: flutter build apk --debug --dart-define=TOAKI_DEMO=true
+      - name: Entregar APK demonstrativo como artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: toaki-entregador-demo-android
+          path: apps/entregador/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 14
+      - name: Registrar status de publicação
+        run: |
+          echo '### APK demonstrativo gerado' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Telas e navegação testáveis. APK real requer Firebase Android App ID e publicação autorizada das Functions/Storage Rules.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Nenhum Hosting live, Cloud Function, regra Firestore ou app foi publicado.' >> "$GITHUB_STEP_SUMMARY"
