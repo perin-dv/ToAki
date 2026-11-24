@@ -12,7 +12,7 @@ function texto(s,min,max,obrigatorio=true){
 }
 function normalizarPlaca(valor){
   if(typeof valor!=="string")throw Error("Informe a placa do veículo.");
-  const placa=valor.trim().toUpperCase().replace(/[\\s-]+/g,"");
+  const placa=valor.trim().toUpperCase().replace(/[\s-]+/g,"");
   if(placa.length!==7)throw Error("Placa incompleta: informe 7 caracteres. Exemplos: ABC-1234 ou ABC1D23.");
   if(!/^(?:[A-Z]{3}[0-9]{4}|[A-Z]{3}[0-9][A-Z][0-9]{2})$/.test(placa))
     throw Error("Placa inválida: use ABC-1234 (antiga) ou ABC1D23 (Mercosul).");
