@@ -10,6 +10,14 @@ function texto(s,min,max,obrigatorio=true){
   if(n.length<min||n.length>max)throw Error("Campo fora do tamanho permitido.");
   return n;
 }
+function normalizarPlaca(valor){
+  if(typeof valor!=="string")throw Error("Informe a placa do veículo.");
+  const placa=valor.trim().toUpperCase().replace(/[\\s-]+/g,"");
+  if(placa.length!==7)throw Error("Placa incompleta: informe 7 caracteres. Exemplos: ABC-1234 ou ABC1D23.");
+  if(!/^(?:[A-Z]{3}[0-9]{4}|[A-Z]{3}[0-9][A-Z][0-9]{2})$/.test(placa))
+    throw Error("Placa inválida: use ABC-1234 (antiga) ou ABC1D23 (Mercosul).");
+  return placa;
+}
 function referenciaOpcional(valor,nome){
   if(valor===undefined||valor===null||valor==="")return "";
   if(!idOk(valor))throw Error(nome+" inválido.");
@@ -47,8 +55,7 @@ function validarOperacao(input){
     }};
   }
   if(tipo==="veiculo"){
-    const placa=texto(dados.placa,7,7).toUpperCase();
-    if(!/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(placa))throw Error("Placa inválida.");
+    const placa=normalizarPlaca(dados.placa);
     if(!["Moto","Carro","Van","Caminhão"].includes(dados.categoria))throw Error("Categoria inválida.");
     return{empresaId,tipo,dados:{placa,categoria:dados.categoria}};
   }
@@ -93,4 +100,4 @@ function validarTransicaoStatus(atual,novo){
   if(!(permitidos[atual]||[]).includes(novo))throw Error("Transição de status não permitida.");
   return novo;
 }
-module.exports={validarOperacao,validarAlteracao,validarTransicaoStatus};
+module.exports={validarOperacao,validarAlteracao,validarTransicaoStatus,normalizarPlaca};

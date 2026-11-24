@@ -590,3 +590,11 @@
 .delivery-flow-guide>.helper{margin-top:12px}
 @media(max-width:960px){.delivery-flow-steps{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:600px){.delivery-flow-steps{grid-template-columns:1fr}}
+
+/* Cadastro rápido do cenário fictício Soma, isolado no frontend operacional */
+.soma-quick-test{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin:15px 0}
+.soma-quick-test>div{flex:1 1 380px;min-width:0}
+.soma-quick-test strong{font-size:15px;color:#253746}
+.soma-quick-test p{font-size:12px;line-height:1.6;color:#607083;margin:8px 0 0}
+.soma-quick-test .primary{flex:0 1 250px;min-height:40px}
+@media(max-width:650px){.soma-quick-test .primary{width:100%;flex:1 1 100%}}

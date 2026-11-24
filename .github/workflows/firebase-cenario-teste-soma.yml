@@ -1,0 +1,52 @@
+name: FASE B - publicar cadastro rapido de teste Soma (manual)
+
+# Deploy apenas das Functions de cadastro + cenário Soma; não altera produção web.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: toaki-cenario-teste-soma
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    if: github.repository == 'perin-dv/ToAki' && github.ref == 'refs/heads/main' && github.actor == github.repository_owner
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validar código e projeto
+        run: |
+          set -euo pipefail
+          node -e 'if(require("./.firebaserc").projects.default!=="toaki-cf058")process.exit(1)'
+          npm install --no-audit --no-fund
+          npm test
+          npm run build
+          npm --prefix functions install --no-audit --no-fund
+          node --check functions/cenario-teste-soma.cjs
+          node --check functions/operacao-politica.cjs
+      - name: Validar credencial do Firebase
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TOAKI_CF058 }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$FIREBASE_SERVICE_ACCOUNT_JSON" ]]; then echo "::error::Credencial ausente";exit 1;fi
+          umask 077
+          CRED="$RUNNER_TEMP/toaki-cenario-soma.json"
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$CRED"
+          node -e 'const fs=require("fs");const f=JSON.parse(fs.readFileSync(process.argv[1]));if(f.type!=="service_account"||f.project_id!=="toaki-cf058")process.exit(1)' "$CRED"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$CRED" >> "$GITHUB_ENV"
+      - name: Publicar somente cadastro e cenário de teste
+        run: |
+          set -euo pipefail
+          trap 'rm -f "$GOOGLE_APPLICATION_CREDENTIALS"' EXIT
+          npx firebase deploy --only functions:operarEmpresaHomologacao,functions:alterarRegistroEmpresaPiloto,functions:criarCenarioEntregaTesteSoma --project toaki-cf058 --non-interactive
+          echo 'Functions do cadastro e cenário de teste publicadas. Hosting, Rules e IAM não alterados.' >> "$GITHUB_STEP_SUMMARY"

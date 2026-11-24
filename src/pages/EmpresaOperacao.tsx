@@ -5,6 +5,7 @@ import EnderecoPorCep from "../components/EnderecoPorCep";
 import {enderecoVazio,enderecoCompleto,validarEndereco} from "../lib/cep";
 import {ambientePilotoOriginal} from "../lib/ambiente";
 import {criarConviteEntrega,montarLinkConvite} from "../lib/vinculoEntrega";
+import {criarCenarioTesteSoma} from "../lib/cenarioTesteSoma";
 
 const abas:{id:TipoOperacional;nome:string}[]=[
   {id:"cliente",nome:"Clientes"},
@@ -47,6 +48,7 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
   const [editando,setEditando]=useState<string|null>(null);
   const [salvando,setSalvando]=useState(false);
   const [operacaoId,setOperacaoId]=useState("");
+  const [criandoCenario,setCriandoCenario]=useState(false);
   const [conviteGerado,setConviteGerado]=useState<{pedidoId:string;link:string;expiraEm:number}|null>(null);
   const podeGerenciar=role==="dono_empresa"||role==="gestor";
   const podeAlterar=podeGerenciar||(role==="vendedor"&&aba==="pedido");
@@ -112,7 +114,7 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
     try{
       if(editando)await alterarRegistro(empresaId,aba,editando,"atualizar",montarPayload());
       else await criarRegistro(empresaId,aba,montarPayload());
-      setAviso(editando?"Alterações confirmadas no Firestore da sua empresa.":"Cadastro confirmado no Firestore da sua empresa.");
+      setAviso(editando?"Alterações confirmadas no Firestore da sua empresa.":"Cadastro confirmado no Firestore da sua empresa. Você já pode continuar para a próxima aba.");
       limpar();
     }catch(e){setErro("Operação não realizada: "+(e instanceof Error?e.message:"Falha desconhecida."));}
     finally{setSalvando(false);}
@@ -145,6 +147,19 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
       setAviso("Status atualizado no Firebase e registrado no histórico.");}
     catch(e){setErro(e instanceof Error?e.message:"Não foi possível mudar o status.");}
     finally{setOperacaoId("");}
+  };
+  const montarTeste=async()=>{
+    if(!empresaId||empresaId!=="empresa_teste_soma"||!podeGerenciar)return;
+    if(!window.confirm("Criar NF fictícia 20261124001, cliente Sakamoto (teste), entregador Thiago (teste) e veículo Moto (placa fictícia TST1A24)? Os dados serão salvos SOMENTE na Soma de testes. Não ativa GPS."))return;
+    setCriandoCenario(true);setErro("");setAviso("");setBuscaLista("");setFiltroStatus("todos");
+    try{
+      const c=await criarCenarioTesteSoma();
+      setAviso(c.jaExistia?
+        "O cenário Thiago / Sakamoto já existe na Soma de testes. Abra NF "+c.numeroNF+" abaixo.":
+        "Cenário de teste cadastrado com sucesso no Firebase Soma: NF "+c.numeroNF+" · Cliente Sakamoto · Thiago · Moto TST1A24. A nota não é fiscal real.");
+    }catch(e){
+      setErro("Não foi possível criar o cenário fictício: "+(e instanceof Error?e.message:"Erro desconhecido."));
+    }finally{setCriandoCenario(false);}
   };
   const gerarConvite=async(r:RegistroOperacional)=>{
     if(!empresaId||!podeGerenciar)return;
@@ -185,6 +200,15 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
       </div>
       <p className="helper">A operação da empresa já pode registrar status e mostrar os dados da NF. O GPS do motoboy e o comprovante verdadeiro serão conectados em uma etapa separada; não existe localização inventada.</p>
     </section>}
+    {aba==="pedido"&&empresaId==="empresa_teste_soma"&&podeGerenciar&&
+      <section className="panel content-panel soma-quick-test" aria-label="Cadastro rápido de teste">
+        <div><strong>Teste rápido: Thiago → Sakamoto</strong>
+          <p>Cria uma única vez, somente na Soma fictícia: cliente Sakamoto, entregador Thiago, uma moto e NF 20261124001. Placa TST1A24 e endereço ilustrativo em Maringá; nenhum documento fiscal é emitido.</p>
+          <p className="helper">O entregador ficará cadastrado para atribuição. Para rastrear GPS real, ainda precisará aceitar convite e autorizar a localização no aplicativo.</p>
+        </div>
+        <button type="button" className="primary" disabled={criandoCenario}
+          onClick={()=>void montarTeste()}>{criandoCenario?"Salvando cenário...":"Criar cenário de teste no Firebase"}</button>
+      </section>}
     <div className="demo-two-columns demo-delivery-layout">
       <section className="panel content-panel">
         <div className="account-section-heading"><div><h2>{editando?"Editar":"Novo cadastro —"} {abas.find(item=>item.id===aba)?.nome}</h2>
@@ -198,12 +222,14 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
             complemento:campos.complemento,bairro:campos.bairro,cidade:campos.cidade,uf:campos.uf}}
             onChange={endereco=>setCampos(c=>({...c,...endereco}))} prefix="empresa-cliente"/>}
           {aba==="veiculo"&&<>
-            <label>Placa<input required minLength={7} maxLength={7} readOnly={!!editando}
-              value={campos.placa} onChange={e=>alterar("placa",e.target.value.toUpperCase())} placeholder="ABC1D23"/></label>
+            <label>Placa do veículo (digite aqui)<input required minLength={7} maxLength={8} readOnly={!!editando}
+              value={campos.placa} onChange={e=>alterar("placa",e.target.value.toUpperCase())}
+              autoCapitalize="characters" placeholder="ABC-1234 ou ABC1D23"/></label>
+            <p className="helper">Aceita placa antiga ABC-1234 ou Mercosul ABC1D23. São 7 letras/números (hífen opcional). ABC-123 está incompleta.</p>
             <label>Categoria<select value={campos.categoria} onChange={e=>alterar("categoria",e.target.value)}>
               <option>Moto</option><option>Carro</option><option>Van</option><option>Caminhão</option></select></label>
           </>}
-          {(aba==="entregador"||aba==="pedido")&&<div className="form-search-reference">
+          {aba==="entregador"&&<div className="form-search-reference">
             <label>Buscar moto/veículo por placa<input type="search" value={buscaVeiculo}
               onChange={e=>setBuscaVeiculo(e.target.value)} placeholder="Digite a placa cadastrada..."/></label>
             <label>Veículo vinculado<select value={campos.veiculo_id} onChange={e=>alterar("veiculo_id",e.target.value)}>
@@ -227,13 +253,18 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
               {clientes.length===0&&<p className="helper">Nenhum cliente corresponde à busca. Cadastre o destinatário primeiro.</p>}
             </div>
             <div className="form-search-reference">
-              <label>Buscar motorista<input type="search" value={buscaMotorista} onChange={e=>setBuscaMotorista(e.target.value)}
-                placeholder="Digite o nome do motorista..."/></label>
-              <label>Motorista responsável<select value={campos.entregador_id} onChange={e=>escolherMotorista(e.target.value)}>
+              <label>Buscar entregador<input type="search" value={buscaMotorista} onChange={e=>setBuscaMotorista(e.target.value)}
+                placeholder="Digite o nome do entregador..."/></label>
+              <label>Entregador responsável<select value={campos.entregador_id} onChange={e=>escolherMotorista(e.target.value)}>
                 <option value="">Aguardando atribuição</option>
                 {listas.entregador.filter(r=>r.id===campos.entregador_id||motoristas.some(c=>c.id===r.id))
                   .filter(r=>r.ativo!==false).map(r=><option key={r.id} value={r.id}>{rotulo(r,"entregador")}</option>)}
               </select></label>
+              {campos.entregador_id&&<p className="helper" role="status">Veículo associado automaticamente: {
+                listas.veiculo.find(v=>v.id===campos.veiculo_id)
+                  ?rotulo(listas.veiculo.find(v=>v.id===campos.veiculo_id)!,"veiculo")
+                  :"nenhum veículo associado a este entregador. Cadastre e vincule em Motoristas."
+              }. Não é necessário selecionar uma segunda vez na NF.</p>}
             </div>
             <label>Destino da entrega<input required minLength={5} maxLength={180} value={campos.endereco_entrega}
               onChange={e=>alterar("endereco_entrega",e.target.value)} placeholder="Endereço cadastrado ou destino autorizado"/></label>
