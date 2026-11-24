@@ -28,6 +28,11 @@ service cloud.firestore {
         && exists(funcionarioPath(empresaId))
         && get(funcionarioPath(empresaId)).data.ativo == true;
     }
+    // Entregador vê apenas sua própria conta/tarefa. Nunca toda a frota, clientes ou NFs.
+    function operadorEmpresa(empresaId) {
+      return funcionario(empresaId)
+        && get(funcionarioPath(empresaId)).data.papel in ['dono_empresa','gestor','vendedor'];
+    }
     function gestor(empresaId) {
       return funcionario(empresaId)
         && get(funcionarioPath(empresaId)).data.papel in ['dono_empresa','gestor'];
@@ -89,12 +94,12 @@ service cloud.firestore {
       }
     }
     match /empresas/{empresaId} {
-      allow get: if funcionario(empresaId) || adminToaki();
+      allow get: if operadorEmpresa(empresaId) || adminToaki();
       allow list: if adminToaki();
       allow write: if false;
 
       match /filiais/{filialId} {
-        allow read: if funcionario(empresaId);
+        allow read: if operadorEmpresa(empresaId);
         allow write: if false;
       }
       match /funcionarios/{uid} {
@@ -103,35 +108,35 @@ service cloud.firestore {
         allow write: if false;
       }
       match /clientes/{clienteId} {
-        allow read: if funcionario(empresaId);
+        allow read: if operadorEmpresa(empresaId);
         allow write: if false;
       }
       match /entregadores_vinculados/{entregadorId} {
-        allow read: if funcionario(empresaId);
+        allow read: if operadorEmpresa(empresaId);
         allow write: if false;
       }
       match /veiculos/{veiculoId} {
-        allow read: if funcionario(empresaId);
+        allow read: if operadorEmpresa(empresaId);
         allow write: if false;
       }
       match /pedidos/{pedidoId} {
-        allow read: if funcionario(empresaId);
+        allow read: if operadorEmpresa(empresaId);
         allow write: if false;
       }
       match /rotas/{rotaId} {
-        allow read: if funcionario(empresaId);
+        allow read: if operadorEmpresa(empresaId);
         allow write: if false;
       }
       match /entregas/{entregaId} {
-        allow read: if funcionario(empresaId);
+        allow read: if operadorEmpresa(empresaId);
         allow write: if false;
       }
       match /ocorrencias/{ocorrenciaId} {
-        allow read: if funcionario(empresaId);
+        allow read: if operadorEmpresa(empresaId);
         allow write: if false;
       }
       match /comprovantes/{comprovanteId} {
-        allow read: if funcionario(empresaId);
+        allow read: if operadorEmpresa(empresaId);
         allow write: if false;
       }
       match /links_rastreamento/{linkId} {

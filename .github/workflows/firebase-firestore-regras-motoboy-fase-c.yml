@@ -1,0 +1,60 @@
+name: FASE C - publicar Firestore Rules do escopo motoboy (aprovação manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      aprovacao:
+        description: "Digite PUBLICAR_REGRAS_MOTOBOY somente após validar no emulador e revisar o PR"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: toaki-fase-c-firestore-rules
+  cancel-in-progress: false
+
+jobs:
+  rules:
+    if: github.repository == 'perin-dv/ToAki' && github.ref == 'refs/heads/main' && github.actor == github.repository_owner && inputs.aprovacao == 'PUBLICAR_REGRAS_MOTOBOY'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Configurar Java para o Firestore Emulator
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Validar projeto e regras no emulador
+        shell: bash
+        run: |
+          set -euo pipefail
+          node -e 'const fs=require("fs");if(JSON.parse(fs.readFileSync(".firebaserc")).projects.default!=="toaki-cf058")process.exit(1)'
+          npm install --no-audit --no-fund
+          npm run test:security
+      - name: Validar a credencial
+        shell: bash
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TOAKI_CF058 }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$FIREBASE_SERVICE_ACCOUNT_JSON" ]]; then exit 1; fi
+          umask 077
+          CRED="$RUNNER_TEMP/toaki-rules-motoboy.json"
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$CRED"
+          node -e 'const fs=require("fs");const k=JSON.parse(fs.readFileSync(process.argv[1]));if(k.type!=="service_account"||k.project_id!=="toaki-cf058")process.exit(1)' "$CRED"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$CRED" >> "$GITHUB_ENV"
+      - name: Implantar APENAS Firestore Rules aprovadas
+        shell: bash
+        run: |
+          set -euo pipefail
+          trap 'rm -f "$GOOGLE_APPLICATION_CREDENTIALS"' EXIT
+          npx firebase deploy --only firestore:rules --project toaki-cf058 --non-interactive
+          echo 'Regras Firestore revisadas implantadas. Hosting, Functions e Storage não alterados.' >> "$GITHUB_STEP_SUMMARY"
