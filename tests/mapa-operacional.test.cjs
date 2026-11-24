@@ -23,15 +23,19 @@ test("localização do aparelho é opcional, HTTPS e não é enviada ao Firebase
   assert.ok(page.includes("onClick={localizarAparelho}"));
   assert.ok(page.includes("Minha localização"));
   assert.doesNotMatch(action,/watchPosition|setDoc|addDoc|updateDoc|httpsCallable|sendBeacon|fetch\(/);
-  assert.ok(page.includes("Não é rastreamento ao vivo de motoboys"));
+  assert.ok(page.includes("O site não envia seu próprio GPS ao Firebase"));
 });
-test("selecionar NF real concentra o mapa no endereço escolhido; não afirma GPS do boy",()=>{
+test("selecionar NF real permite GPS verificado e recusa localização antiga",()=>{
   const page=source("src/pages/SiteOperacionalPage.tsx");
-  assert.ok(page.includes('setModoMapa(r.endereco_entrega?"destino":"cidade")'));
+  assert.ok(page.includes('r.endereco_entrega?"destino":"cidade"'));
+  assert.ok(page.includes('Date.now()-r.posicao_atual.atualizado_em.toMillis()<120000'));
+  assert.ok(page.includes('modoMapa==="entregador"&&focoGps'));
   assert.ok(page.includes('const enderecoSelecionado=modoMapa==="destino"'));
   assert.ok(page.includes("encodeURIComponent(focoMapa)"));
   assert.ok(page.includes("Ao selecionar uma NF, o Google Maps recebe o destino cadastrado"));
   assert.ok(!page.includes("setMostrarMapa"));
+  assert.ok(page.includes("GPS autorizado do entregador"));
+  assert.ok(page.includes("Não é possível consultar as NFs"));
   const css=source("src/styles.css");
   assert.ok(css.includes(".real-map-toolbar"));
   assert.ok(css.includes(".real-map-content>.real-map-frame"));

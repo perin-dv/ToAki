@@ -42,3 +42,8 @@ O APK de demonstração não deve ser enviado como se fosse app de produção e 
 
 ## Estado de publicação
 A branch/PR é preparação para teste. Cloud Functions, regras Storage e APK real **não são publicados automaticamente**. `main` protegida; Hosting Live intocado.
+
+## Workflows seguros de publicação após revisão
+- `firebase-motoboy-fase-c.yml`: publica apenas as oito Functions da etapa, acionado manualmente pelo dono na `main`.
+- `firebase-storage-motoboy-fase-c.yml`: **modifica Storage Rules no bucket do Firebase existente**; exige digitar `PUBLICAR_STORAGE_FASE_C`. Conferir previamente as regras em emulador e manter os buckets de produção isolados. Não ativar sem aprovação.
+- `flutter-entregador.yml`: gera APK de **prévia** e executa testes sem Firebase.
