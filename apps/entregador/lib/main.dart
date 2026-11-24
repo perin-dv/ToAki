@@ -53,7 +53,7 @@ class ToAkiShell extends StatefulWidget {
 class _ToAkiShellState extends State<ToAkiShell>{
   late final ToAkiApi? api=demoMode||widget.setupError!=null?null:ToAkiApi();
   late final TrackingService tracking=TrackingService(api);
-  bool logged=demoMode,linked=demoMode,working=false;
+  bool logged=false,linked=demoMode,working=false;
   bool showingProof=false;
   Delivery? selected=demoMode?Delivery.demo:null;
   List<Delivery> deliveries=demoMode?[Delivery.demo]:[];

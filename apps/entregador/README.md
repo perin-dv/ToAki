@@ -47,3 +47,13 @@ A branch/PR é preparação para teste. Cloud Functions, regras Storage e APK re
 - `firebase-motoboy-fase-c.yml`: publica apenas as oito Functions da etapa, acionado manualmente pelo dono na `main`.
 - `firebase-storage-motoboy-fase-c.yml`: **modifica Storage Rules no bucket do Firebase existente**; exige digitar `PUBLICAR_STORAGE_FASE_C`. Conferir previamente as regras em emulador e manter os buckets de produção isolados. Não ativar sem aprovação.
 - `flutter-entregador.yml`: gera APK de **prévia** e executa testes sem Firebase.
+
+## Windows PowerShell (PC)
+Na raiz do repositório:
+```powershell
+cd apps/entregador
+powershell -ExecutionPolicy Bypass -File .\\scripts\\preparar.ps1
+flutter run -d chrome --dart-define=TOAKI_DEMO=true
+```
+Na demonstração, a primeira tela é **Login** e o botão Entrar abre as entregas fictícias. A rota, foto e assinatura são exemplos e não fazem alterações no Firebase.
+Se preferir não instalar Flutter no PC, baixe o artifact `toaki-entregador-demo-web` na execução de CI e sirva os arquivos extraídos com um servidor HTTP estático local.

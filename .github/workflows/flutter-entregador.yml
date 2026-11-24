@@ -53,6 +53,12 @@ jobs:
       - name: Compilar prévia para computador (Flutter Web)
         working-directory: apps/entregador
         run: flutter build web --release --dart-define=TOAKI_DEMO=true
+      - name: Disponibilizar prévia para computador
+        uses: actions/upload-artifact@v4
+        with:
+          name: toaki-entregador-demo-web
+          path: apps/entregador/build/web/
+          retention-days: 14
       - name: Compilar APK demonstrativo sem segredos
         working-directory: apps/entregador
         run: flutter build apk --debug --dart-define=TOAKI_DEMO=true
