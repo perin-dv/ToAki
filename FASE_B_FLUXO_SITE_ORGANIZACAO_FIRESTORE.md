@@ -55,3 +55,11 @@ Validar com dados de teste: cliente e veículo aparecem pelos nomes, NF por núm
 - Uma única chamada validada no backend e **uma transação Firestore** criam o veículo, o entregador vinculado, a reserva da placa e a auditoria. Se houver conflito de placa, nenhuma entidade é criada.
 - Cadastro de NF exige selecionar **só o entregador**, recuperando seu veículo automaticamente. A mudança do veículo de um entregador existente permanece na edição autorizada.
 - Registrar entregador no cadastro empresarial **não cria conta móvel nem ativa GPS**.
+
+## Gravação direta do teste aprovado Thiago → Sakamoto
+- Após merge protegido do PR específico, o workflow `firebase-semente-soma-apos-merge.yml` executa o seed `functions/scripts/seed-soma-thiago-sakamoto.cjs`, sem exigir cadastro manual na interface.
+- Escritas **somente no Firestore do projeto `toaki-cf058`**, empresa sandbox **`empresa_teste_soma`**, se o documento for oficialmente `tipo_registro: empresa_teste`, `modo_teste: true`, `ambiente: piloto`, `cnpj: null`, `status: ativa`.
+- Cliente **Sakamoto (teste)**, entregador **Thiago (teste)**, veículo **Moto TST1A24** e NF **20261124001** aparecem com IDs legíveis e vínculos íntegros. Placa e endereço são ilustrativos.
+- Tudo é gravado na **mesma transação** com reservas de NF/placa e auditoria. Não toca em documentos de outras empresas e não sobrescreve conflitos nem registros antigos.
+- O script **consulta os registros novamente após a transação** e só informa sucesso se todas as relações persistiram. Em falhas, o workflow aparece vermelho e não se deve afirmar publicação.
+- Nenhum login Auth de motoboy nem GPS é criado. O amigo Thiago ainda precisará de autenticação e consentimento para rastreamento no futuro app.

@@ -1,0 +1,67 @@
+name: FASE B - semear NF Thiago Sakamoto no Firestore (aprovado)
+
+# Um único seed de documentos fictícios, após merge protegido em main.
+# Não faz deploy de Functions, Hosting, Rules, Auth, IAM ou GPS.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "functions/scripts/seed-soma-thiago-sakamoto.cjs"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: toaki-semente-teste-thiago-sakamoto
+  cancel-in-progress: false
+
+jobs:
+  gravar-dados-ficticios:
+    name: Gravar e conferir 4 documentos de teste no Firestore Soma
+    if: github.repository == 'perin-dv/ToAki' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Obter apenas a main aprovada
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Configurar Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validar projeto e cenário antes de usar credencial
+        shell: bash
+        run: |
+          set -euo pipefail
+          node -e 'if(require("./.firebaserc").projects.default!=="toaki-cf058")process.exit(1)'
+          node --check functions/scripts/seed-soma-thiago-sakamoto.cjs
+          node --test tests/cenario-teste-soma.test.cjs tests/seed-soma-thiago-sakamoto.test.cjs
+          npm --prefix functions install --no-audit --no-fund
+      - name: Preparar credencial sem expor segredo
+        shell: bash
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TOAKI_CF058 }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$FIREBASE_SERVICE_ACCOUNT_JSON" ]]; then
+            echo "::error::Credencial Firebase não configurada; nenhum dado foi criado."
+            exit 1
+          fi
+          umask 077
+          CRED="$RUNNER_TEMP/toaki-semente-soma.json"
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$CRED"
+          node -e 'const fs=require("fs");const k=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));if(k.type!=="service_account"||k.project_id!=="toaki-cf058")process.exit(1)' "$CRED"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$CRED" >> "$GITHUB_ENV"
+      - name: Gravar e verificar Thiago, moto, Sakamoto e NF apenas na Soma
+        shell: bash
+        env:
+          TOAKI_SEED_SOMA: AUTORIZADO_CENARIO_FICTICIO_SOMA_20261124
+        run: |
+          set -euo pipefail
+          trap 'rm -f "$GOOGLE_APPLICATION_CREDENTIALS"' EXIT
+          node functions/scripts/seed-soma-thiago-sakamoto.cjs
+          echo '### Dados fictícios gravados e verificados no Firestore' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Soma: cliente Sakamoto (teste), entregador Thiago (teste), moto TST1A24, NF 20261124001.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Não alterados: Hosting Live, Rules, Auth, Cloud Functions, IAM ou GPS.' >> "$GITHUB_STEP_SUMMARY"
