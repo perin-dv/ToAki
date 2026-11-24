@@ -57,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen>{
               suffixIcon:IconButton(tooltip:'Mostrar senha',onPressed:()=>setState(()=>showPassword=!showPassword),
                 icon:Icon(showPassword?Icons.visibility_off_outlined:Icons.visibility_outlined)))),
           Align(alignment:Alignment.centerRight,
-            child:TextButton(onPressed:busy?null:()=>run(()async{
+            child:TextButton(onPressed:busy||widget.demo?null:()=>run(()async{
               if(email.text.trim().isEmpty)throw StateError('Informe seu e-mail.');
               await widget.api!.reset(email.text);
               if(mounted)setState(()=>message='Enviamos um link de recuperação de senha.');

@@ -167,3 +167,4 @@ exports.iniciarEntregaMotoboyPiloto=fMotoboy.iniciarEntregaMotoboyPiloto;
 exports.enviarGpsMotoboyPiloto=fMotoboy.enviarGpsMotoboyPiloto;
 exports.pararGpsMotoboyPiloto=fMotoboy.pararGpsMotoboyPiloto;
 exports.concluirEntregaMotoboyPiloto=fMotoboy.concluirEntregaMotoboyPiloto;
+exports.registrarPushMotoboyPiloto=fMotoboy.registrarPushMotoboyPiloto;

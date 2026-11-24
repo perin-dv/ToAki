@@ -22,12 +22,12 @@ service firebase.storage {
         && firestore.get(/databases/(default)/documents/empresas/$(empresaId)/funcionarios/$(request.auth.uid)).data.papel in ['dono_empresa','gestor'];
     }
     match /comprovantes/{empresaId}/{pedidoId}/{uid}/{nome} {
-      allow create: if nome in ['foto.png','assinatura.png']
+      allow create: if nome in ['foto.jpg','assinatura.png']
         && registrado(empresaId,uid)
         && pedidoValido(empresaId,pedidoId,uid)
-        && request.resource.contentType == 'image/png'
+        && request.resource.contentType == (nome == 'foto.jpg' ? 'image/jpeg' : 'image/png')
         && request.resource.size > 64
-        && request.resource.size < (nome == 'foto.png' ? 8388608 : 2097152);
+        && request.resource.size < (nome == 'foto.jpg' ? 8388608 : 2097152);
       allow get: if (registrado(empresaId,uid) && pedidoValido(empresaId,pedidoId,uid))
         || podeLerGestor(empresaId);
       allow list, update, delete: if false;

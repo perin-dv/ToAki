@@ -6,6 +6,7 @@ import {enderecoVazio,enderecoCompleto,validarEndereco} from "../lib/cep";
 import {ambientePilotoOriginal} from "../lib/ambiente";
 import {criarConviteEntrega,montarLinkConvite} from "../lib/vinculoEntrega";
 import {criarCenarioTesteSoma} from "../lib/cenarioTesteSoma";
+import {criarConviteMotoboy} from "../lib/vinculoMotoboy";
 
 const abas:{id:TipoOperacional;nome:string}[]=[
   {id:"cliente",nome:"Clientes"},
@@ -49,6 +50,10 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
   const [salvando,setSalvando]=useState(false);
   const [operacaoId,setOperacaoId]=useState("");
   const [criandoCenario,setCriandoCenario]=useState(false);
+  const [convidandoMotoboy,setConvidandoMotoboy]=useState(false);
+  const [idMotoboy,setIdMotoboy]=useState("");
+  const [emailMotoboy,setEmailMotoboy]=useState("");
+  const [codigoMotoboy,setCodigoMotoboy]=useState<{codigo:string;expiraEm:number}|null>(null);
   const [conviteGerado,setConviteGerado]=useState<{pedidoId:string;link:string;expiraEm:number}|null>(null);
   const podeGerenciar=role==="dono_empresa"||role==="gestor";
   const podeAlterar=podeGerenciar||(role==="vendedor"&&aba==="pedido");
@@ -165,6 +170,16 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
     catch(e){setErro(e instanceof Error?e.message:"Não foi possível mudar o status.");}
     finally{setOperacaoId("");}
   };
+  const vincularAppMotoboy=async()=>{
+    if(!empresaId||!podeGerenciar||!idMotoboy||!emailMotoboy)return;
+    setConvidandoMotoboy(true);setErro("");setCodigoMotoboy(null);
+    try{
+      const c=await criarConviteMotoboy(empresaId,idMotoboy,emailMotoboy);
+      setCodigoMotoboy({codigo:c.codigo,expiraEm:c.expiraEm});
+      setAviso("Convite de aplicativo criado para o e-mail informado. Compartilhe o código privadamente.");
+    }catch(e){setErro("Falha ao convidar entregador: "+(e instanceof Error?e.message:"Erro desconhecido"));}
+    finally{setConvidandoMotoboy(false);}
+  };
   const montarTeste=async()=>{
     if(!empresaId||empresaId!=="empresa_teste_soma"||!podeGerenciar)return;
     if(!window.confirm("Criar NF fictícia 20261124001, cliente Sakamoto (teste), entregador Thiago (teste) e veículo Moto (placa fictícia TST1A24)? Os dados serão salvos SOMENTE na Soma de testes. Não ativa GPS."))return;
@@ -206,6 +221,33 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
       {abas.map(item=><button type="button" key={item.id} className={"account-tab "+(aba===item.id?"account-tab-active":"")}
         aria-current={aba===item.id?"page":undefined} onClick={()=>mudarAba(item.id)}>{item.nome}</button>)}
     </nav>
+    {aba==="entregador"&&podeGerenciar&&
+      <section className="panel content-panel" aria-label="Vincular aplicativo do entregador">
+        <div className="account-section-heading"><div>
+          <h2>Conectar entregador ao aplicativo toAki</h2>
+          <p>Escolha o entregador cadastrado e o e-mail verdadeiro da conta dele. O convite é individual, dura 24h e não ativa GPS automaticamente.</p>
+        </div></div>
+        <div className="form-search-reference">
+          <label>Entregador cadastrado<select value={idMotoboy} onChange={e=>{setIdMotoboy(e.target.value);setCodigoMotoboy(null);}}>
+            <option value="">Escolha um entregador</option>
+            {listas.entregador.filter(r=>r.ativo!==false).map(r=><option value={r.id} key={r.id}>{rotulo(r,"entregador")}</option>)}
+          </select></label>
+          <label>E-mail do entregador<input type="email" value={emailMotoboy} maxLength={180}
+            placeholder="email-do-entregador@exemplo.com"
+            onChange={e=>{setEmailMotoboy(e.target.value);setCodigoMotoboy(null);}}/></label>
+          <button type="button" className="primary" disabled={convidandoMotoboy||!idMotoboy||!emailMotoboy.trim()}
+            onClick={()=>void vincularAppMotoboy()}>{convidandoMotoboy?"Gerando...":"Gerar código do aplicativo"}</button>
+        </div>
+        {codigoMotoboy&&<div className="invite-output" role="status">
+          <strong>Código privado para o aplicativo Flutter</strong>
+          <p>Válido até {new Date(codigoMotoboy.expiraEm).toLocaleString("pt-BR")}. Apenas o e-mail informado pode aceitar.</p>
+          <textarea rows={3} readOnly aria-label="Código privado do entregador" value={codigoMotoboy.codigo}
+            onFocus={e=>e.target.select()}/>
+          <button type="button" className="secondary" onClick={()=>void navigator.clipboard?.writeText(codigoMotoboy.codigo)}>
+            Copiar código
+          </button>
+        </div>}
+      </section>}
     {aba==="pedido"&&<section className="panel content-panel delivery-flow-guide" aria-label="Fluxo da nota fiscal">
       <h2>Fluxo completo da NF no site</h2>
       <div className="delivery-flow-steps">

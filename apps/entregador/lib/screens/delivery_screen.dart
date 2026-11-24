@@ -157,8 +157,8 @@ class _MapView extends StatelessWidget {
       if(current!=null)Marker(point:current,width:48,height:48,
         child:const Icon(Icons.location_pin,color:ToAkiColors.orange,size:43)),
     ]),
-    const RichAttributionWidget(attributions:[
-      TextSourceAttribution('© OpenStreetMap contributors')
+    RichAttributionWidget(attributions:[
+      TextSourceAttribution('© OpenStreetMap contributors'),
     ]),
    ]);
  }

@@ -44,7 +44,7 @@ export default function SiteOperacionalPage(){
   const [busca,setBusca]=useState("");
   const [nfSelecionada,setNfSelecionada]=useState<string|null>(null);
   // Mapa SEMPRE começa por uma cidade real; GPS só é lido sob permissão.
-  const [modoMapa,setModoMapa]=useState<"cidade"|"aparelho"|"destino">("cidade");
+  const [modoMapa,setModoMapa]=useState<"cidade"|"aparelho"|"destino"|"entregador">("cidade");
   const [pontoAparelho,setPontoAparelho]=useState<{lat:number;lng:number;precisao:number}|null>(null);
   const [erroMapa,setErroMapa]=useState("");
   const [buscandoGps,setBuscandoGps]=useState(false);
@@ -92,6 +92,12 @@ export default function SiteOperacionalPage(){
         return {id:item.id,titulo_registro:typeof d.titulo_registro==="string"?d.titulo_registro:"NF cadastrada",
           status,numero_nf:typeof d.numero_nf==="string"?d.numero_nf:undefined,
           endereco_entrega:typeof d.endereco_entrega==="string"?d.endereco_entrega:undefined,
+          posicao_atual:d.posicao_atual&&typeof d.posicao_atual.latitude==="number"&&
+            typeof d.posicao_atual.longitude==="number"?{
+              latitude:d.posicao_atual.latitude,longitude:d.posicao_atual.longitude,
+              precisao:typeof d.posicao_atual.precisao==="number"?d.posicao_atual.precisao:999,
+              atualizado_em:d.posicao_atual.atualizado_em
+            }:undefined,
           criado_em:d.criado_em};
       }));
       setErro("");
@@ -162,11 +168,20 @@ export default function SiteOperacionalPage(){
   const selecionada=registros.find(r=>r.id===nfSelecionada)??filtrados[0]??null;
   const enderecoSelecionado=modoMapa==="destino"&&selecionada?.id===nfSelecionada
     ?selecionada.endereco_entrega:null;
-  // Maringá é somente o foco inicial do mapa, NÃO a localização de um entregador.
-  const focoMapa=modoMapa==="aparelho"&&pontoAparelho
+  // Posição real é recebida do Firestore apenas para a NF escolhida e empresa autorizada.
+  const ultimaGps=selecionada?.posicao_atual;
+  const gpsRecente=ultimaGps&&ultimaGps.precisao<=100&&
+    typeof ultimaGps.atualizado_em?.toMillis==="function"&&
+    Date.now()-ultimaGps.atualizado_em.toMillis()<120000;
+  const focoGps=gpsRecente&&ultimaGps
+    ?ultimaGps.latitude.toFixed(5)+","+ultimaGps.longitude.toFixed(5):null;
+  const focoMapa=modoMapa==="entregador"&&focoGps?focoGps:
+    modoMapa==="aparelho"&&pontoAparelho
     ?pontoAparelho.lat.toFixed(5)+","+pontoAparelho.lng.toFixed(5)
     :enderecoSelecionado||"Maringá, Paraná, Brasil";
-  const descricaoFoco=modoMapa==="aparelho"&&pontoAparelho
+  const descricaoFoco=modoMapa==="entregador"&&focoGps
+    ?"GPS autorizado do entregador — NF "+(selecionada?.numero_nf||"selecionada"):
+    modoMapa==="aparelho"&&pontoAparelho
     ?"Sua posição neste aparelho"+(pontoAparelho.precisao>200?" (aproximada)":"")
     :enderecoSelecionado
       ?"Destino cadastrado da NF "+(selecionada?.numero_nf||"selecionada")
@@ -220,20 +235,23 @@ export default function SiteOperacionalPage(){
                   <div className="real-map-focus" role="status"><span className="real-map-focus-dot" aria-hidden="true"/> {descricaoFoco}</div>
                   <div className="real-map-actions">
                     <button type="button" className="secondary" disabled={buscandoGps} onClick={localizarAparelho}>{buscandoGps?"Localizando...":"Minha localização"}</button>
+                    {gpsRecente&&<button type="button" className="primary" onClick={()=>{setModoMapa("entregador");setErroMapa("");}}>GPS do entregador</button>}
                     <button type="button" className="secondary" onClick={()=>{setModoMapa("cidade");setErroMapa("");}}>Ver Maringá</button>
                   </div>
                 </div>
                 <iframe className="real-map-frame" title={"Mapa real — "+descricaoFoco} loading="lazy" referrerPolicy="no-referrer"
                   src={urlMapa} allowFullScreen/>
                 {erroMapa&&<p className="form-error" role="alert">{erroMapa}</p>}
-                <p className="helper real-map-disclaimer">Mapa inicial: Maringá, PR. Ao usar Minha localização, o navegador solicita permissão e o Google Maps recebe sua posição para centralizar o mapa. Ao selecionar uma NF, o Google Maps recebe o destino cadastrado. O site não envia seu GPS ao Firebase. <strong>Não é rastreamento ao vivo de motoboys.</strong></p>
+                <p className="helper real-map-disclaimer">Mapa inicial: Maringá, PR. Ao usar Minha localização, o navegador solicita permissão e o Google Maps recebe sua posição para centralizar o mapa. Ao selecionar uma NF, o Google Maps recebe o destino cadastrado. O site não envia seu próprio GPS ao Firebase. O GPS do entregador só aparece após vínculo, início de rota e autorização no aplicativo; leituras com mais de 2 minutos são ocultadas.</p>
               </div>
             </section>
             <div className="right">
               <section className="panel"><div className="panel-head"><h2>NFs consultadas</h2><span className="subtle">Até 50 registros</span></div>
                 {!filtrados.length?<p className="subtle">Nenhuma NF cadastrada ou encontrada.</p>:filtrados.map(r=><button type="button" key={r.id} className={"delivery "+(selecionada?.id===r.id?"selected":"")} onClick={()=>{
                   setNfSelecionada(r.id);
-                  setModoMapa(r.endereco_entrega?"destino":"cidade");
+                  setModoMapa(r.posicao_atual?.atualizado_em?.toMillis&&
+                    Date.now()-r.posicao_atual.atualizado_em.toMillis()<120000?"entregador":
+                    r.endereco_entrega?"destino":"cidade");
                   setErroMapa("");
                 }}>
                   <span className="bike">📦</span><span className="copy"><strong>NF {r.numero_nf??r.id}</strong><small>{r.endereco_entrega??"Endereço não informado"}</small></span>
@@ -241,7 +259,7 @@ export default function SiteOperacionalPage(){
                 </button>)}
               </section>
               <section className="panel"><div className="panel-head"><h2>Detalhes da NF</h2></div>
-                {selecionada?<p className="details"><strong>NF {selecionada.numero_nf??selecionada.id}</strong><br/>Destino: {selecionada.endereco_entrega??"Não informado"}<br/>Status: {selecionada.status}<br/>GPS: ainda não conectado a este painel</p>:<p className="helper">Nenhuma NF selecionada.</p>}
+                {selecionada?<p className="details"><strong>NF {selecionada.numero_nf??selecionada.id}</strong><br/>Destino: {selecionada.endereco_entrega??"Não informado"}<br/>Status: {selecionada.status}<br/>GPS: {gpsRecente&&focoGps?"posição real atualizada pelo aplicativo":"sem posição recente autorizada"}</p>:<p className="helper">Nenhuma NF selecionada.</p>}
                 <button className="primary" type="button" onClick={()=>mudarSecao("entregas")}>Gerenciar NFs →</button></section>
             </div>
           </div>

@@ -22,7 +22,7 @@ test("GPS rejeita precisão excessiva, campos suspeitos e localizações inváli
 });
 test("arquivo de comprovante sempre isolado por empresa, NF e conta",()=>{
  assert.equal(p.nomeArquivo("empresa_teste_soma","nf_20261124001","user1","foto"),
-  "comprovantes/empresa_teste_soma/nf_20261124001/user1/foto.png");
+  "comprovantes/empresa_teste_soma/nf_20261124001/user1/foto.jpg");
  assert.throws(()=>p.nomeArquivo("empresa_teste_soma","../../segredo","u","foto"));
 });
 test("servidor requer vínculo de Auth, e-mail, consentimento do dispositivo e status",()=>{

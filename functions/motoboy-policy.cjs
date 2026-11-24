@@ -32,7 +32,7 @@ function gpsValido(v){
 function nomeArquivo(empresa,pedido,uid,tipo){
   empresaId(empresa);identificador(pedido,"NF");identificador(uid,"Conta");
   if(!["foto","assinatura"].includes(tipo))throw Error("Comprovante inválido.");
-  return "comprovantes/"+empresa+"/"+pedido+"/"+uid+"/"+tipo+".png";
+  return "comprovantes/"+empresa+"/"+pedido+"/"+uid+"/"+(tipo==="foto"?"foto.jpg":"assinatura.png");
 }
 function permissaoGps(pedido,uid,now){
   if(!pedido||pedido.status!=="em_rota"||pedido.entregador_uid!==uid)throw Error("Rota não está ativa para esta conta.");

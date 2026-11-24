@@ -195,6 +195,17 @@ exports.pararGpsMotoboyPiloto=onCall(opt,async req=>{
   });
   return {ok:true};
 });
+exports.registrarPushMotoboyPiloto=onCall(opt,async req=>{
+  const c=await entregador(req);
+  const token=req.data?.token;
+  if(typeof token!=="string"||token.length<20||token.length>4096||
+    !/^[A-Za-z0-9:_-]+$/.test(token))
+    throw new HttpsError("invalid-argument","Token de notificação inválido.");
+  await db().doc("entregadores/"+c.uid).update({
+    token_notificacao:token,atualizado_em:FieldValue.serverTimestamp()
+  });
+  return {ok:true};
+});
 exports.concluirEntregaMotoboyPiloto=onCall(opt,async req=>{
   const c=await entregador(req),id=valida(req.data?.pedidoId,v=>P.identificador(v,"NF"));
   const pedido=emp(c.empresaId).collection("pedidos").doc(id);
@@ -209,8 +220,9 @@ exports.concluirEntregaMotoboyPiloto=onCall(opt,async req=>{
   try{
     objects=await Promise.all([foto,assinatura].map(async path=>{
       const [metadata]=await getStorage().bucket().file(path).getMetadata();
-      if(metadata.contentType!=="image/png"||Number(metadata.size)<64||
-        Number(metadata.size)>(path.endsWith("foto.png")?8*1024*1024:2*1024*1024))
+      if(metadata.contentType!==(path.endsWith("foto.jpg")?"image/jpeg":"image/png")||
+        Number(metadata.size)<64||
+        Number(metadata.size)>(path.endsWith("foto.jpg")?8*1024*1024:2*1024*1024))
         throw Error("Foto ou assinatura fora do formato autorizado.");
       return path;
     }));
