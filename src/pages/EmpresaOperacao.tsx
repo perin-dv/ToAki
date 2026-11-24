@@ -110,6 +110,17 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
     if(!empresaId){setErro("Empresa ainda não autorizada.");return;}
     if(!podeAlterar){setErro("Seu cargo não permite salvar este cadastro.");return;}
     if(aba==="cliente"){const e=validarEndereco(campos);if(e){setErro(e);return;}}
+    if(aba==="veiculo"){
+      const placa=campos.placa.trim().toUpperCase().replace(/[\s-]+/g,"");
+      if(placa.length!==7){
+        setErro("Placa incompleta: faltam caracteres. Digite 7 letras/números, como ABC-1234 ou ABC1D23.");
+        return;
+      }
+      if(!/^(?:[A-Z]{3}[0-9]{4}|[A-Z]{3}[0-9][A-Z][0-9]{2})$/.test(placa)){
+        setErro("Placa inválida. Digite no formato antigo ABC-1234 ou Mercosul ABC1D23.");
+        return;
+      }
+    }
     setSalvando(true);
     try{
       if(editando)await alterarRegistro(empresaId,aba,editando,"atualizar",montarPayload());
