@@ -46,6 +46,8 @@ jobs:
           node --check functions/index.cjs
           node --check functions/operacoes.cjs
           node --check functions/cenario-teste-soma.cjs
+          node --check functions/scripts/seed-soma-thiago-sakamoto.cjs
+          node --test tests/seed-soma-thiago-sakamoto.test.cjs
           node --check functions/entregador-veiculo.cjs
           node --test tests/entregador-veiculo.test.cjs
           node --check functions/cenario-teste-politica.cjs
