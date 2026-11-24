@@ -168,3 +168,41 @@ test("Soma: testador autorizado sem e-mail verificado só lê sua empresa",async
  await assertFails(getDoc(doc(outroId,"empresas",empresa)));
  await assertFails(getDoc(doc(tester,"solicitacoes_cadastro_empresas","uid-testador")));
 });
+
+
+test("entregador autenticado não lista clientes, pedidos ou frota da empresa",async()=>{
+  const empresa="empresa_teste_soma",uid="uid-boy";
+  const motoboy=env.authenticatedContext(uid,{
+    email:"motoboy@exemplo.test",email_verified:true,
+    role:"entregador",empresa_id:empresa
+  }).firestore();
+  await env.withSecurityRulesDisabled(async ctx=>{
+    const store=ctx.firestore();
+    await setDoc(doc(store,"empresas",empresa),{status:"ativa"});
+    await setDoc(doc(store,"empresas",empresa,"funcionarios",uid),
+      {ativo:true,papel:"entregador",nome_exibicao:"Thiago de teste"});
+    await setDoc(doc(store,"empresas",empresa,"pedidos","nf_20261124001"),
+      {numero_nf:"20261124001",entregador_uid:uid,status:"em_rota"});
+    await setDoc(doc(store,"empresas",empresa,"pedidos","nf_outro"),
+      {numero_nf:"222",status:"pendente"});
+    await setDoc(doc(store,"empresas",empresa,"clientes","cliente_pessoal"),
+      {nome:"Cliente privado"});
+    await setDoc(doc(store,"empresas",empresa,"veiculos","veiculo_AAA1234"),
+      {placa:"AAA1234"});
+    await setDoc(doc(store,"entregadores",uid),
+      {empresa_id:empresa,entregador_id:"entregador_thiago_teste_soma",ativo:true});
+    await setDoc(doc(store,"entregadores",uid,"tarefas","nf_20261124001"),
+      {status:"em_rota",numero_nf:"20261124001"});
+  });
+  await assertFails(getDoc(doc(motoboy,"empresas",empresa)));
+  for(const resource of ["pedidos","clientes","veiculos","entregadores_vinculados"]){
+    await assertFails(getDocs(query(collection(motoboy,"empresas",empresa,resource),limit(10))));
+  }
+  await assertFails(getDoc(doc(motoboy,"empresas",empresa,"pedidos","nf_outro")));
+  await assertFails(getDoc(doc(motoboy,"empresas",empresa,"pedidos","nf_20261124001")));
+  await assertSucceeds(getDoc(doc(motoboy,"empresas",empresa,"funcionarios",uid)));
+  await assertSucceeds(getDoc(doc(motoboy,"entregadores",uid)));
+  await assertSucceeds(getDoc(doc(motoboy,"entregadores",uid,"tarefas","nf_20261124001")));
+  await assertFails(setDoc(doc(motoboy,"entregadores",uid,"tarefas","forjada"),
+    {status:"entregue"}));
+});
