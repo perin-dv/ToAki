@@ -2,8 +2,9 @@ include: package:flutter_lints/flutter.yaml
 
 analyzer:
   errors:
-    invalid_use_of_visible_for_testing_member: ignore
+    # Flutter 3.50 deixou Material transicionalmente deprecated. Não trocar o design aprovado.
+    deprecated_member_use: ignore
 
 linter:
   rules:
-    prefer_const_constructors: false
+    curly_braces_in_flow_control_structures: false

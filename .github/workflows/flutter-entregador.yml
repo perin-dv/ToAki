@@ -39,6 +39,8 @@ jobs:
         run: |
           flutter create --platforms=android,web --org br.com.toaki --project-name toaki_entregador .
           python3 scripts/ajustar_android.py
+          # Flutter create gera um teste padrão para MyApp que não existe neste aplicativo.
+          rm -f test/widget_test.dart
           flutter pub get
       - name: Verificar estrutura, importações e design
         working-directory: apps/entregador
