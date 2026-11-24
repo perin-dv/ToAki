@@ -42,3 +42,16 @@ A documentação usa rótulos explicativos. Os nomes de coleção e os campos ab
 
 ## Antes da Fase C — integração motoboy
 Validar com dados de teste: cliente e veículo aparecem pelos nomes, NF por número; atribuição persiste; edição preserva IDs; transições de status exibem histórico; convite autentica o cliente; status do espelho atualiza; regras impedem leitura entre empresas. Só então adicionar o vínculo da conta do motoboy, GPS autorizado, status ao vivo e comprovante real.
+
+## Correção do teste rápido — Thiago/Sakamoto (24/11/2026)
+- Cadastro em Veículos **recebe** placa antiga com ou sem hífen (ABC-1234/ABC1234) e Mercosul (ABC1D23). A placa é normalizada no servidor e continua com 7 caracteres alfanuméricos. `ABC-123` é incompleta e rejeitada com orientação clara.
+- Em Pedidos / NFs, o usuário seleciona **somente o entregador**. Se já possui veículo associado, ele é preenchido automaticamente; não aparece um segundo seletor de veículo.
+- Botão **Criar cenário de teste no Firebase** aparece apenas para gestores da empresa fictícia Soma. Após confirmação, uma única transação cria cliente Sakamoto (teste), veículo Moto com placa fictícia TST1A24, entregador Thiago (teste) ligado à moto, NF fictícia 20261124001 e as reservas/auditoria.
+- A operação é idempotente e não sobrescreve dados de outras empresas nem dados existentes conflituosos. O botão só funciona com sessão autenticada e Function publicada.
+- **A criação do cenário não equivale à instalação do aplicativo ou rastreamento do motoboy.** Nenhum GPS é acionado ou gravado. A placa e destino são ilustrações fictícias, não dados validados no mundo real.
+
+## Cadastro único do entregador e transporte
+- Novo formulário na aba **Motoristas** pede nome, contato, tipo de transporte (Moto, Carro, Van ou Caminhão) e placa.
+- Uma única chamada validada no backend e **uma transação Firestore** criam o veículo, o entregador vinculado, a reserva da placa e a auditoria. Se houver conflito de placa, nenhuma entidade é criada.
+- Cadastro de NF exige selecionar **só o entregador**, recuperando seu veículo automaticamente. A mudança do veículo de um entregador existente permanece na edição autorizada.
+- Registrar entregador no cadastro empresarial **não cria conta móvel nem ativa GPS**.

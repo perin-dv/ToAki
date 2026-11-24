@@ -1,0 +1,40 @@
+"use strict";
+const test=require("node:test");
+const assert=require("node:assert/strict");
+const fs=require("node:fs");
+const {EMPRESA,origem,cliente,veiculo,entregador,pedido,refs,respostaCenario,pertenceAoCenario}=require("../functions/cenario-teste-politica.cjs");
+test("o cenário é estritamente fictício e pertence apenas ao sandbox Soma",()=>{
+  assert.equal(EMPRESA,"empresa_teste_soma");
+  assert.equal(cliente.nome,"Sakamoto (teste)");
+  assert.equal(entregador.nome,"Thiago (teste)");
+  assert.equal(veiculo.categoria,"Moto");
+  assert.equal(veiculo.placa,"TST1A24");
+  assert.equal(refs.idVeiculo,"veiculo_TST1A24");
+  assert.equal(refs.idPedido,"nf_20261124001");
+  assert.equal(pedido.entregador_id,refs.idEntregador);
+  assert.equal(pedido.destinatario_id,refs.idCliente);
+  assert.equal(pedido.veiculo_id,refs.idVeiculo);
+  assert.match(pedido.endereco_entrega,/fictícia/);
+  assert.equal(pertenceAoCenario({origem_teste:origem,empresa_id:EMPRESA}),true);
+  assert.equal(pertenceAoCenario({origem_teste:origem,empresa_id:"empresa_12345678000199"}),false);
+});
+test("resposta idempotente e identificadores legíveis, sem login de motoboy ou GPS",()=>{
+  assert.equal(respostaCenario(true).jaExistia,true);
+  const backend=fs.readFileSync("functions/cenario-teste-soma.cjs","utf8");
+  assert.match(backend,/request.auth.token.empresa_id!==EMPRESA/);
+  assert.match(backend,/autorizarDestinoOperacional/);
+  assert.match(backend,/membro.data\(\)\?\.ativo!==true/);
+  assert.match(backend,/docs.some\(d=>d.exists\)/);
+  assert.match(backend,/tx.create\(references\[3\]/);
+  assert.doesNotMatch(backend,/posicao_atual|setCustomUserClaims|watchPosition/);
+  assert.doesNotMatch(backend,/tx\.set\(/);
+});
+test("formulário da NF usa entregador e seu veículo automaticamente",()=>{
+  const ui=fs.readFileSync("src/pages/EmpresaOperacao.tsx","utf8");
+  assert.match(ui,/escolherMotorista/);
+  assert.match(ui,/veiculo_id:motorista\?\.veiculo_id\|\|""/);
+  assert.match(ui,/Veículo associado automaticamente/);
+  assert.match(ui,/ABC-1234 ou ABC1D23/);
+  assert.match(ui,/Criar cenário de teste no Firebase/);
+  assert.doesNotMatch(ui,/GPS conectado ao entregador/);
+});
