@@ -30,7 +30,7 @@ exports.cadastrarEntregadorComVeiculoPiloto=onCall(opts,async request=>{
   const [empresa,membro]=await Promise.all([
     empresaRef.get(),empresaRef.collection("funcionarios").doc(uid).get()
   ]);
-  if(!empresa.exists||empresa.data()?.status!=="ativa"
+  if(!empresa.exists||empresa.data()?.status!=="ativa")
     throw new HttpsError("failed-precondition","Empresa não está ativa.");
   try{
     autorizarDestinoOperacional({

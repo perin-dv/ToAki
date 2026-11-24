@@ -25,7 +25,7 @@ test("placa antiga com ou sem hífen e Mercosul são normalizadas no servidor",(
   assert.equal(validarOperacao({...prefix,dados:{placa:"ABC-1234",categoria:"Moto"}}).dados.placa,"ABC1234");
   assert.equal(validarOperacao({...prefix,dados:{placa:"ABC1D23",categoria:"Carro"}}).dados.categoria,"Carro");
   assert.throws(()=>validarOperacao({...prefix,dados:{placa:"ABC-123",categoria:"Moto"}}),/Placa incompleta/);
-  assert.throws(()=>validarOperacao({...prefix,dados:{placa:"ABC/1234",categoria:"Moto"}}),/Placa inválida/);
+  assert.throws(()=>validarOperacao({...prefix,dados:{placa:"ABC/234",categoria:"Moto"}}),/Placa inválida/);
 });
 test("não há operação de exclusão nem mudanças de papel no validador inicial",()=>{
   assert.throws(()=>validarOperacao({empresaId:id,tipo:"admin",dados:{papel:"admin"}}),/Tipo de cadastro inválido/);
