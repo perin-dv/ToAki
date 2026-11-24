@@ -1,0 +1,33 @@
+name: toaki_entregador
+description: Aplicativo Flutter do entregador toAki (Fase C, piloto Soma)
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  firebase_core: ^5.1.0
+  firebase_auth: ^7.0.1
+  cloud_functions: ^7.0.1
+  firebase_storage: ^14.0.1
+  firebase_messaging: ^17.1.0
+  flutter_map: ^8.3.2
+  geolocator: ^14.1.2
+  geolocator_android: ^5.2.1
+  image_picker: ^1.2.4
+  signature: ^6.4.0
+  latlong2: ^0.9.1
+  url_launcher: ^6.3.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/logo-toaki.webp
