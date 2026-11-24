@@ -158,3 +158,4 @@ exports.alterarRegistroEmpresaPiloto=require("./alteracoes.cjs").alterarRegistro
 exports.criarConviteEntregaPiloto=require("./convites-entrega.cjs").criarConviteEntregaPiloto;
 exports.resgatarConviteEntregaPiloto=require("./convites-entrega.cjs").resgatarConviteEntregaPiloto;
 exports.criarCenarioEntregaTesteSoma=require("./cenario-teste-soma.cjs").criarCenarioEntregaTesteSoma;
+exports.cadastrarEntregadorComVeiculoPiloto=require("./entregador-veiculo.cjs").cadastrarEntregadorComVeiculoPiloto;

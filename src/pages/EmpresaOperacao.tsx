@@ -1,6 +1,6 @@
 import {useEffect,useMemo,useState,type FormEvent} from "react";
 import {useAuth} from "../auth/AuthProvider";
-import {empresaAutorizada,escutarRegistros,criarRegistro,alterarRegistro,type TipoOperacional,type RegistroOperacional} from "../lib/operacaoEmpresa";
+import {empresaAutorizada,escutarRegistros,criarRegistro,alterarRegistro,cadastrarEntregadorComVeiculo,type TipoOperacional,type RegistroOperacional} from "../lib/operacaoEmpresa";
 import EnderecoPorCep from "../components/EnderecoPorCep";
 import {enderecoVazio,enderecoCompleto,validarEndereco} from "../lib/cep";
 import {ambientePilotoOriginal} from "../lib/ambiente";
@@ -110,7 +110,10 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
     if(!empresaId){setErro("Empresa ainda não autorizada.");return;}
     if(!podeAlterar){setErro("Seu cargo não permite salvar este cadastro.");return;}
     if(aba==="cliente"){const e=validarEndereco(campos);if(e){setErro(e);return;}}
-    if(aba==="veiculo"){
+    if(aba==="veiculo"||(aba==="entregador"&&!editando)){
+      if(aba==="entregador"&&!campos.placa.trim()){
+        setErro("Informe a placa do veículo para cadastrar o entregador e o transporte juntos.");return;
+      }
       const placa=campos.placa.trim().toUpperCase().replace(/[\s-]+/g,"");
       if(placa.length!==7){
         setErro("Placa incompleta: faltam caracteres. Digite 7 letras/números, como ABC-1234 ou ABC1D23.");
@@ -124,6 +127,9 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
     setSalvando(true);
     try{
       if(editando)await alterarRegistro(empresaId,aba,editando,"atualizar",montarPayload());
+      else if(aba==="entregador")await cadastrarEntregadorComVeiculo(empresaId,{
+        nome:campos.nome,telefone:campos.telefone,placa:campos.placa,categoria:campos.categoria
+      });
       else await criarRegistro(empresaId,aba,montarPayload());
       setAviso(editando?"Alterações confirmadas no Firestore da sua empresa.":"Cadastro confirmado no Firestore da sua empresa. Você já pode continuar para a próxima aba.");
       limpar();
@@ -232,15 +238,15 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
           {aba==="cliente"&&<EnderecoPorCep value={{cep:campos.cep,logradouro:campos.logradouro,numero:campos.numero,
             complemento:campos.complemento,bairro:campos.bairro,cidade:campos.cidade,uf:campos.uf}}
             onChange={endereco=>setCampos(c=>({...c,...endereco}))} prefix="empresa-cliente"/>}
-          {aba==="veiculo"&&<>
-            <label>Placa do veículo (digite aqui)<input required minLength={7} maxLength={8} readOnly={!!editando}
+          {(aba==="veiculo"||(aba==="entregador"&&!editando))&&<>
+            <label>{aba==="entregador"?"Placa do veículo do entregador":"Placa do veículo (digite aqui)"}<input required minLength={7} maxLength={8} readOnly={!!editando}
               value={campos.placa} onChange={e=>alterar("placa",e.target.value.toUpperCase())}
               autoCapitalize="characters" placeholder="ABC-1234 ou ABC1D23"/></label>
             <p className="helper">Aceita placa antiga ABC-1234 ou Mercosul ABC1D23. São 7 letras/números (hífen opcional). ABC-123 está incompleta.</p>
-            <label>Categoria<select value={campos.categoria} onChange={e=>alterar("categoria",e.target.value)}>
+            <label>Tipo de transporte<select value={campos.categoria} onChange={e=>alterar("categoria",e.target.value)}>
               <option>Moto</option><option>Carro</option><option>Van</option><option>Caminhão</option></select></label>
           </>}
-          {aba==="entregador"&&<div className="form-search-reference">
+          {aba==="entregador"&&!!editando&&<div className="form-search-reference">
             <label>Buscar moto/veículo por placa<input type="search" value={buscaVeiculo}
               onChange={e=>setBuscaVeiculo(e.target.value)} placeholder="Digite a placa cadastrada..."/></label>
             <label>Veículo vinculado<select value={campos.veiculo_id} onChange={e=>alterar("veiculo_id",e.target.value)}>
@@ -281,7 +287,7 @@ export default function EmpresaOperacao({abaInicial="cliente"}:{abaInicial?:Tipo
               onChange={e=>alterar("endereco_entrega",e.target.value)} placeholder="Endereço cadastrado ou destino autorizado"/></label>
           </>}
           <div className="form-operational-buttons">
-            <button type="submit" disabled={salvando} className="primary">{salvando?"Gravando...":editando?"Salvar alterações":"Cadastrar no Firebase"}</button>
+            <button type="submit" disabled={salvando} className="primary">{salvando?"Gravando...":editando?"Salvar alterações":aba==="entregador"?"Cadastrar entregador e veículo":"Cadastrar no Firebase"}</button>
             {editando&&<button type="button" className="secondary" onClick={limpar}>Cancelar edição</button>}
           </div>
         </form>:<p>Seu perfil pode consultar estes cadastros, mas alterações exigem permissão de gestor.</p>}

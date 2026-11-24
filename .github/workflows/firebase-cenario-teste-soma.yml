@@ -32,6 +32,7 @@ jobs:
           npm run build
           npm --prefix functions install --no-audit --no-fund
           node --check functions/cenario-teste-soma.cjs
+          node --check functions/entregador-veiculo.cjs
           node --check functions/operacao-politica.cjs
       - name: Validar credencial do Firebase
         env:
@@ -48,5 +49,5 @@ jobs:
         run: |
           set -euo pipefail
           trap 'rm -f "$GOOGLE_APPLICATION_CREDENTIALS"' EXIT
-          npx firebase deploy --only functions:operarEmpresaHomologacao,functions:alterarRegistroEmpresaPiloto,functions:criarCenarioEntregaTesteSoma --project toaki-cf058 --non-interactive
+          npx firebase deploy --only functions:operarEmpresaHomologacao,functions:alterarRegistroEmpresaPiloto,functions:criarCenarioEntregaTesteSoma,functions:cadastrarEntregadorComVeiculoPiloto --project toaki-cf058 --non-interactive
           echo 'Functions do cadastro e cenário de teste publicadas. Hosting, Rules e IAM não alterados.' >> "$GITHUB_STEP_SUMMARY"

@@ -81,6 +81,18 @@ export async function criarRegistro(empresaId:string,tipo:TipoOperacional,dados:
   return data.registroId;
 }
 
+export async function cadastrarEntregadorComVeiculo(empresaId:string,dados:{
+  nome:string;telefone:string;categoria:string;placa:string
+}):Promise<{entregadorId:string;veiculoId:string}>{
+  exigirAmbienteOperacional();
+  if(!identificadorEmpresaValido(empresaId))throw Error("Empresa inválida.");
+  const fn=httpsCallable<{empresaId:string}&typeof dados,{ok:boolean;entregadorId:string;veiculoId:string}>(
+    getFunctions(firebaseApp,"southamerica-east1"),"cadastrarEntregadorComVeiculoPiloto");
+  const {data}=await fn({empresaId,...dados});
+  if(!data.ok||!data.entregadorId||!data.veiculoId)throw Error("O cadastro do entregador não foi confirmado.");
+  return data;
+}
+
 export type AcaoOperacional="atualizar"|"desativar"|"mudar_status";
 export async function alterarRegistro(empresaId:string,tipo:TipoOperacional,registroId:string,acao:AcaoOperacional,dados?:Record<string,string>,novoStatus?:string):Promise<void>{
   exigirAmbienteOperacional();
